@@ -1,0 +1,58 @@
+# Gradle and Android build outputs
+.gradle/
+.build-cache/
+.kotlin/
+build/
+.cxx/
+.externalNativeBuild/
+captures/
+/dist/
+/.publish/
+*.apk
+*.aab
+*.apks
+*.dex
+*.class
+
+# Machine-specific settings and IDE state
+local.properties
+*.iml
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Credentials, signing material and local financial data
+.env
+.env.*
+!.env.example
+keystore.properties
+signing.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Logs, local tooling and internal design/task artifacts
+*.log
+/skill-setup/
+/.stitch/
+/.agents/
+/.codex/
+/docs/superpowers/
+/docs/implementation/
+/docs/verification/
+/docs/design/
+/docs/wallet-gpay-next-phase.md
+/tools/update-local-snapshot.ps1
+
+# Keep only a curated public screenshot set
+/docs/previews/
+
+# Gradle wrapper JAR and Room schema JSON files are required source assets.
+# Do not exclude gradle/wrapper/gradle-wrapper.jar or app/schemas/.
