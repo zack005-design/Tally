@@ -28,6 +28,8 @@ Separate the money you paid from your own share of a group expense. Track multip
 
 You pay ₹900 for three equal shares. Your account decreases by ₹900, your personal spending is ₹300, and friends owe you ₹600. Receiving that ₹600 settles the amount owed and restores your balance without counting it as new income.
 
+For a step-by-step accounting example, read [Your payment and your share](payment-and-share.md), including partial repayments and the case where a friend pays first.
+
 Tally records the bill and repayments; it does not send money between participants.
 
 [View bill review](../screenshots/readme/shared-bill.png) · [Everyday money →](everyday-money.md)

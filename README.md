@@ -82,19 +82,21 @@
 
 ## Your payment and your share
 
-Paying the bill does not mean spending the entire bill yourself.
+See what you paid, what you personally spent, and what remains to be settled.
 
 For a **₹900 dinner split equally among three people**, when you pay the whole amount:
 
 <table align="center" width="100%">
   <tr>
-    <td align="center" width="33%"><h3>₹900</h3>Leaves your account</td>
-    <td align="center" width="33%"><h3>₹300</h3>Your personal spending</td>
-    <td align="center" width="33%"><h3>₹600</h3>Owed to you by friends</td>
+    <td align="center" width="33%" valign="top"><h3><a href="docs/features/payment-and-share.md#what-you-paid">₹900</a></h3>Leaves your account</td>
+    <td align="center" width="33%" valign="top"><h3><a href="docs/features/payment-and-share.md#your-personal-share">₹300</a></h3>Your personal spending</td>
+    <td align="center" width="33%" valign="top"><h3><a href="docs/features/payment-and-share.md#what-remains-to-be-settled">₹600</a></h3>Owed to you by friends</td>
   </tr>
 </table>
 
-Repayments restore your balance and reduce the debt without becoming new income. Transfers between your own accounts stay separate from spending. Integer-paise calculations keep payments and shares exact.
+Repayments reduce what is owed without becoming new income. Transfers between your own accounts stay separate from spending.
+
+[Explore payments, shares, and settlements →](docs/features/payment-and-share.md)
 
 ## Privacy
 
