@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/ios-polish/launcher.png" width="88" alt="Tally app logo">
+  <a href="https://github.com/zack005-design/Tally/releases"><img src="docs/screenshots/ios-polish/launcher.png" width="88" alt="Tally app logo — open releases"></a>
 </p>
 
 <h1 align="center">Tally</h1>
@@ -26,30 +26,30 @@ Tally brings account balances, everyday spending, and shared bills into one plac
 
 <table>
   <tr>
-    <th>Overview</th>
-    <th>Shared bills</th>
-    <th>Spending calendar</th>
+    <th><a href="docs/screenshots/readme/overview.png">Overview</a></th>
+    <th><a href="docs/screenshots/readme/shared-bill.png">Shared bills</a></th>
+    <th><a href="docs/screenshots/readme/calendar.png">Spending calendar</a></th>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/readme/overview.png" width="240" alt="Overview showing available funds, Wallet and GPay balances, and recent spending"></td>
-    <td><img src="docs/screenshots/readme/shared-bill.png" width="240" alt="Shared-bill review separating the amount paid, personal share, and outstanding settlements"></td>
-    <td><img src="docs/screenshots/readme/calendar.png" width="240" alt="Weekly spending calendar with a selected day and its transactions"></td>
+    <td><a href="docs/screenshots/readme/overview.png"><img src="docs/screenshots/readme/overview.png" width="240" alt="Overview showing available funds, Wallet and GPay balances, and recent spending"></a></td>
+    <td><a href="docs/screenshots/readme/shared-bill.png"><img src="docs/screenshots/readme/shared-bill.png" width="240" alt="Shared-bill review separating the amount paid, personal share, and outstanding settlements"></a></td>
+    <td><a href="docs/screenshots/readme/calendar.png"><img src="docs/screenshots/readme/calendar.png" width="240" alt="Weekly spending calendar with a selected day and its transactions"></a></td>
   </tr>
 </table>
 
-*Actual app screens with fictional test data. [View more screens](docs/screenshots/all-screens/).*
+*Actual app screens with fictional test data. Click a screen to open it at full size, or [browse the gallery](docs/screenshots/all-screens/README.md).*
 
 ## Everyday money, organized
 
 | Feature | What it helps you do |
 | --- | --- |
-| **Accounts and balances** | Track Wallet, GPay, and other accounts; add funds, move money between accounts, and check recorded balances. |
-| **Expenses and income** | Record purchases, income, and personal refunds. Use favourite templates or repeat a recent expense to reduce entry time. |
-| **Shared bills** | Split expenses equally or by amounts, percentages, weights, or individual items. Record multiple payers and shared charges. |
-| **Friends and repayments** | See outstanding balances, record partial repayments, and keep a history of settlements and group expenses. |
-| **Receipts** | Import a receipt photo or PDF, review text recognized on the device, and confirm the details before saving. |
-| **Spending and planning** | Explore transactions by day or category, set monthly budgets, plan allowances, and track savings goals. |
-| **Reports and reminders** | Export monthly CSV or PDF reports, create recurring expense drafts, and enable optional local reminders. |
+| **[Accounts and balances](docs/screenshots/all-screens/accounts.png)** | Track Wallet, GPay, and other accounts; add funds, move money between accounts, and check recorded balances. |
+| **[Expenses and income](docs/screenshots/all-screens/expense.png)** | Record purchases, income, and personal refunds. Use favourite templates or repeat a recent expense to reduce entry time. |
+| **[Shared bills](docs/screenshots/readme/shared-bill.png)** | Split expenses equally or by amounts, percentages, weights, or individual items. Record multiple payers and shared charges. |
+| **[Friends and repayments](docs/screenshots/all-screens/friends.png)** | See outstanding balances, record partial repayments, and keep a history of settlements and group expenses. |
+| **[Receipts](docs/screenshots/all-screens/receipt-review.png)** | Import a receipt photo or PDF, review text recognized on the device, and confirm the details before saving. |
+| **[Spending and planning](docs/screenshots/all-screens/spending.png)** | Explore transactions by day or category, set monthly budgets, plan allowances, and track savings goals. |
+| **[Reports and reminders](docs/screenshots/all-screens/export.png)** | Export monthly CSV or PDF reports, create recurring expense drafts, and enable optional local reminders. |
 
 A home-screen widget and launcher shortcut make expense entry easier to reach. Entries are saved only after you confirm them.
 
@@ -73,7 +73,7 @@ CSV and PDF reports are separate from backups: they are for reading and analysis
 
 ## Reports and Tally Companion
 
-The export screen includes a guide for reviewing a Transactions CSV with **Tally Companion** or **Tally Toolkit**, available in the [release downloads](https://github.com/zack005-design/Tally/releases/tag/v0.1.0-ios-polish-20261021).
+The [export screen](docs/screenshots/ios-polish/companion-export.png) includes a guide for reviewing a Transactions CSV with **[Tally Companion](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-companion-0.1.0.zip)** or **[Tally Toolkit](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-toolkit-0.1.0.zip)**.
 
 These are separate Codex plugins. You explicitly attach the exported CSV for review; Tally does not send your records automatically.
 
