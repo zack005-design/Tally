@@ -5,6 +5,10 @@ import org.junit.Test
 import java.time.*
 
 class GpayScheduleTest {
+    @org.junit.Test fun resetYearsStayWithinTheSupportedPickerRange() {
+        assertTrue(runCatching {GpaySchedule(true,100,1,"-999999999-01","-999999999-01")}.isFailure)
+        assertTrue(runCatching {GpaySchedule(true,100,1,"9999-01","9999-01")}.isFailure)
+    }
     @Test fun shortMonthsUseTheirLastDay() {
         val schedule=GpaySchedule(true,120000,31,"2028-01","2028-01")
         assertEquals(LocalDate.of(2028,2,29),schedule.dueDate(YearMonth.of(2028,2)))

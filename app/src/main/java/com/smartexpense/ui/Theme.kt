@@ -5,53 +5,75 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.smartexpense.R
 
+/** One light palette for every screen, including sheets and Android dark-mode devices. */
 object Tokens {
-    val background=Color(0xFFF6F5F2)
-    val surface=Color(0xFFF0EEEA)
-    val secondarySurface=Color(0xFFEAE8E3)
-    val inputSurface=Color(0xFFF0EEEA)
-    val border=Color(0xFFD6D4CF)
-    val text=Color(0xFF111111)
-    val muted=Color(0xFF716F69)
-    val accent=Color(0xFF181818)
-    val expense=text
-    val positive=Color(0xFF111111)
-    val negative=Color(0xFF703F39)
-    val blue=accent
-    val chartTones=listOf(accent,muted,Color(0xFF98958E),border,secondarySurface)
-    val card=RoundedCornerShape(24.dp)
-    val field=RoundedCornerShape(16.dp)
-    val pageInset=24.dp
-    val sectionGap=12.dp
+    val background @Composable get() = MaterialTheme.colorScheme.background
+    val paper @Composable get() = MaterialTheme.colorScheme.surfaceContainerLowest
+    val surface @Composable get() = MaterialTheme.colorScheme.surface
+    val secondarySurface @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+    val inputSurface @Composable get() = MaterialTheme.colorScheme.surfaceContainerLowest
+    val border @Composable get() = MaterialTheme.colorScheme.outlineVariant
+    val text @Composable get() = MaterialTheme.colorScheme.onSurface
+    val muted @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+    val accent @Composable get() = MaterialTheme.colorScheme.primary
+    val expense @Composable get() = text
+    val positive @Composable get() = accent
+    val negative @Composable get() = MaterialTheme.colorScheme.error
+    val blue @Composable get() = accent
+    val chartTones @Composable get() = listOf(accent, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.outline, secondarySurface)
+    val card = RoundedCornerShape(18.dp)
+    val field = RoundedCornerShape(12.dp)
+    val pageInset = 20.dp
+    val sectionGap = 16.dp
 }
-private val ledgerFont=FontFamily.SansSerif
-private fun type(size:Int,line:Int,weight:FontWeight=FontWeight.Normal)=TextStyle(fontFamily=ledgerFont,fontSize=size.sp,lineHeight=line.sp,fontWeight=weight,fontFeatureSettings="tnum",letterSpacing=0.sp)
-private val ledgerTypography=Typography(
-    displaySmall=type(44,50,FontWeight.Medium),
-    headlineLarge=type(30,36,FontWeight.SemiBold),
-    headlineMedium=type(22,28,FontWeight.SemiBold),
-    headlineSmall=type(22,28,FontWeight.SemiBold),
-    titleLarge=type(17,24,FontWeight.SemiBold),
-    titleMedium=type(15,22,FontWeight.SemiBold),
-    titleSmall=type(14,20,FontWeight.Medium),
-    bodyLarge=type(15,23),bodyMedium=type(14,21),bodySmall=type(12,18),
-    labelLarge=type(14,20,FontWeight.SemiBold),labelMedium=type(12,18,FontWeight.Medium),labelSmall=type(11,16,FontWeight.Medium)
+
+private fun type(size: Int, line: Int, weight: FontWeight = FontWeight.Normal) = TextStyle(
+    fontFamily = FontFamily.SansSerif, fontSize = size.sp, lineHeight = line.sp,
+    fontWeight = weight, fontFeatureSettings = "tnum", letterSpacing = 0.sp
 )
-@Composable fun TrackerTheme(content:@Composable ()->Unit) {
+
+private val lightTypography = Typography(
+    displaySmall = type(46, 54, FontWeight.SemiBold),
+    headlineLarge = type(34, 41, FontWeight.Bold),
+    headlineMedium = type(28, 35, FontWeight.SemiBold),
+    headlineSmall = type(24, 31, FontWeight.SemiBold),
+    titleLarge = type(20, 27, FontWeight.SemiBold),
+    titleMedium = type(17, 24, FontWeight.SemiBold),
+    titleSmall = type(15, 22, FontWeight.Medium),
+    bodyLarge = type(16, 23), bodyMedium = type(14, 21), bodySmall = type(12, 18),
+    labelLarge = type(16, 22, FontWeight.SemiBold),
+    labelMedium = type(13, 19, FontWeight.Medium), labelSmall = type(11, 16, FontWeight.Medium)
+)
+
+private val lightColors = lightColorScheme(
+    primary = Color(0xFF0066FF), onPrimary = Color.White,
+    primaryContainer = Color(0xFFEAF0FF), onPrimaryContainer = Color(0xFF183F94),
+    secondary = Color(0xFF626E9B), onSecondary = Color.White,
+    secondaryContainer = Color(0xFFF0F3F9), onSecondaryContainer = Color(0xFF080B12),
+    tertiary = Color(0xFF7561C4), onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFF0EBFF), onTertiaryContainer = Color(0xFF473487),
+    background = Color(0xFFF6F7F9), onBackground = Color(0xFF080B12),
+    surface = Color(0xFFF6F7F9), onSurface = Color(0xFF080B12),
+    surfaceVariant = Color(0xFFF0F3F9), onSurfaceVariant = Color(0xFF596577),
+    surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFF8F9FC),
+    surfaceContainer = Color(0xFFF3F4F8), surfaceContainerHigh = Color(0xFFEDF0F7), surfaceContainerHighest = Color(0xFFE4E8F1),
+    surfaceTint = Color.Transparent, outline = Color(0xFF767E8E), outlineVariant = Color(0xFFE0E4EB),
+    error = Color(0xFFB3263D), onError = Color.White,
+    errorContainer = Color(0xFFFFEBEF), onErrorContainer = Color(0xFF8B1830),
+    inverseSurface = Color(0xFF252C3E), inverseOnSurface = Color.White, inversePrimary = Color(0xFFBBCDFF)
+)
+
+/** Source-compatible with existing preview fixtures; the approved product design is light-only. */
+@Suppress("UNUSED_PARAMETER")
+@Composable fun TrackerTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme=lightColorScheme(primary=Tokens.accent,onPrimary=Color.White,primaryContainer=Color(0xFFEAE8E3),onPrimaryContainer=Tokens.accent,secondary=Tokens.accent,onSecondary=Color.White,secondaryContainer=Tokens.secondarySurface,onSecondaryContainer=Tokens.text,tertiary=Tokens.positive,onTertiary=Tokens.background,background=Tokens.background,surface=Tokens.surface,surfaceVariant=Tokens.secondarySurface,surfaceContainerLowest=Tokens.background,surfaceContainerLow=Tokens.surface,surfaceContainer=Tokens.surface,surfaceContainerHigh=Tokens.secondarySurface,surfaceContainerHighest=Color(0xFFD6D4CF),surfaceTint=Tokens.background,onBackground=Tokens.text,onSurface=Tokens.text,onSurfaceVariant=Tokens.muted,outline=Tokens.muted,outlineVariant=Tokens.border,error=Tokens.negative,onError=Tokens.background,errorContainer=Color(0xFFF2E5E1),onErrorContainer=Tokens.negative,inverseSurface=Tokens.text,inverseOnSurface=Tokens.background,inversePrimary=Tokens.accent),
-        typography=ledgerTypography,
-        shapes=Shapes(small=Tokens.field,medium=Tokens.card,large=RoundedCornerShape(24.dp)),content=content
+        colorScheme = lightColors, typography = lightTypography,
+        shapes = Shapes(small = Tokens.field, medium = Tokens.card, large = Tokens.card, extraLarge = RoundedCornerShape(28.dp)),
+        content = content
     )
 }
-
-
-
-

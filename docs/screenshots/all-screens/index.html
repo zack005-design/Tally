@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tally — screen review</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#18202c;font:16px/1.5 system-ui,sans-serif}header{padding:32px 28px 20px;max-width:1500px;margin:auto}h1{margin:0 0 6px;font-size:28px}p{margin:0;color:#596577}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:20px}input{font:inherit;padding:12px 16px;border:1px solid #c5cbd5;border-radius:12px;background:white;min-width:240px;max-width:100%}main{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:24px;padding:12px 28px 40px;max-width:1500px;margin:auto}figure{margin:0;min-width:0}figure a{display:block;border-radius:18px;overflow:hidden;box-shadow:0 1px 4px #18202c18;background:white}img{display:block;width:100%;height:auto}figcaption{padding:10px 2px;font-weight:600}a{color:inherit}:focus-visible{outline:3px solid #0066ff;outline-offset:4px}[hidden]{display:none!important}@media(max-width:520px){main{grid-template-columns:1fr;padding:12px 20px}header{padding:24px 20px}}
+</style>
+<header><h1>Tally · screen review</h1><p>Actual Android app captures with fictional test data. Open a screen to inspect it at full size.</p><div class="controls"><input id="search" type="search" placeholder="Find a screen" aria-label="Find a screen"><span id="count" aria-live="polite"></span></div></header>
+<main id="screens" aria-label="App screen previews"></main>
+<script src="screens.js"></script>
+<script>
+const root=document.getElementById('screens');
+const screens=Array.isArray(window.tallyScreens)?window.tallyScreens:[];
+for(const screen of screens){
+ const figure=document.createElement('figure');figure.dataset.name=screen.title.toLowerCase();
+ const link=document.createElement('a');link.href=screen.name;link.target='_blank';link.rel='noopener';
+ const image=document.createElement('img');image.src=screen.name;image.alt=screen.title+' app screen';image.loading='lazy';
+ const caption=document.createElement('figcaption');caption.textContent=screen.title;
+ link.append(image);figure.append(link,caption);root.append(figure);
+}
+function filter(){const term=document.getElementById('search').value.trim().toLowerCase();let count=0;for(const item of root.children){item.hidden=!item.dataset.name.includes(term);if(!item.hidden)count++;}document.getElementById('count').textContent=count+' screens';}
+document.getElementById('search').addEventListener('input',filter);filter();
+</script>
+</html>

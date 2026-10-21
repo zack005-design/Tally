@@ -3,7 +3,15 @@ package com.smartexpense.domain
 import java.time.*
 
 data class GroupDefault(val groupId:String,val method:String,val values:Map<String,String>) {
+    val requiresBillDetails:Boolean get()=method in listOf("Fixed","Itemized")
+    /** Exact amounts and items are entered for each bill; a preference never invents them. */
+    fun validate(people:List<String>) {
+        require(groupId.isNotBlank() && people.size>=2 && people.distinct().size==people.size)
+        if(requiresBillDetails) require(values.isEmpty()) {"Enter bill-specific amounts and items in the bill draft"}
+        else rule(people)
+    }
     fun rule(people:List<String>):SplitRule {
+        require(!requiresBillDetails) {"Enter this bill's exact amounts or items before calculating its split"}
         require(method in listOf("Equal","Weighted","Percentage"))
         if(method!="Equal") require(values.keys==people.toSet()) {"Group membership changed. Edit the saved split default."}
         val rule=when(method) {
@@ -15,13 +23,13 @@ data class GroupDefault(val groupId:String,val method:String,val values:Map<Stri
     }
 }
 data class RecurringTemplate(val id:String,val kind:Kind,val amount:Long,val description:String,val accountId:String,val firstDate:String,val frequency:String) {
-    init {require(id.isNotBlank() && kind in listOf(Kind.EXPENSE,Kind.INCOME) && amount>0 && description.isNotBlank() && description.length<=200 && accountId.isNotBlank());require(frequency in listOf("Daily","Weekly","Monthly"));LocalDate.parse(firstDate)}
+    init {require(id.isNotBlank() && kind in listOf(Kind.EXPENSE,Kind.INCOME) && amount>0 && description.isNotBlank() && description.length<=200 && accountId.isNotBlank());require(frequency in listOf("Daily","Weekly","Monthly"));require(LocalDate.parse(firstDate).year in 1900..2100) {"Choose a recurring date between 1900 and 2100"}}
     fun entryId(date:LocalDate)="recurring:$id:$date"
     fun occurrences(today:LocalDate):List<LocalDate> {
         val first=LocalDate.parse(firstDate)
         if(first>today) return emptyList()
         val count=when(frequency) {"Daily"->java.time.temporal.ChronoUnit.DAYS.between(first,today);"Weekly"->java.time.temporal.ChronoUnit.WEEKS.between(first,today);else->java.time.temporal.ChronoUnit.MONTHS.between(YearMonth.from(first),YearMonth.from(today))}
-        return ((count-399).coerceAtLeast(0)..count).map {when(frequency) {"Daily"->first.plusDays(it);"Weekly"->first.plusWeeks(it);else->first.plusMonths(it)}}.filter {it<=today}
+        return (0..count).map {when(frequency) {"Daily"->first.plusDays(it);"Weekly"->first.plusWeeks(it);else->first.plusMonths(it)}}.filter {it<=today}
     }
 }
 data class GoalContribution(val id:String,val date:String,val amount:Long)

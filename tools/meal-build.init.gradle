@@ -1,0 +1,12 @@
+// Isolate generated outputs while another chat builds the same workspace.
+allprojects { project ->
+    def moduleName = project.path == ':' ? 'root' : project.path.substring(1).replace(':', '/')
+    project.layout.buildDirectory.set(new File(project.rootDir, '.build-cache/meal-split/' + moduleName))
+    project.plugins.withId('com.android.application') {
+        if (project.hasProperty('mealVerificationId')) {
+            project.androidComponents.finalizeDsl { dsl ->
+                dsl.defaultConfig.applicationId = 'com.smartexpense.mealverify'
+            }
+        }
+    }
+}

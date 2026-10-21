@@ -1,0 +1,7 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="add-expense" android:enabled="true"
+        android:icon="@drawable/ic_add" android:shortcutShortLabel="@string/quick_expense_label">
+        <intent android:action="com.smartexpense.QUICK_ADD"
+            android:targetPackage="com.smartexpense" android:targetClass="com.smartexpense.MainActivity"/>
+    </shortcut>
+</shortcuts>

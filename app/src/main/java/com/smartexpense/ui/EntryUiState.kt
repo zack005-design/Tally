@@ -13,7 +13,8 @@ data class EntryUiState(
     val date:String=LocalDateTime.now().withNano(0).toString(),val notes:String="",val text:String="",val parserNotice:String="",
     val replaces:String?=null,val refundOf:String?=null,
     val secondAccountId:String="",val secondPayment:String="",val itemCharges:String="",val itemDiscount:String="",
-    val originalMovements:Map<String,Long> = emptyMap(),val originalDate:Long?=null
+    val originalMovements:Map<String,Long> = emptyMap(),val originalDate:Long?=null,
+    val billItemNames:List<String> = emptyList()
 ) {
     fun draft():EntryDraft {
         val money=Money.parse(amount); require(money>0) { "Enter a positive amount" }
@@ -58,8 +59,12 @@ fun EntryUiState.sourcePayments(payment:Long):Map<String,Long> {
     require(second>=0 && second<=payment) {"Second source payment cannot exceed your payment"}
     return mapOf(accountId to Math.subtractExact(payment,second),secondAccountId to second)
 }
-fun EntryUiState.withGroup(group:Group):EntryUiState = copy(shared=true,kind=Kind.EXPENSE,groupId=group.id,
-    participants=(listOf("self")+group.members).distinct(),paid=(listOf("self")+group.members).distinct().associateWith {""},method="Equal",values=emptyMap(),items="",itemCharges="",itemDiscount="")
+fun EntryUiState.withGroup(group:Group):EntryUiState {
+    val members=(listOf("self")+group.members).distinct()
+    if(shared && kind==Kind.EXPENSE && groupId==group.id && participants.toSet()==members.toSet()) return this
+    return copy(shared=true,kind=Kind.EXPENSE,groupId=group.id,
+        participants=members,paid=members.associateWith {""},method="Equal",values=emptyMap(),items="",itemCharges="",itemDiscount="",billItemNames=emptyList())
+}
 fun EntryUiState.reviewAmounts():Result<EntryReviewAmounts> = runCatching {
     val draft=draft()
     val shares=Finance.split(draft.amount,draft.participants,draft.splitRule)
@@ -67,8 +72,9 @@ fun EntryUiState.reviewAmounts():Result<EntryReviewAmounts> = runCatching {
     EntryReviewAmounts(draft.amount,draft.contributions["self"]?:0,shares["self"]?:0,net["self"]?:0)
 }
 
-fun EntryUiState.canReview(accounts:List<Account>):Boolean =
+fun EntryUiState.canReview(accounts:List<Account>,categories:List<Category>?=null):Boolean =
     preview().isSuccess && accountImpact().isSuccess && description.isNotBlank() &&
+        (kind!=Kind.EXPENSE || categories==null || categoryId==null || categories.any {it.id==categoryId && !it.archived}) &&
         (secondAccountId.isBlank() || accounts.any {it.id==secondAccountId && !it.archived}) &&
         accounts.any {it.id==accountId && !it.archived} &&
         (kind!=Kind.TRANSFER || destinationId!=accountId && accounts.any {it.id==destinationId && !it.archived}) &&
@@ -79,5 +85,28 @@ fun EntryUiState.reuse(record:Record):EntryUiState = copy(
     accountId="",destinationId="",shared=record.kind==Kind.EXPENSE && record.personIds.any {it!="self"},
     participants=if(record.kind==Kind.EXPENSE && record.personIds.any {it!="self"}) record.personIds else listOf("self"),paid=emptyMap(),
     method=if(record.kind==Kind.EXPENSE && record.personIds.any {it!="self"}) "" else "Equal",
-    values=emptyMap(),items="",groupId=record.groupId,refundOf=null,secondAccountId="",secondPayment="",itemCharges="",itemDiscount="",originalMovements=emptyMap(),originalDate=null,notes=record.notes,parserNotice="Review the suggested transaction and choose an account. For a shared bill, select its split method and enter contributions.")
+    values=emptyMap(),items="",billItemNames=emptyList(),groupId=record.groupId,refundOf=null,secondAccountId="",secondPayment="",itemCharges="",itemDiscount="",originalMovements=emptyMap(),originalDate=null,notes=record.notes,parserNotice="Review the suggested transaction and choose an account. For a shared bill, select its split method and enter contributions.")
+
+fun EntryUiState.withMealFriend(friend:String):EntryUiState {
+    require(friend.isNotBlank() && friend!="self") {"Choose a friend."}
+    val rows=namedMealItems(billItemNames,items)
+    val previous=participants.filter {it!="self"}.singleOrNull()
+    val mine=if(shared && previous!=null) rows.indices.filter {rows[it].people==listOf("self")}.toSet() else emptySet()
+    val both=if(shared && previous!=null) rows.indices.filter {rows[it].people.toSet()==setOf("self",previous)}.toSet() else emptySet()
+    return copy(shared=true,kind=Kind.EXPENSE,method="Itemized",participants=listOf("self",friend),
+        groupId=groupId.takeIf {friend==previous},items=assignMealItems(items,mine,both,friend),
+        paid=mapOf("self" to paid["self"].orEmpty(),friend to if(friend==previous) paid[friend].orEmpty() else ""))
+}
+
+/** Text assignment changes ownership only; payments remain the amounts actually paid. */
+fun EntryUiState.withMealDescription(description:String,person:String):EntryUiState {
+    val friend=participants.filter {it!="self"}.singleOrNull()
+    require(shared && friend!=null && person in participants && participants.size==2 && method=="Itemized") {"Choose one friend first."}
+    val rows=namedMealItems(billItemNames,items)
+    require(rows.all {it.people.all {owner->owner in participants}}) {"Check who ate each item."}
+    val selected=matchMealItems(description,billItemNames).getOrThrow()
+    val sharedRows=rows.indices.filter {rows[it].people.toSet()==setOf("self",friend)}.toSet()
+    val mine=if(person=="self") selected-sharedRows else rows.indices.filter {rows[it].people==listOf("self")}.toSet()-selected
+    return copy(items=assignMealItems(items,mine,sharedRows,friend))
+}
 

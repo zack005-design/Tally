@@ -12,6 +12,7 @@ interface ExpenseTextParser { fun parse(text: String, people: List<PersonRef>): 
 class RuleBasedTextParser(private val clock:java.time.Clock=java.time.Clock.systemDefaultZone()) : ExpenseTextParser {
     override fun parse(text: String, people: List<PersonRef>): ParsedDraft {
         val normalized = text.lowercase().replace("grocries", "groceries").replace("luch", "lunch")
+        val compact=Regex("""^\s*([\p{L}][\p{L} &'’-]{0,60}?)\s+(?:₹\s*)?[0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?\s+(?:via\s+|using\s+)?(gpay|wallet|cash)\s*$""",RegexOption.IGNORE_CASE).matchEntire(text)
         val missing = linkedSetOf<String>()
         val warnings = mutableListOf<String>()
         fun resolve(name: String): String? {
@@ -27,7 +28,8 @@ class RuleBasedTextParser(private val clock:java.time.Clock=java.time.Clock.syst
             Regex("\\b(returned|repaid|repayment)\\b").containsMatchIn(normalized) -> Kind.REPAYMENT
             Regex("\\b(refund|refunded)\\b").containsMatchIn(normalized) -> Kind.REFUND
             Regex("\\b(salary|income|earned|received)\\b").containsMatchIn(normalized) -> Kind.INCOME
-            Regex("\\b(spent|paid|bought|bill|food|lunch|dinner|groceries)\\b").containsMatchIn(normalized) -> Kind.EXPENSE
+            Regex("\\b(spent|paid|bought|bill|food|lunch|dinner|groceries|coffee|tea|breakfast|snack|metro|taxi)\\b").containsMatchIn(normalized) -> Kind.EXPENSE
+            compact!=null -> Kind.EXPENSE
             else -> null
         }
         val amountPattern = "(?:₹\\s*)?([0-9]+(?:,[0-9]{3})*(?:\\.[0-9]{1,2})?)"
@@ -68,7 +70,8 @@ class RuleBasedTextParser(private val clock:java.time.Clock=java.time.Clock.syst
             else -> null
         }
         val date=when {dated!=null->runCatching {java.time.LocalDate.parse(dated)}.getOrNull();"yesterday" in normalized->java.time.LocalDate.now(clock).minusDays(1);"today" in normalized->java.time.LocalDate.now(clock);else->null}
-        return ParsedDraft(text,kind,amount,category,payers,split,person,transfer?.groupValues?.get(1)?.trim(),transfer?.groupValues?.get(2)?.trim(),missing,warnings,date)
+        val source=transfer?.groupValues?.get(1)?.trim()?:compact?.groupValues?.get(2)
+        return ParsedDraft(compact?.groupValues?.get(1)?.trim()?:text,kind,amount,category,payers,split,person,source,transfer?.groupValues?.get(2)?.trim(),missing,warnings,date)
     }
 }
 
@@ -76,3 +79,14 @@ class RuleBasedTextParser(private val clock:java.time.Clock=java.time.Clock.syst
 interface ReceiptDraftSource { suspend fun draft(image: ByteArray): ParsedDraft }
 interface LocalIntelligenceDraftSource { suspend fun draft(text: String, people: List<PersonRef>): ParsedDraft }
 
+
+/** Resolves only a unique active account or an established Wallet/GPay slot. */
+fun resolveParsedAccount(name:String?,accounts:List<Account>,sources:WalletSources?=null):String? {
+    if(name.isNullOrBlank()) return null
+    val active=accounts.filterNot {it.archived}
+    val exact=active.filter {it.name.equals(name.trim(),true)}
+    if(exact.isNotEmpty()) return exact.singleOrNull()?.id
+    val slot=when(name.trim().lowercase()) {"gpay"->sources?.gpayId;"wallet","cash"->sources?.walletId;else->null}
+    if(slot!=null && active.any {it.id==slot}) return slot
+    return if(name.trim().lowercase() in listOf("wallet","cash")) active.filter {it.type.equals("Cash",true)}.singleOrNull()?.id else null
+}

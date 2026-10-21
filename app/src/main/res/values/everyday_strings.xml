@@ -1,0 +1,5 @@
+<resources>
+    <string name="quick_expense_label">Add expense</string>
+    <string name="quick_expense_hint">Tally · review before saving</string>
+    <string name="quick_widget_description">Open a new expense draft in Tally. No balances or history are shown.</string>
+</resources>

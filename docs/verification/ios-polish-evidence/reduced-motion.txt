@@ -1,0 +1,9 @@
+
+com.smartexpense.IosPolishTest:..
+com.smartexpense.StudioNavigationTest:..
+
+Time: 25.327
+
+OK (4 tests)
+
+

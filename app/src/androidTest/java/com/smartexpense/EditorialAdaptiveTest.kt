@@ -37,24 +37,25 @@ class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
                     Scaffold(bottomBar={LedgerNavigation(if(stage.intValue==0) "home" else "add",{})}) {padding->Box(Modifier.fillMaxSize().padding(padding)) {
                         key(stage.intValue) {when(stage.intValue) {
                             0->HomeScreen(snapshot,{_,_->},{},{},{},{})
-                            1->EntryScreen(EntryUiState(),accounts,people,emptyList(),emptyList(),{},{},{})
-                            2->EntryScreen(EntryUiState(amount="100",description="Lunch",accountId="bank"),accounts,people,emptyList(),emptyList(),{},{},{})
-                            3->EntryScreen(split,accounts,people,emptyList(),emptyList(),{},{},{})
+                            1->AdvancedEntryScreen(EntryUiState(),accounts,people,emptyList(),emptyList(),{},{},{})
+                            2->AdvancedEntryScreen(EntryUiState(amount="100",description="Lunch",accountId="bank"),accounts,people,emptyList(),emptyList(),{},{},{})
+                            3->AdvancedEntryScreen(split,accounts,people,emptyList(),emptyList(),{},{},{})
                             else->ActivityScreen(snapshot,{})
                         }}
                     }}
                 }}
             }
         }
-        listOf("Home","Activity","Add","Split","Insights").forEach {label->
+        listOf("Today","Friends","Activity").forEach {label->
             compose.onNodeWithText(label).assertIsDisplayed().assertHasClickAction()
             val bounds=compose.onNodeWithText(label).fetchSemanticsNode().boundsInRoot
             assertTrue("$label crosses the navigation width",bounds.left>=0 && bounds.right<=compose.onRoot().fetchSemanticsNode().boundsInRoot.right)
         }
-        compose.onNodeWithText("₹24,580.50").assertExists()
+        // With one account, total and account balance are both intentionally shown.
+        compose.onAllNodesWithText("₹24,580.50").assertCountEquals(2)
         compose.runOnIdle {stage.intValue=1}
 
-        compose.onNodeWithText("Continue →").assertIsDisplayed()
+        compose.onNodeWithText("Continue").assertIsDisplayed()
         compose.runOnIdle {stage.intValue=2}
         compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasText("Save transaction"))
         compose.onNodeWithText("Save transaction").assertIsDisplayed().assertIsEnabled()
@@ -68,6 +69,7 @@ class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
         compose.onNodeWithText("Shared dinner").assertExists()
     }
 }
+
 
 
 

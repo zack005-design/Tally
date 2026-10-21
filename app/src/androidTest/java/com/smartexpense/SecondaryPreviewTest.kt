@@ -52,7 +52,7 @@ class SecondaryPreviewTest {
     private fun createModel():AppViewModel {
         val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(),TrackerDatabase::class.java).build()
         database=db
-        return AppViewModel(FinanceRepository(db),BackupService(db),SavedStateHandle()).also {models.put("preview",it)}
+        return AppViewModel(FinanceRepository(db),BackupService(db),BillScanner(androidx.test.core.app.ApplicationProvider.getApplicationContext()),SavedStateHandle()).also {models.put("preview",it)}
     }
     private fun render(large:Boolean=false,content:@Composable ()->Unit) {
         compose.setContent {
@@ -92,7 +92,7 @@ class SecondaryPreviewTest {
         compose.onNodeWithText("Account history").assertExists()
         capture("account-detail")
         compose.onNodeWithText("Cancel").performClick()
-        compose.onNodeWithText("New account").performClick()
+        compose.onNodeWithText("Add account").performClick()
         compose.onNodeWithText("Account name").assertIsDisplayed()
         capture("account-editor")
     }
@@ -133,18 +133,18 @@ class SecondaryPreviewTest {
     }
     @Test fun offsetConfirmation() {
         render {OffsetReviewSurface("Maya",5000,"Weekend trip",{},{})}
-        compose.onNodeWithText("Confirm offset").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Record offset").performScrollTo().assertIsDisplayed()
         capture("offset-confirmation")
     }
     @Test fun narrowLargeAccountEditorKeepsCancelAndSaveReachable() {
         lateinit var model:AppViewModel
         compose.runOnIdle {model=createModel()}
         render(large=true) {AccountsScreen(fixture,model,{})}
-        compose.onNodeWithText("New account").performClick()
+        compose.onNodeWithText("Add account").performClick()
         compose.onNodeWithText("Cancel").assertIsDisplayed()
         compose.onNodeWithText("Account name",useUnmergedTree=true).assertHeightIsAtLeast(24.dp)
         capture("account-editor-320dp-2x")
-        compose.onNodeWithText("Create account").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Save").performScrollTo().assertIsDisplayed()
         capture("account-editor-save-320dp-2x")
         compose.onNodeWithText("Cancel").performClick()
         compose.onNodeWithText("Account name").assertDoesNotExist()
@@ -158,3 +158,4 @@ class SecondaryPreviewTest {
         capture("repayment-review-confirm-320dp-2x")
     }
 }
+

@@ -15,7 +15,11 @@ import androidx.compose.ui.semantics.semantics
 import com.smartexpense.R
 import com.smartexpense.domain.*
 
-@Composable fun EntryScreen(s:EntryUiState,accounts:List<Account>,people:List<Person>,categories:List<Category>,groups:List<Group>,onChange:(EntryUiState)->Unit,onParse:()->Unit,onSave:()->Unit,records:List<Record> = emptyList(),onFriends:()->Unit={},onBack:()->Unit={},walletSources:WalletSources?=null) {
+@Composable fun AdvancedEntryScreen(s:EntryUiState,accounts:List<Account>,people:List<Person>,categories:List<Category>,groups:List<Group>,onChange:(EntryUiState)->Unit,onParse:()->Unit,onSave:()->Unit,records:List<Record> = emptyList(),onFriends:()->Unit={},onBack:()->Unit={},walletSources:WalletSources?=null,hasBill:Boolean=false,onDiscardBill:()->Unit={},onExchange:()->Unit={}) {
+    if(s.kind in listOf(Kind.INCOME,Kind.REFUND,Kind.TRANSFER)) {
+        ReferenceRecordScreen(s,accounts,categories,records,onChange,onSave,onBack,walletSources,hasBill,onDiscardBill,onExchange)
+        return
+    }
     val preview=s.preview()
     var mode by rememberSaveable(s.id) {mutableStateOf(if(s.amount.isNotBlank() || s.shared || s.replaces!=null) "Manual" else "Describe")}
     var reviewing by rememberSaveable(s.id) {mutableStateOf(s.amount.isNotBlank())}
@@ -25,21 +29,24 @@ import com.smartexpense.domain.*
     var addPeople by rememberSaveable {mutableStateOf(false)}
     val labels=people.associate {it.id to personLabel(it,people)}
     val splitting=s.shared && s.kind==Kind.EXPENSE && mode=="Manual"
-    val valid=s.canReview(accounts)
+    val valid=s.canReview(accounts,categories)
     Scaffold(modifier=Modifier.imePadding(),containerColor=Tokens.background,contentWindowInsets=WindowInsets(0,0,0,0),bottomBar={
         if(mode=="Describe" || (!reviewing && !splitting)) Box(Modifier.padding(horizontal=Tokens.pageInset,vertical=10.dp)) {
-            if(mode=="Describe") EditorialPrimaryButton("Continue →") {onParse();mode="Manual";reviewing=true}
+            if(mode=="Describe") EditorialPrimaryButton("Continue") {onParse();mode="Manual";reviewing=true}
             else EditorialPrimaryButton("Review Transaction →",valid) {reviewing=true}
         }
     }) {padding->Box(Modifier.fillMaxSize().padding(padding)) {
-    Page(if(splitting) "Split Bill" else if(s.replaces!=null) "Correct transaction" else if(s.kind==Kind.REFUND) "Record refund" else "Add Transaction",if(splitting) "Split and manage shared expenses" else "Record an expense, income or split bill",onBack=onBack,actions={FilledTonalIconButton({entryMenu=true}) {Icon(painterResource(R.drawable.ic_more),"Entry options")}}) {
-        if(!splitting) item {EntryMode(mode) {mode=it}}
+    Page(if(splitting) "Split Bill" else if(s.replaces!=null) "Correct transaction" else if(s.kind==Kind.REFUND) "Record refund" else if(s.kind==Kind.INCOME) "Record income" else if(mode=="Describe") "Describe entry" else "Add Transaction",onBack=onBack,actions={IconButton({entryMenu=true}) {Icon(painterResource(R.drawable.ic_more),"Entry options",tint=Tokens.accent)}}) {
+        if(hasBill) item {Panel {Text("Printed bill attached · check the total, date and items before Save",color=Tokens.muted);TextButton(onExchange) {Text("Enter a manual exchange rate")};TextButton(onDiscardBill) {Text("Discard bill attachment")}}}
+        if(!splitting && mode!="Describe") item {EntryMode(mode) {mode=it}}
         if(mode=="Describe") {
-            item {Surface(shape=Tokens.card,color=Tokens.background,shadowElevation=2.dp) {
-                TextField(s.text,{onChange(s.copy(text=it))},Modifier.fillMaxWidth(),placeholder={Text("Describe your transaction…\n\ne.g. Dinner with friends ₹890. I paid ₹500, Rahul paid ₹290, Kevin paid ₹100 and Arjun paid nothing. Split equally.",style=MaterialTheme.typography.bodyMedium)},minLines=4,shape=Tokens.card,
-                    colors=TextFieldDefaults.colors(unfocusedContainerColor=Tokens.background,focusedContainerColor=Tokens.background,unfocusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent,focusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent))
+            item {Surface(shape=Tokens.card,color=Tokens.paper) {
+                OutlinedTextField(s.text,{onChange(s.copy(text=it))},Modifier.fillMaxWidth(),placeholder={Text("Describe your transaction…\n\ne.g. Dinner with friends ₹890. I paid ₹500, Rahul paid ₹290, Kevin paid ₹100 and Arjun paid nothing. Split equally.",style=MaterialTheme.typography.bodyMedium)},minLines=8,shape=Tokens.card,
+                    colors=OutlinedTextFieldDefaults.colors(unfocusedContainerColor=Tokens.paper,focusedContainerColor=Tokens.paper,unfocusedBorderColor=Tokens.border,focusedBorderColor=Tokens.accent))
             }}
-            item {DescribeLivePreview(s.text,people)}
+            item {DescribeLivePreview(s.text,people,accounts.find {it.id==s.accountId}?.name,accounts,walletSources)}
+            item {ReferenceInfo("Review before saving. You can edit any field.")}
+            if(detailsExpanded) {
             item {Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 listOf("Dinner split" to "Dinner bill is 890. I paid 500, Rahul paid 290, Kevin paid 100, Arjun paid 0. Split equally", "Grocery expense" to "Spent 1450 on groceries", "Transfer" to "Transfer 500 from bank to cash").forEach {(name,text)->SuggestionChip({onChange(s.copy(text=text))},label={Text(name,style=MaterialTheme.typography.labelSmall)},shape=Tokens.field)}
             }}
@@ -54,6 +61,7 @@ import com.smartexpense.domain.*
             }}
             if(s.parserNotice.isNotBlank()) item {Text(s.parserNotice,color=Tokens.negative,style=MaterialTheme.typography.bodySmall)}
 
+            }
         } else {
             if(s.parserNotice.isNotBlank()) item {Text(s.parserNotice,color=Tokens.muted,style=MaterialTheme.typography.bodySmall)}
             if(!splitting) item {Text("Transaction type",style=MaterialTheme.typography.bodyMedium);Spacer(Modifier.height(12.dp));TransactionTypes(s.kind,s.shared) {kind,shared->onChange(s.copy(kind=kind,shared=shared,refundOf=if(kind==Kind.REFUND) s.refundOf else null))}}
@@ -90,16 +98,16 @@ import com.smartexpense.domain.*
 
             item {Panel {PaymentSourcePicker(s,accounts,onChange,walletSources)}}
             if(!splitting || detailsExpanded || s.accountId.isBlank()) item {Surface(shape=Tokens.card,color=Tokens.background,shadowElevation=1.dp) {Column {
-                if(s.kind in listOf(Kind.EXPENSE,Kind.REFUND)) Choice("Category",s.categoryId,categories.filterNot {it.archived}.map {it.id to it.name}) {onChange(s.copy(categoryId=it))}
+                if(s.kind in listOf(Kind.EXPENSE,Kind.REFUND)) {
+                    if(s.categoryId!=null && categories.none {it.id==s.categoryId && !it.archived}) Text("Choose an active category or Uncategorised before saving.",color=Tokens.negative)
+                    Choice("Category",s.categoryId?:"",listOf("" to "Uncategorised")+categories.filterNot {it.archived}.map {it.id to it.name}) {onChange(s.copy(categoryId=it.ifEmpty {null}))}
+                }
                 if(s.kind==Kind.TRANSFER) Choice("Destination account",s.destinationId,accounts.filter {!it.archived && it.id!=s.accountId}.map {it.id to it.name}) {onChange(s.copy(destinationId=it))}
                 if(s.kind==Kind.REFUND) Choice("Original expense",s.refundOf,records.filter {it.kind==Kind.EXPENSE && !it.reversed && it.personIds==listOf("self")}.map {it.id to it.description}) {id->onChange(s.copy(refundOf=id,categoryId=records.first {it.id==id}.categoryId))}
                 if(!splitting) Field("Description",s.description,{onChange(s.copy(description=it))})
                 EditorialDateRow(s.date) {onChange(s.copy(date=it))}
                 Field("Notes (optional)",s.notes,{onChange(s.copy(notes=it))})
-                if(s.kind==Kind.EXPENSE && !splitting) Row(Modifier.padding(16.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Text("Mark as shared expense",Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium)
-                    Switch(s.shared,{onChange(s.copy(shared=it))},Modifier.semantics {contentDescription="Shared expense"})
-                }
+                if(s.kind==Kind.EXPENSE && !splitting) ReferenceToggleRow("Shared expense",s.shared,{onChange(s.copy(shared=it))})
             }}}
             if(accounts.none {!it.archived}) item {Text("Create an account from Home → Accounts before saving.",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)}
             if(reviewing || splitting) item {TransactionReviewPanel(s,accounts,valid,onSave)}
@@ -109,8 +117,9 @@ import com.smartexpense.domain.*
     }
     }}
     if(entryMenu) EditorialActionSheet("Transaction options",buildList {
+        if(mode=="Describe") add(EditorialAction("Use manual entry") {mode="Manual"})
         if(splitting) {add(EditorialAction("Make personal expense") {onChange(s.copy(shared=false));reviewing=false});add(EditorialAction("Describe this transaction") {mode="Describe"})}
-        add(EditorialAction("Account, date & notes") {detailsExpanded=!detailsExpanded})
+        add(EditorialAction(if(mode=="Describe") "More entry options" else "Account, date & notes") {detailsExpanded=!detailsExpanded})
         add(EditorialAction("Advanced split options") {extraMethods=!extraMethods})
     },{entryMenu=false})
 }
@@ -148,7 +157,6 @@ import com.smartexpense.domain.*
     if(open) EditorialBottomSheet("Date & time",{open=false}) {
         TextButton({open=false;dateOpen=true}) {Text("Change date")}
         TextButton({open=false;timeOpen=true}) {Text("Change time")}
-        OutlinedButton({open=false},Modifier.fillMaxWidth()) {Text("Close")}
     }
     if(dateOpen) EditorialDatePicker("Choose date",date.toLocalDate(),{dateOpen=false}) {onChange(java.time.LocalDateTime.of(it,date.toLocalTime()).toString());dateOpen=false}
     if(timeOpen) EditorialTimePicker(date.toLocalTime(),{timeOpen=false}) {onChange(java.time.LocalDateTime.of(date.toLocalDate(),it).toString());timeOpen=false}
@@ -185,13 +193,17 @@ import com.smartexpense.domain.*
     lines.forEachIndexed {index,line->
         val parts=line.split('=')
         Row(verticalAlignment=Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {Text(parts.first().trim()+" ₹",style=MaterialTheme.typography.titleSmall);Text(parts.getOrElse(1) {""}.split('+').joinToString(", ") {id->people.find {it.id==id.trim()}?.let {personLabel(it,people)}?:"Unknown participant"},style=MaterialTheme.typography.bodySmall,color=Tokens.muted)}
-            TextButton({onChange(s.copy(items=lines.filterIndexed {i,_->i!=index}.joinToString("\n")))}) {Text("Remove")}
+            Column(Modifier.weight(1f)) {
+                Text(if(s.billItemNames.size==lines.size) s.billItemNames[index] else "Item ${index+1}",style=MaterialTheme.typography.titleSmall)
+                Text(parts.first().trim()+" ₹",style=MaterialTheme.typography.titleSmall)
+                Text(parts.getOrElse(1) {""}.split('+').joinToString(", ") {id->people.find {it.id==id.trim()}?.let {personLabel(it,people)}?:"Unknown participant"},style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
+            }
+            TextButton({onChange(s.copy(items=lines.filterIndexed {i,_->i!=index}.joinToString("\n"),billItemNames=if(s.billItemNames.size==lines.size) s.billItemNames.filterIndexed {i,_->i!=index} else emptyList()))}) {Text("Remove")}
         }
     }
     Field("Item amount (₹)",amount,{amount=it},true)
     ParticipantChoices(people.filter {it.id in s.participants},eligible) {id,checked->selected=if(checked) selected+id else selected-id}
-    OutlinedButton({onChange(s.copy(items=(lines+"$amount = ${eligible.joinToString(" + ")}").joinToString("\n")));amount="";selected=emptyList()},enabled=eligible.isNotEmpty() && runCatching {Money.parse(amount)>0}.getOrDefault(false)) {Text("Add item")}
+    OutlinedButton({onChange(s.copy(items=(lines+"$amount = ${eligible.joinToString(" + ")}").joinToString("\n"),billItemNames=if(s.billItemNames.isNotEmpty() && s.billItemNames.size==lines.size) s.billItemNames+"Item ${lines.size+1}" else emptyList()));amount="";selected=emptyList()},enabled=eligible.isNotEmpty() && runCatching {Money.parse(amount)>0}.getOrDefault(false)) {Text("Add item")}
     Field("Shared taxes / charges (₹)",s.itemCharges,{onChange(s.copy(itemCharges=it))},true)
     Field("Bill discount (₹)",s.itemDiscount,{onChange(s.copy(itemDiscount=it))},true)
     Text("Charges follow each person's item subtotal; discounts follow their subtotal plus charges.",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
@@ -201,12 +213,3 @@ import com.smartexpense.domain.*
         OutlinedButton({onChange(s.copy(amount=Money.input(itemTotal)))},Modifier.fillMaxWidth()) {Text("Use calculated bill total")}
     }
 }
-
-
-
-
-
-
-
-
-
