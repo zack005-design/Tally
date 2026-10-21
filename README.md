@@ -107,7 +107,7 @@ Repayments restore your balance and reduce the debt without becoming new income.
 
 ## Tally Companion
 
-Review an exported Transactions CSV with your custom Codex plugins. The [export screen](docs/screenshots/ios-polish/companion-export.png) guides you through preparing the file; you explicitly attach it in Codex.
+Review an exported Transactions CSV with your custom Codex plugins. The [export screen](https://github.com/zack005-design/Tally/blob/main/docs/screenshots/ios-polish/companion-export.png) guides you through preparing the file; you explicitly attach it in Codex.
 
 [Download Tally Companion](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-companion-0.1.0.zip) &nbsp;·&nbsp; [Download Tally Toolkit](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-toolkit-0.1.0.zip)
 
