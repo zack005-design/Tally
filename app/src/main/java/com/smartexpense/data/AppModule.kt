@@ -9,6 +9,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 @Module @InstallIn(SingletonComponent::class)
 object AppModule {
+    @Provides fun clock():java.time.Clock=java.time.Clock.systemUTC()
+    @Provides fun reminderGateway(value:AndroidReminderGateway):ReminderGateway=value
     val migration1To2=object:androidx.room.migration.Migration(1,2) {
         override fun migrate(db:androidx.sqlite.db.SupportSQLiteDatabase) {
             db.execSQL("CREATE TABLE IF NOT EXISTS walletSources (id INTEGER NOT NULL PRIMARY KEY, walletId TEXT NOT NULL, gpayId TEXT NOT NULL, lastResetMonth TEXT NOT NULL, FOREIGN KEY(walletId) REFERENCES accounts(id) ON UPDATE NO ACTION ON DELETE NO ACTION, FOREIGN KEY(gpayId) REFERENCES accounts(id) ON UPDATE NO ACTION ON DELETE NO ACTION)")
@@ -29,5 +31,11 @@ object AppModule {
     val migration3To4=object:androidx.room.migration.Migration(3,4) {
         override fun migrate(db:androidx.sqlite.db.SupportSQLiteDatabase) {db.execSQL("CREATE TABLE IF NOT EXISTS localPlans (`key` TEXT NOT NULL PRIMARY KEY, kind TEXT NOT NULL, json TEXT NOT NULL)")}
     }
-    @Provides @Singleton fun database(@ApplicationContext context:Context):TrackerDatabase = Room.databaseBuilder(context,TrackerDatabase::class.java,"smart-expense.db").addMigrations(migration1To2,migration2To3,migration3To4).build()
+    val migration4To5=object:androidx.room.migration.Migration(4,5) {
+        override fun migrate(db:androidx.sqlite.db.SupportSQLiteDatabase) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS receipts (transactionId TEXT NOT NULL PRIMARY KEY, mime TEXT NOT NULL, text TEXT NOT NULL, hash TEXT NOT NULL, FOREIGN KEY(transactionId) REFERENCES transactions(id) ON UPDATE NO ACTION ON DELETE CASCADE)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS receiptChunks (transactionId TEXT NOT NULL, position INTEGER NOT NULL, bytes BLOB NOT NULL, PRIMARY KEY(transactionId,position), FOREIGN KEY(transactionId) REFERENCES receipts(transactionId) ON UPDATE NO ACTION ON DELETE CASCADE)")
+        }
+    }
+    @Provides @Singleton fun database(@ApplicationContext context:Context):TrackerDatabase = Room.databaseBuilder(context,TrackerDatabase::class.java,"smart-expense.db").addMigrations(migration1To2,migration2To3,migration3To4,migration4To5).build()
 }

@@ -102,7 +102,6 @@ data class EditorialAction(val label:String,val onClick:()->Unit)
     EditorialBottomSheet(title,onDismiss) {
         Text(message,style=MaterialTheme.typography.bodyLarge)
         EditorialPrimaryButton(confirmLabel,enabled,onClick=onConfirm)
-        OutlinedButton(onDismiss,Modifier.fillMaxWidth(),enabled=enabled) {Text("Cancel")}
     }
 }
 

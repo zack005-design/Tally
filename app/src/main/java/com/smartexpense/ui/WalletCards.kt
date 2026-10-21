@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 import com.smartexpense.domain.*
 import java.time.*
 import java.time.format.DateTimeFormatter
+import com.smartexpense.R
 
 fun walletPaymentAccounts(s:Snapshot):List<Account> = s.accounts.sortedBy {when(it.id) {s.walletSources?.walletId->0;s.walletSources?.gpayId->1;else->2}}.map {account->
     val role=when(account.id) {s.walletSources?.walletId->"Wallet";s.walletSources?.gpayId->"GPay";else->null}
@@ -23,7 +24,11 @@ fun walletPaymentAccounts(s:Snapshot):List<Account> = s.accounts.sortedBy {when(
     };return}
     val wallet=s.accounts.find {it.id==sources.walletId};val gpay=s.accounts.find {it.id==sources.gpayId}
     Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        AdaptivePair(first={SourceCard("Wallet",wallet,visible,"Custom cash balance",onManage)},second={SourceCard("GPay",gpay,visible,if(sources.schedule.enabled) "Monthly reset enabled" else "Manual balance · reset off",onManage)})
+        GroupedCard {
+            GroupedRow("Wallet",R.drawable.ic_wallet_outline,value=if(visible && wallet!=null) referenceMoney(wallet.balance) else "••••••",tone=ReferenceTone.Peach,onClick=onManage)
+            GroupedDivider()
+            GroupedRow("GPay",R.drawable.ic_contactless,value=if(visible && gpay!=null) referenceMoney(gpay.balance) else "••••••",tone=ReferenceTone.Lavender,onClick=onManage)
+        }
         val next=sources.schedule.nextDate(today)
         if(next!=null) Panel {
             SectionHeading("Until your next refill")

@@ -3,11 +3,13 @@ package com.smartexpense.domain
 import java.time.*
 
 data class CashMovement(val transactionId:String,val accountId:String,val amount:Long)
-data class MonthlyReview(val month:String,val openingByAccount:Map<String,Long>,val closingByAccount:Map<String,Long>,val income:Long,val funding:Long,val corrections:Long,val resetChanges:Long,val spending:Long,val cashPaid:Long,val refunds:Long,val repaymentsReceived:Long,val repaymentsPaid:Long,val hasHistory:Boolean) {
+data class MonthlyReview(val month:String,val openingByAccount:Map<String,Long>,val closingByAccount:Map<String,Long>,val income:Long,val funding:Long,val corrections:Long,val resetChanges:Long,val spending:Long,val cashPaid:Long,val refunds:Long,val repaymentsReceived:Long,val repaymentsPaid:Long,val hasHistory:Boolean,val sharedCashPaid:Long=0,val transfersNet:Long=0) {
     val opening:Long get()=Finance.total(openingByAccount.values)
     val closing:Long get()=Finance.total(closingByAccount.values)
+    val personalCashPaid:Long get()=Math.subtractExact(cashPaid,sharedCashPaid)
     val available:Long get()=Finance.total(listOf(opening,income,funding,resetChanges.coerceAtLeast(0)))
     val surplus:Long get()=Math.subtractExact(available,spending)
+    val netFunding:Long get()=Finance.total(listOf(income,funding,resetChanges.coerceAtLeast(0),Math.negateExact(spending)))
 }
 
 /** Reconstruct cash from the whole ledger. Month end excludes the next month's first instant. */
@@ -23,5 +25,5 @@ fun monthlyReview(records:List<Record>,movements:List<CashMovement>,month:YearMo
     val adjustments=entries.filter {active.getValue(it.transactionId).kind==Kind.ADJUSTMENT}
     val normal=adjustments.filterNot {it.transactionId.startsWith("gpay-reset")}
     val resets=adjustments.filter {it.transactionId.startsWith("gpay-reset")}
-    return MonthlyReview(month.toString(),balances(from),balances(until),cash(Kind.INCOME),Finance.total(normal.filter {it.amount>0}.map {it.amount}),Finance.total(normal.filter {it.amount<0}.map {it.amount}),Finance.total(resets.map {it.amount}),Finance.total(selected.map {when(it.kind) {Kind.EXPENSE->it.personalAmount;Kind.REFUND->Math.negateExact(it.personalAmount);else->0L}}),Math.negateExact(cash(Kind.EXPENSE)),cash(Kind.REFUND),cash(Kind.REPAYMENT) {it.amount>0},Math.negateExact(cash(Kind.REPAYMENT) {it.amount<0}),active.values.any {it.date<until})
+    return MonthlyReview(month.toString(),balances(from),balances(until),cash(Kind.INCOME),Finance.total(normal.filter {it.amount>0}.map {it.amount}),Finance.total(normal.filter {it.amount<0}.map {it.amount}),Finance.total(resets.map {it.amount}),Finance.total(selected.map {when(it.kind) {Kind.EXPENSE->it.personalAmount;Kind.REFUND->Math.negateExact(it.personalAmount);else->0L}}),Math.negateExact(cash(Kind.EXPENSE)),cash(Kind.REFUND),cash(Kind.REPAYMENT) {it.amount>0},Math.negateExact(cash(Kind.REPAYMENT) {it.amount<0}),active.values.any {it.date<until},sharedCashPaid=Math.negateExact(cash(Kind.EXPENSE) {active.getValue(it.transactionId).personIds.any {id->id!="self"}}),transfersNet=cash(Kind.TRANSFER))
 }

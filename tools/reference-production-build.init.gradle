@@ -1,0 +1,5 @@
+// Build the real application ID without reusing verification-only dex outputs.
+allprojects { project ->
+    def moduleName = project.path == ':' ? 'root' : project.path.substring(1).replace(':', '/')
+    project.layout.buildDirectory.set(new File(project.rootDir, '.build-cache/reference-production/' + moduleName))
+}

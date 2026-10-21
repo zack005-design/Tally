@@ -28,7 +28,7 @@ class BackupSurfaceTest {
         val database=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(),TrackerDatabase::class.java).build();db=database
         val repository=FinanceRepository(database)
         runBlocking {repository.initialize()}
-        return AppViewModel(repository,BackupService(database),SavedStateHandle()).also {models.put("backup-surface",it)}
+        return AppViewModel(repository,BackupService(database),BillScanner(androidx.test.core.app.ApplicationProvider.getApplicationContext()),SavedStateHandle()).also {models.put("backup-surface",it)}
     }
     @After fun close() {compose.runOnIdle {models.clear()};db?.close()}
     private fun capture(name:String) {
@@ -62,3 +62,4 @@ class BackupSurfaceTest {
         }
     }
 }
+

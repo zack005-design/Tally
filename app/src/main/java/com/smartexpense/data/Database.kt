@@ -5,6 +5,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TrackerDao {
+    @Query("SELECT * FROM receipts") suspend fun receipts():List<ReceiptEntity>
+    @Query("SELECT * FROM receipts WHERE transactionId=:id") suspend fun receipt(id:String):ReceiptEntity?
+    @Query("SELECT * FROM receipts WHERE transactionId=:id") fun receiptChanges(id:String):Flow<ReceiptEntity?>
+    @Query("SELECT * FROM receiptChunks ORDER BY transactionId,position") suspend fun receiptChunks():List<ReceiptChunkEntity>
+    @Query("SELECT * FROM receiptChunks WHERE transactionId=:id ORDER BY position") suspend fun receiptChunks(id:String):List<ReceiptChunkEntity>
+    @Insert suspend fun insertReceipt(value:ReceiptEntity)
+    @Insert suspend fun insertReceiptChunks(values:List<ReceiptChunkEntity>)
+    @Query("DELETE FROM receipts WHERE transactionId=:id") suspend fun deleteReceipt(id:String)
     @Query("SELECT * FROM localPlans ORDER BY key") suspend fun plans():List<PlanEntity>
     @Query("SELECT COUNT(*) FROM localPlans") fun planChanges():Flow<Int>
     @Upsert suspend fun savePlan(value:PlanEntity)
@@ -56,6 +64,7 @@ interface TrackerDao {
     @Query("SELECT * FROM settlements") suspend fun settlements():List<SettlementEntity>
     @Query("SELECT * FROM allocations") suspend fun allocations():List<AllocationEntity>
     @Query("SELECT * FROM revisions") suspend fun revisions():List<RevisionEntity>
+    @Query("SELECT COUNT(*) FROM revisions") fun revisionChanges():Flow<Int>
     @Query("SELECT COUNT(*) FROM transactions") fun transactionChanges():Flow<Int>
     @Query("SELECT COUNT(*) FROM accounts") fun accountChanges():Flow<Int>
     @Query("SELECT COUNT(*) FROM people") fun personChanges():Flow<Int>
@@ -84,5 +93,6 @@ interface TrackerDao {
     @Query("UPDATE transactions SET reversed=1 WHERE id=:id") suspend fun markReversed(id:String)
 }
 
-@Database(entities=[PlanEntity::class,GpayScheduleEntity::class,ResetTargetEntity::class,DiaryEntity::class,LocalSettingsEntity::class,WalletSourcesEntity::class,AccountEntity::class,PersonEntity::class,GroupEntity::class,GroupMemberEntity::class,CategoryEntity::class,TransactionEntity::class,AccountEntryEntity::class,ShareEntity::class,ContributionEntity::class,ObligationEntity::class,SettlementEntity::class,AllocationEntity::class,BudgetEntity::class,RevisionEntity::class],version=4,exportSchema=true)
+@Database(entities=[ReceiptEntity::class,ReceiptChunkEntity::class,PlanEntity::class,GpayScheduleEntity::class,ResetTargetEntity::class,DiaryEntity::class,LocalSettingsEntity::class,WalletSourcesEntity::class,AccountEntity::class,PersonEntity::class,GroupEntity::class,GroupMemberEntity::class,CategoryEntity::class,TransactionEntity::class,AccountEntryEntity::class,ShareEntity::class,ContributionEntity::class,ObligationEntity::class,SettlementEntity::class,AllocationEntity::class,BudgetEntity::class,RevisionEntity::class],version=5,exportSchema=true)
 abstract class TrackerDatabase:RoomDatabase() { abstract fun dao():TrackerDao }
+

@@ -11,6 +11,9 @@ import javax.inject.Singleton
 
 class LocalDataFailure(cause:Throwable):Exception("Could not save local data. Your previous records are unchanged.",cause)
 
+/** Widget-safe shortcut metadata; never includes an amount, account, or history. */
+data class WidgetFavourite(val id:String,val name:String,val categoryName:String,val categoryIcon:String)
+
 @Singleton
 class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     private val dao=db.dao()
@@ -18,6 +21,57 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     private suspend fun <T> storage(block:suspend ()->T):T = try { block() } catch(e:CancellationException) { throw e } catch(e:SQLiteException) { throw LocalDataFailure(e) }
     val changes:Flow<Unit> = combine(listOf(dao.transactionChanges(),dao.accountChanges(),dao.personChanges(),dao.categoryChanges(),dao.budgetChanges(),dao.groupChanges(),dao.walletSourceChanges(),dao.scheduleChanges(),dao.diaryChanges(),dao.settingsChanges(),dao.planChanges())) { Unit }
     val snapshots:Flow<Snapshot> = changes.map {snapshot()}
+    suspend fun widgetFavourites():List<WidgetFavourite> = storage {db.withTransaction {
+        val activeAccounts=dao.accounts().filterNot {it.archived}.map {it.id}.toSet()
+        val activeCategories=dao.categories().filterNot {it.archived}.associateBy {it.id}
+        dao.plans().asSequence().filter {it.kind=="favourite"}.mapNotNull {runCatching {PlanCodec.favourite(it)}.getOrNull()}
+            .filter {it.accountId in activeAccounts && (it.categoryId==null || it.categoryId in activeCategories)}
+            .take(3).map {value->val category=activeCategories[value.categoryId];WidgetFavourite(value.id,value.description,category?.name.orEmpty(),category?.icon.orEmpty())}.toList()
+    }}
+    suspend fun reminderSettings():ReminderSettings=storage {dao.plans().find {it.key=="settings:reminder"}?.let(PlanCodec::reminder)?:ReminderSettings()}
+    suspend fun saveReminderSettings(value:ReminderSettings)=storage {db.withTransaction {
+        val previous=reminderSettings();dao.savePlan(PlanCodec.reminder(value.copy(lastNotifiedDate=previous.lastNotifiedDate)))
+    }}
+    suspend fun markReminderDelivered(date:String)=storage {db.withTransaction {dao.savePlan(PlanCodec.reminder(reminderSettings().copy(lastNotifiedDate=date)))}}
+    suspend fun savedReceiptId(bytes:ByteArray):String?=storage {db.withTransaction {
+        var current=dao.receipts().find {it.hash==ReceiptStorage.hash(bytes)}?.transactionId?:return@withTransaction null
+        val revisions=dao.revisions().filter {it.replacementId!=null}.associateBy {it.originalId}
+        val visited=mutableSetOf<String>()
+        while(visited.add(current)) current=revisions[current]?.replacementId?:return@withTransaction current
+        error("Invalid receipt revision history")
+    }}
+    private suspend fun receiptOwner(id:String):String? {
+        var current=id
+        val ancestors=dao.revisions().filter {it.replacementId!=null}.associateBy {it.replacementId}
+        val visited=mutableSetOf<String>()
+        while(visited.add(current)) {
+            if(dao.receipt(current)!=null) return current
+            current=ancestors[current]?.originalId?:return null
+        }
+        error("Invalid receipt revision history")
+    }
+    suspend fun receipt(id:String):ScannedBill?=storage {db.withTransaction {
+        receiptOwner(id)?.let {owner->dao.receipt(owner)?.let {ScannedBill(ReceiptStorage.join(dao.receiptChunks(owner)),it.mime,it.text)}}
+    }}
+    fun receiptChanges(id:String):Flow<ScannedBill?> = combine(dao.receiptChanges(id),dao.transactionChanges(),dao.revisionChanges()) {_,_,_->receipt(id)}
+    suspend fun removeReceipt(id:String)=storage {db.withTransaction {receiptOwner(id)?.let {dao.deleteReceipt(it)}}}
+    suspend fun saveWithBill(draft:EntryDraft,bill:ScannedBill):String=storage {db.withTransaction {
+        require(draft.kind==Kind.EXPENSE) {"Bill attachments belong to expense entries"}
+        ReceiptStorage.validate(bill)
+        val hash=ReceiptStorage.hash(bill.bytes)
+        require(dao.receipts().none {it.hash==hash && it.transactionId!=draft.id}) {"This bill is already attached to a saved transaction"}
+        dao.receipt(draft.id)?.let {require(it.hash==hash && it.text==bill.text && it.mime==bill.mime);return@withTransaction save(draft)}
+        require(dao.receiptChunks().sumOf {it.bytes.size.toLong()}+bill.bytes.size<=ReceiptStorage.TOTAL_BYTES) {"Receipt storage is full. Export a backup and remove old attachments to add another."}
+        val transaction=save(draft)
+        dao.insertReceipt(ReceiptEntity(transaction,bill.mime,bill.text,hash))
+        dao.insertReceiptChunks((bill.bytes.indices step ReceiptStorage.CHUNK_BYTES).mapIndexed {index,start->ReceiptChunkEntity(transaction,index,bill.bytes.copyOfRange(start,minOf(start+ReceiptStorage.CHUNK_BYTES,bill.bytes.size)))})
+        transaction
+    }}
+    suspend fun saveCategoryRule(value:CategoryRule)=storage {
+        require(value.id.isNotBlank() && value.merchant.trim().isNotBlank() && value.merchant.length<=100 && dao.categories().any {it.id==value.categoryId && !it.archived})
+        require(dao.plans().filter {it.kind=="category"}.map(PlanCodec::category).none {it.id!=value.id && it.merchant.equals(value.merchant.trim(),true)}) {"Another merchant rule already uses that name"}
+        dao.savePlan(PlanCodec.category(value.copy(merchant=value.merchant.trim())))
+    }
 
     suspend fun initialize() = storage { db.withTransaction {
         if(dao.localSettings()==null) dao.saveLocalSettings(LocalSettingsEntity(welcomeDone=dao.accounts().isNotEmpty(),lastReviewMonth=java.time.YearMonth.now().toString()))
@@ -31,6 +85,7 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val gpay=gpayId?:createAccount("GPay","Bank",gpayOpening)
         require(wallet!=gpay && listOf(wallet,gpay).all {key->dao.accounts().any {it.id==key && !it.archived}}) {"Choose two different active accounts"}
         dao.saveWalletSources(WalletSourcesEntity(walletId=wallet,gpayId=gpay,lastResetMonth=java.time.YearMonth.from(today).toString()))
+        dao.saveLocalSettings((dao.localSettings()?:LocalSettingsEntity()).copy(welcomeDone=true))
     }}
     suspend fun refreshMonthlyGpay(today:java.time.LocalDate=java.time.LocalDate.now()) = storage {db.withTransaction {
         val source=dao.walletSources()?:return@withTransaction
@@ -70,7 +125,7 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     }
     suspend fun saveGroupDefault(value:GroupDefault)=storage {db.withTransaction {
         val members=dao.members().filter {it.groupId==value.groupId}.map {it.personId}
-        require(dao.groups().any {it.id==value.groupId});value.rule((listOf("self")+members).distinct())
+        require(dao.groups().any {it.id==value.groupId});value.validate((listOf("self")+members).distinct())
         dao.savePlan(PlanCodec.group(value))
     }}
     suspend fun saveTemplate(value:RecurringTemplate)=storage {
@@ -89,6 +144,13 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val row=PlanCodec.goal(next);require(row.json.length<=10000) {"This goal has reached its local history limit"};dao.savePlan(row)
     }}
     suspend fun deletePlan(key:String)=storage {dao.deletePlan(key)}
+    suspend fun saveFavourite(value:FavouriteExpense)=storage {db.withTransaction {
+        val favourites=dao.plans().filter {it.kind=="favourite"}
+        require(favourites.any {it.key=="favourite:${value.id}"} || favourites.size<6) {"Keep up to six favourites. Remove one to add another."}
+        require(dao.accounts().any {it.id==value.accountId && !it.archived}) {"Choose an active account"}
+        require(value.categoryId==null || dao.categories().any {it.id==value.categoryId && !it.archived}) {"Choose an active category"}
+        dao.savePlan(PlanCodec.favourite(value))
+    }}
     suspend fun saveProfile(name:String,avatar:String)=storage {db.withTransaction {
         require(name.trim().isNotEmpty() && name.trim().length<=100 && avatar in listOf("initials","wallet","leaf","star")) {"Enter your name and choose an avatar"}
         dao.saveLocalSettings((dao.localSettings()?:LocalSettingsEntity()).copy(name=name.trim(),avatar=avatar))
@@ -99,14 +161,16 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         dao.saveLocalSettings((dao.localSettings()?:LocalSettingsEntity()).copy(lastReviewMonth=month))
     }}
     suspend fun monthlyReview(month:String):MonthlyReview=storage {db.withTransaction {
-        val records=dao.transactions().map {Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed)}
+        val shares=dao.shares().groupBy {it.transactionId}
+        val records=dao.transactions().map {Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,personIds=shares[it.id].orEmpty().map {share->share.personId})}
         com.smartexpense.domain.monthlyReview(records,dao.entries().map {CashMovement(it.transactionId,it.accountId,it.amount)},java.time.YearMonth.parse(month))
     }}
+    suspend fun exportReport(month:String):Pair<Snapshot,MonthlyReview> = storage {db.withTransaction {snapshot(Int.MAX_VALUE,month) to monthlyReview(month)}}
     suspend fun snapshot(historyLimit:Int=Int.MAX_VALUE,selectedMonth:String=java.time.YearMonth.now().toString()):Snapshot = storage { db.withTransaction {
         val transactions=dao.recentTransactions(historyLimit);val ids=transactions.map {it.id}
         val plans=dao.plans();val members=dao.members();val entries=ids.chunked(900).flatMap {dao.entriesForRecords(it)}.groupBy {it.transactionId};val shares=ids.chunked(900).flatMap {dao.sharesForRecords(it)}.groupBy {it.transactionId};val settlements=ids.chunked(900).flatMap {dao.settlementsForRecords(it)}.groupBy {it.transactionId}
         val today=java.time.LocalDate.now();val month=java.time.YearMonth.from(today);val previous=month.minusMonths(1);val selected=java.time.YearMonth.parse(selectedMonth)
-        Snapshot(dao.balances().map { Account(it.id,it.name,it.type,it.balance,it.archived) },dao.people().map { Person(it.id,it.name,it.aliases.split('|').filter(String::isNotBlank)) },dao.groups().map { g -> Group(g.id,g.name,members.filter { it.groupId==g.id }.map { it.personId }) },dao.categories().map { Category(it.id,it.name,it.color,it.icon,it.archived) },dao.budgets().map { Budget(it.id,it.month,it.categoryId,it.amount) },transactions.map { Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,entries[it.id].orEmpty().map {it.accountId},(shares[it.id].orEmpty().map {it.personId}+settlements[it.id].orEmpty().flatMap {listOf(it.fromPerson,it.toPerson)}).distinct()) },dao.debts().map { Debt(it.id,it.transactionId,it.fromPerson,it.toPerson,it.amount,it.outstanding,it.date,it.groupId) },DashboardMetrics(report(today,today).spending,report(today.with(java.time.DayOfWeek.MONDAY),today).spending,report(month.atDay(1),today),report(previous.atDay(1),previous.atDay(minOf(today.dayOfMonth,previous.lengthOfMonth()))).spending),report(selected.atDay(1),selected.atEndOfMonth()),dao.groupSpending().associate {it.groupId to it.amount},dao.transactionCount(),selectedMonth,report(selected.minusMonths(1).atDay(1),selected.minusMonths(1).atEndOfMonth()).spending,walletSources=dao.walletSources()?.let {WalletSources(it.walletId,it.gpayId,it.lastResetMonth,dao.transaction("gpay-reset:${it.gpayId}:${it.lastResetMonth}")?.date,dao.gpaySchedule()?.toDomain()?:GpaySchedule())},diary=dao.diary().associate {it.date to it.text},localSettings=dao.localSettings()?.let {LocalSettings(it.name,it.avatar,it.welcomeDone,it.lastReviewMonth)}?:LocalSettings(),groupDefaults=plans.filter {it.kind=="group"}.map(PlanCodec::group),templates=plans.filter {it.kind=="template"}.map(PlanCodec::template),goals=plans.filter {it.kind=="goal"}.map(PlanCodec::goal),categoryRules=plans.filter {it.kind=="category"}.map(PlanCodec::category))
+        Snapshot(dao.balances().map { Account(it.id,it.name,it.type,it.balance,it.archived) },dao.people().map { Person(it.id,it.name,it.aliases.split('|').filter(String::isNotBlank)) },dao.groups().map { g -> Group(g.id,g.name,members.filter { it.groupId==g.id }.map { it.personId }) },dao.categories().map { Category(it.id,it.name,it.color,it.icon,it.archived) },dao.budgets().map { Budget(it.id,it.month,it.categoryId,it.amount) },transactions.map { Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,entries[it.id].orEmpty().map {it.accountId},(shares[it.id].orEmpty().map {it.personId}+settlements[it.id].orEmpty().flatMap {listOf(it.fromPerson,it.toPerson)}).distinct()) },dao.debts().map { Debt(it.id,it.transactionId,it.fromPerson,it.toPerson,it.amount,it.outstanding,it.date,it.groupId) },DashboardMetrics(report(today,today).spending,report(today.with(java.time.DayOfWeek.MONDAY),today).spending,report(month.atDay(1),today),report(previous.atDay(1),previous.atDay(minOf(today.dayOfMonth,previous.lengthOfMonth()))).spending),report(selected.atDay(1),selected.atEndOfMonth()),dao.groupSpending().associate {it.groupId to it.amount},dao.transactionCount(),selectedMonth,report(selected.minusMonths(1).atDay(1),selected.minusMonths(1).atEndOfMonth()).spending,walletSources=dao.walletSources()?.let {WalletSources(it.walletId,it.gpayId,it.lastResetMonth,dao.transaction("gpay-reset:${it.gpayId}:${it.lastResetMonth}")?.date,dao.gpaySchedule()?.toDomain()?:GpaySchedule())},diary=dao.diary().associate {it.date to it.text},localSettings=dao.localSettings()?.let {LocalSettings(it.name,it.avatar,it.welcomeDone,it.lastReviewMonth)}?:LocalSettings(),groupDefaults=plans.filter {it.kind=="group"}.map(PlanCodec::group),templates=plans.filter {it.kind=="template"}.map(PlanCodec::template),goals=plans.filter {it.kind=="goal"}.map(PlanCodec::goal),categoryRules=plans.filter {it.kind=="category"}.map(PlanCodec::category),favourites=plans.filter {it.kind=="favourite"}.map(PlanCodec::favourite))
     } }
     suspend fun report(start:java.time.LocalDate,end:java.time.LocalDate):PeriodReport = storage {
         val zone=java.time.ZoneId.systemDefault();val from=start.atStartOfDay(zone).toInstant().toEpochMilli();val until=end.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli();val totals=dao.reportTotals(from,until)
@@ -125,15 +189,33 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val sources=dao.walletSources();require(!account.archived || account.id !in listOf(sources?.walletId,sources?.gpayId)) {"Wallet and GPay must stay active"}
         dao.updateAccount(AccountEntity(account.id,account.name.trim(),account.type,account.archived));validateBalances()
     } }
-    suspend fun reconcile(accountId:String,target:Long) = storage { db.withTransaction {
+    suspend fun reconcile(accountId:String,target:Long,expectedBalance:Long?=null,reason:String="") = storage { db.withTransaction {
         refreshMonthlyGpay()
-        val balance=dao.balances().single { it.id==accountId }.balance
+        val account=dao.balances().single { it.id==accountId }
+        require(!account.archived) {"Choose an active account"}
+        val balance=account.balance
+        require(expectedBalance==null || balance==expectedBalance) {"The recorded balance changed. Review it again before adjusting."}
+        require(reason.length<=500) {"Keep the reason under 500 characters"}
         val change=Math.subtractExact(target,balance); require(change!=0L) { "Balance is already correct" }
-        val tx=id(); dao.insertTransaction(TransactionEntity(tx,Kind.ADJUSTMENT.name,"Balance reconciliation",change,0,null,null,System.currentTimeMillis(),"Target ${Money.format(target)}")); dao.insertEntries(listOf(AccountEntryEntity(id(),tx,accountId,change)));validateBalances()
+        val tx=id(); dao.insertTransaction(TransactionEntity(tx,Kind.ADJUSTMENT.name,"Balance reconciliation",change,0,null,null,System.currentTimeMillis(),"Target ${Money.format(target)}${if(reason.isBlank()) "" else " · ${reason.trim()}"}")); dao.insertEntries(listOf(AccountEntryEntity(id(),tx,accountId,change)));validateBalances()
     } }
-    suspend fun addWalletFunds(accountId:String,amount:Long) = storage {db.withTransaction {
-        require(amount>0 && dao.walletSources()?.walletId==accountId) {"Enter a positive Wallet top-up"}
-        val tx=id();dao.insertTransaction(TransactionEntity(tx,Kind.ADJUSTMENT.name,"Wallet cash top-up",amount,0,null,null,System.currentTimeMillis(),"Cash added to Wallet"))
+    /** Read-only preview uses the same later-reset boundary as balance validation. */
+    suspend fun previewWalletFunds(accountId:String,amount:Long,date:Long):Long = storage {db.withTransaction {
+        val sources=requireNotNull(dao.walletSources()) {"Set up Wallet and GPay first"}
+        require(amount>0 && accountId in listOf(sources.walletId,sources.gpayId)) {"Choose Wallet or GPay and enter a positive amount"}
+        val account=dao.balances().single {it.id==accountId}
+        require(!account.archived) {"Choose an active account"}
+        val absorbed=accountId==sources.gpayId && dao.transactions().any {it.id.startsWith("gpay-reset:${sources.gpayId}:") && !it.reversed && date<it.date}
+        if(absorbed) account.balance else Math.addExact(account.balance,amount)
+    }}
+    suspend fun addWalletFunds(accountId:String,amount:Long,date:Long=System.currentTimeMillis(),note:String="") = storage {db.withTransaction {
+        refreshMonthlyGpay()
+        val sources=dao.walletSources()
+        require(amount>0 && sources!=null && accountId in listOf(sources.walletId,sources.gpayId)) {"Choose Wallet or GPay and enter a positive amount"}
+        require(note.length<=500) {"Keep the note under 500 characters"}
+        require(java.time.Instant.ofEpochMilli(date).atZone(java.time.ZoneId.systemDefault()).year in 1900..2100) {"Choose a date between 1900 and 2100"}
+        val name=if(accountId==sources.walletId) "Wallet" else "GPay"
+        val tx=id();dao.insertTransaction(TransactionEntity(tx,Kind.ADJUSTMENT.name,"$name cash top-up",amount,0,null,null,date,"Money added to $name"+if(note.isBlank()) "" else " · ${note.trim()}"))
         dao.insertEntries(listOf(AccountEntryEntity(id(),tx,accountId,amount)));validateBalances()
     }}
     suspend fun createPerson(name:String,aliases:String=""):String = storage { require(name.isNotBlank()); val key=id(); dao.insertPerson(PersonEntity(key,name.trim(),aliases)); key }
@@ -167,6 +249,7 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         require(draft.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) { "Use the repayment or reconciliation workflow" }
         require(draft.kind==Kind.REFUND || draft.refundOf==null) {"Only refunds may link to an original expense"}
         require(dao.accounts().any { it.id==draft.accountId && !it.archived }) { "Choose an active payment account" }
+        require(draft.kind!=Kind.EXPENSE || draft.categoryId==null || dao.categories().any {it.id==draft.categoryId && !it.archived}) {"Choose an active category or explicitly choose Uncategorised before saving."}
         if(replaces!=null) reverseInternal(replaces)
         val shares=if(draft.kind==Kind.EXPENSE) Finance.split(draft.amount,draft.participants,draft.splitRule) else emptyMap()
         val net=if(draft.kind==Kind.EXPENSE) Finance.net(shares,draft.contributions) else emptyMap()
@@ -263,3 +346,6 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         dao.insertRevision(RevisionEntity(id(),firstTx,secondTx,time,"Mutual offset"))
     }}
 }
+
+
+

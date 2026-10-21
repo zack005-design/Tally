@@ -1,0 +1,13 @@
+// Keep UI verification output separate from feature builds in the shared directory.
+allprojects { project ->
+    def moduleName = project.path == ':' ? 'root' : project.path.substring(1).replace(':', '/')
+    def isolatedApp = project.rootProject.hasProperty('uiPolishVerificationId')
+    project.layout.buildDirectory.set(new File(project.rootDir, (isolatedApp ? '.build-cache/ui-polish-isolated/' : '.build-cache/ui-polish/') + moduleName))
+    project.plugins.withId('com.android.application') {
+        if (isolatedApp) {
+            project.androidComponents.finalizeDsl { dsl ->
+                dsl.defaultConfig.applicationId = 'com.smartexpense.uipolish'
+            }
+        }
+    }
+}

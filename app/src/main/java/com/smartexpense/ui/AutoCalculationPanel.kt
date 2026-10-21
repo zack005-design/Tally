@@ -38,7 +38,7 @@ fun AutoCalculationPanel(state: EntryUiState, accounts: List<Account>, onChange:
                     Text("Missing payments are provisional zero: ${bill.missingPayments.joinToString { name(it) }}. Enter 0 explicitly for anyone who paid nothing.", color = Tokens.muted, style = MaterialTheme.typography.bodySmall)
                 }
                 if (bill.net == null) Text("Receive / owe and settlement suggestions appear when all payments are entered and match the bill.", color = Tokens.muted, style = MaterialTheme.typography.bodySmall)
-                else if (detailsExpanded) {
+                else {
                     bill.net.forEach { (id, net) ->
                         CalculationAmount("${name(id)} · ${when { net > 0 -> "receives"; net < 0 -> "owes"; else -> "settled" }}", if (net < 0) Math.negateExact(net) else net)
                     }
@@ -52,8 +52,6 @@ fun AutoCalculationPanel(state: EntryUiState, accounts: List<Account>, onChange:
                 }
             }
             // These explicit actions assign payments; the preview above never writes provisional zeroes.
-            if ("self" in state.participants) OutlinedButton({ apply(payAll(state)) }, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("I paid all") }
-            OutlinedButton({ apply(equalPayments(state)) }, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Split payments equally") }
             if (state.method in listOf("Fixed", "Percentage")) {
                 OutlinedButton({ apply(fillRemainingShare(state)) }, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(if (state.method == "Percentage") "Fill remaining percentage" else "Fill remaining exact share") }
             }

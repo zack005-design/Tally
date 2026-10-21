@@ -1,0 +1,6 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The complete mark fits inside the adaptive icon's central safe zone. -->
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="6" android:strokeLineCap="round"
+        android:pathData="M40,41 L40,68 M53,36 L53,68 M66,31 L66,68 M32,71 L77,45"/>
+</vector>

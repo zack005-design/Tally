@@ -1,0 +1,10 @@
+// Keep reference-migration verification stable and separate from prior incremental dex outputs.
+allprojects { project ->
+    def moduleName = project.path == ':' ? 'root' : project.path.substring(1).replace(':', '/')
+    project.layout.buildDirectory.set(new File(project.rootDir, '.build-cache/exact-reference/' + moduleName))
+    project.plugins.withId('com.android.application') {
+        project.androidComponents.finalizeDsl { dsl ->
+            dsl.defaultConfig.applicationId = 'com.smartexpense.reference'
+        }
+    }
+}

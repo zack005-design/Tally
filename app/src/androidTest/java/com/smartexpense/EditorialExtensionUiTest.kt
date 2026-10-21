@@ -68,26 +68,31 @@ class EditorialExtensionUiTest {
         compose.onNodeWithText("Unassigned payment: ₹390.00").assertExists()
         assertEquals(mapOf("self" to "500"),changed.paid)
         capture("live-calculation")
-        compose.onNodeWithText("I paid all").performScrollTo().performClick()
-        assertEquals("890.00",changed.paid["self"])
-        assertEquals("0.00",changed.paid["r"])
+        compose.onNodeWithText("I paid all").assertDoesNotExist()
+        compose.onNodeWithText("Split payments equally").assertDoesNotExist()
+        assertEquals(mapOf("self" to "500"),changed.paid)
     }
     @Test fun plannerRecalculatesWhileTyping() {
         render {MoneyPlannerScreen(Snapshot(accounts=accounts))}
-        compose.onNodeWithText("Available money (₹)").performTextInput("10000")
-        compose.onNodeWithText("Committed costs (₹)").performTextReplacement("2000")
-        compose.onNodeWithText("Desired savings (₹)").performTextReplacement("1000")
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("After costs and desired savings"))
+        compose.onNodeWithText("Available to plan").performClick()
+        compose.onNodeWithContentDescription("Available money (₹)").performTextReplacement("10000")
+        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Planned bills").performClick()
+        compose.onNodeWithContentDescription("Committed costs (₹)").performTextReplacement("2000")
+        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Reserved savings").performClick()
+        compose.onNodeWithContentDescription("Desired savings (₹)").performTextReplacement("1000")
+        compose.onNodeWithText("Done").performClick()
         compose.runOnIdle {focus.clearFocus()}
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Daily allowance"))
-        compose.onNodeWithText("₹7,000.00").assertExists()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("You can plan about"))
+        compose.onNodeWithText("${Money.format(700000L / (LocalDate.now().lengthOfMonth()-LocalDate.now().dayOfMonth+1))} / day").assertExists()
         capture("money-planner")
     }
     @Test fun transactionDetailsPreview() {
         val r=Record("bill",Kind.EXPENSE,"Shared dinner",89000,22250,"food",null,LocalDate.of(2026,10,9).atTime(19,30).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),"Dinner with friends",false)
         val detail=RecordDetail(r,listOf(Movement("bank",-50000)),people.associate {it.id to 22250L},mapOf("self" to 50000,"r" to 29000,"k" to 10000,"a" to 0),emptyList(),emptyMap())
-        render {TransactionDetailView(r,detail,Snapshot(accounts=accounts,people=people,categories=listOf(Category("food","Food",0,"food",false))),{})}
-        compose.onNodeWithText("₹890.00").assertExists();capture("transaction-detail")
+        render {TransactionDetailView(r,detail,Snapshot(accounts=accounts,people=people,categories=listOf(Category("food","Food",0,"food",false))),onActions={})}
+        compose.onNodeWithText("₹890").assertExists();capture("transaction-detail")
     }
     @Test fun reverseConfirmationCancelsWithoutMutation() {
         var saved=0;var canceled=0
@@ -112,15 +117,16 @@ class EditorialExtensionUiTest {
     }
     @Test fun plannerLargeTextKeepsSourceLabelsUsable() {
         render(true) {MoneyPlannerScreen(Snapshot(accounts=accounts))}
-        compose.onNodeWithText("Expected income").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Expected income (₹)").assertExists()
+        compose.onNodeWithText("Available to plan").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithContentDescription("Available money (₹)").assertExists()
         capture("planner-large-text")
     }
     @Test fun describedSentenceCalculatesBeforeContinue() {
-        render {var form by remember {mutableStateOf(EntryUiState())};EntryScreen(form,accounts,people,emptyList(),emptyList(),{form=it},{},{})}
+        render {var form by remember {mutableStateOf(EntryUiState())};AdvancedEntryScreen(form,accounts,people,emptyList(),emptyList(),{form=it},{},{})}
         compose.onNode(hasSetTextAction()).performTextInput("Dinner with friends ₹890. I paid ₹500, Rahul paid ₹290, Kevin paid ₹100 and Arjun paid nothing. Split equally.")
-        compose.onNodeWithText("Detected amount: ₹890.00").assertExists()
+        compose.onNodeWithText("₹890").assertExists()
         compose.onNodeWithText("Your share: ₹222.50").assertExists()
         compose.onNodeWithText("You receive: ₹277.50").assertExists()
     }
 }
+

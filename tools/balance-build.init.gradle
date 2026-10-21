@@ -1,0 +1,4 @@
+// Keep this verification independent of other builds running in the supplied workspace.
+gradle.beforeProject { project ->
+    project.layout.buildDirectory.set(new File(project.rootDir, ".build-cache/balance-output/${project.name}"))
+}

@@ -14,7 +14,7 @@ import javax.inject.Inject
 data class AppUiState(val snapshot:Snapshot=Snapshot(),val loading:Boolean=true,val busy:Boolean=false,val message:String?=null)
 data class BackupUiState(val password:String="",val visible:Boolean=false,val restoreSummary:String?=null)
 @HiltViewModel
-class AppViewModel @Inject constructor(val repository:FinanceRepository,val backup:BackupService,private val saved:SavedStateHandle):ViewModel() {
+class AppViewModel @Inject constructor(val repository:FinanceRepository,val backup:BackupService,val billScanner:BillScanner,private val saved:SavedStateHandle):ViewModel() {
     private val mutable=MutableStateFlow(AppUiState())
     val state=mutable.asStateFlow()
     private val route=MutableStateFlow("home")
@@ -51,10 +51,31 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         id=saved["draftId"]?:java.util.UUID.randomUUID().toString(),kind=saved.get<String>("kind")?.let(Kind::valueOf)?:Kind.EXPENSE,
         amount=saved["amount"]?:"",description=saved["description"]?:"",accountId=saved["account"]?:"",destinationId=saved["destination"]?:"",text=saved["text"]?:"",
         categoryId=saved["category"],groupId=saved["group"],shared=saved["shared"]?:false,participants=saved.get<ArrayList<String>>("participants")?:listOf("self"),
-        paid=saved.get<HashMap<String,String>>("paid")?:emptyMap(),method=saved["method"]?:"Equal",values=saved.get<HashMap<String,String>>("values")?:emptyMap(),items=saved["items"]?:"",
+        paid=saved.get<HashMap<String,String>>("paid")?:emptyMap(),method=saved["method"]?:"Equal",values=saved.get<HashMap<String,String>>("values")?:emptyMap(),items=saved["items"]?:"",billItemNames=saved.get<ArrayList<String>>("billItemNames")?:emptyList(),
         date=saved["date"]?:java.time.LocalDateTime.now().withNano(0).toString(),notes=saved["notes"]?:"",parserNotice=saved["notice"]?:"",replaces=saved["replaces"],refundOf=saved["refundOf"],secondAccountId=saved["secondAccount"]?:"",secondPayment=saved["secondPayment"]?:"",itemCharges=saved["itemCharges"]?:"",itemDiscount=saved["itemDiscount"]?:"",originalMovements=saved.get<HashMap<String,Long>>("originalMovements")?:emptyMap(),originalDate=saved["originalDate"]
     ))
     val entry=form.asStateFlow()
+    private val launchMutable=MutableStateFlow(saved.get<String>("externalLaunch"))
+    val launchRequest=launchMutable.asStateFlow()
+    fun requestLaunch(destination:String) {require(destination in listOf("backup","quick-add"));saved["externalFavourite"]=null;saved["externalLaunch"]=destination;launchMutable.value=destination}
+    val requestedFavouriteId:String? get()=saved["externalFavourite"]
+    fun requestFavourite(id:String) {
+        if(id.isBlank() || id.length>200) {requestLaunch("quick-add");return}
+        saved["externalFavourite"]=id;saved["externalLaunch"]="favourite";launchMutable.value="favourite"
+    }
+    fun consumeLaunch() {saved["externalFavourite"]=null;saved["externalLaunch"]=null;launchMutable.value=null}
+    private var pendingBill:ScannedBill?=null
+    val billExpected=MutableStateFlow(saved.get<Boolean>("billExpected")?:false)
+    fun discardDraftBill() {pendingBill=null;billExpected.value=false;saved["billExpected"]=false}
+    fun prepareBill(bill:ScannedBill,suggestion:BillSuggestion,category:String?) {
+        newEntry();pendingBill=bill;billExpected.value=true;saved["billExpected"]=true
+        change(entry.value.copy(amount=suggestion.total?.let(Money::input).orEmpty(),description=suggestion.merchant.ifBlank {"Printed bill"},categoryId=category,
+            date=suggestion.date?.let {java.time.LocalDate.parse(it).atTime(12,0).toString()}?:entry.value.date,
+            items=suggestion.items.joinToString("\n") {"${Money.input(it.amount)}=self"},
+            billItemNames=suggestion.items.map {it.name},
+            notes=("Imported printed bill · reviewed locally\n"+suggestion.items.joinToString("\n") {"${it.name}: ${Money.input(it.amount)}"}).take(10000),
+            parserNotice=suggestion.warnings.joinToString(" ")))
+    }
     private val parsedRepayment=MutableStateFlow<ParsedDraft?>(null)
     val repaymentDraft=parsedRepayment.asStateFlow()
     private var pendingExportPassword:CharArray?=null
@@ -83,7 +104,7 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
             try { repository.initialize();
                 try {repository.refreshMonthlyGpay()} catch(e:CancellationException) {throw e} catch(e:Exception) {mutable.update {it.copy(message=e.message?:"Could not apply monthly reset")}}
                 combine(repository.changes,route,month) {_,screen,selected->
-                val limit=when {screen=="diary" || screen.startsWith("diary/")->Int.MAX_VALUE;screen in listOf("activity","calendar","add","accounts","people","groups","split","recurring")->Int.MAX_VALUE;else->5}
+                val limit=when {screen=="diary" || screen.startsWith("diary/")->Int.MAX_VALUE;screen in listOf("home","activity","calendar","add","accounts","people","groups","split","recurring","balance-check","insights")->Int.MAX_VALUE;else->5}
                 repository.snapshot(limit,selected)
             }.collect { snapshot -> mutable.update { it.copy(snapshot=snapshot,loading=false) };checkReview(snapshot) } }
             catch(e:CancellationException) { throw e } catch(e:Exception) { mutable.update { it.copy(loading=false,message=e.message?:"Could not load data") } }
@@ -91,17 +112,34 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
     }
     fun change(value:EntryUiState) {
         form.value=value; saved["draftId"]=value.id;saved["kind"]=value.kind.name;saved["amount"]=value.amount;saved["description"]=value.description;saved["account"]=value.accountId;saved["destination"]=value.destinationId;saved["text"]=value.text
-        saved["category"]=value.categoryId;saved["group"]=value.groupId;saved["shared"]=value.shared;saved["participants"]=ArrayList(value.participants);saved["paid"]=HashMap(value.paid);saved["method"]=value.method;saved["values"]=HashMap(value.values);saved["items"]=value.items;saved["date"]=value.date;saved["notes"]=value.notes;saved["notice"]=value.parserNotice;saved["replaces"]=value.replaces;saved["refundOf"]=value.refundOf;saved["secondAccount"]=value.secondAccountId;saved["secondPayment"]=value.secondPayment;saved["itemCharges"]=value.itemCharges;saved["itemDiscount"]=value.itemDiscount;saved["originalMovements"]=HashMap(value.originalMovements);saved["originalDate"]=value.originalDate
+        saved["category"]=value.categoryId;saved["group"]=value.groupId;saved["shared"]=value.shared;saved["participants"]=ArrayList(value.participants);saved["paid"]=HashMap(value.paid);saved["method"]=value.method;saved["values"]=HashMap(value.values);saved["items"]=value.items;saved["billItemNames"]=ArrayList(value.billItemNames);saved["date"]=value.date;saved["notes"]=value.notes;saved["notice"]=value.parserNotice;saved["replaces"]=value.replaces;saved["refundOf"]=value.refundOf;saved["secondAccount"]=value.secondAccountId;saved["secondPayment"]=value.secondPayment;saved["itemCharges"]=value.itemCharges;saved["itemDiscount"]=value.itemDiscount;saved["originalMovements"]=HashMap(value.originalMovements);saved["originalDate"]=value.originalDate
     }
     fun clearRepaymentDraft() {parsedRepayment.value=null}
-    fun newEntry(kind:Kind=Kind.EXPENSE,shared:Boolean=false) { change(EntryUiState(kind=kind,shared=shared,accountId=state.value.snapshot.walletSources?.walletId.orEmpty())) }
+    fun newEntry(kind:Kind=Kind.EXPENSE,shared:Boolean=false) {discardDraftBill();change(EntryUiState(kind=kind,shared=shared,accountId=state.value.snapshot.walletSources?.walletId.orEmpty())) }
     fun repeatGroup(group:Group) {newEntry(Kind.EXPENSE,true);change(withGroupDefault(entry.value,group))}
+    fun repeatExpense(id:String,onReady:()->Unit) = action("Expense copy ready to review") {
+        val detail=repository.detail(id)
+        require(!detail.record.reversed && detail.record.kind==Kind.EXPENSE && detail.shares.keys==setOf("self")) {"Choose an active personal expense"}
+        val draft=repository.loadDraft(id)
+        discardDraftBill()
+        change(EntryUiState(amount=Money.input(draft.amount),description=draft.description,accountId=draft.accountId,categoryId=draft.categoryId,
+            secondAccountId=draft.selfPayments.keys.firstOrNull {it!=draft.accountId}.orEmpty(),
+            secondPayment=draft.selfPayments.entries.firstOrNull {it.key!=draft.accountId}?.value?.let(Money::input).orEmpty(),
+            parserNotice="Copy for today. Review the amount and payment account before saving."))
+        onReady()
+    }
+    fun favouriteEntry(value:FavouriteExpense) {
+        discardDraftBill()
+        change(EntryUiState(amount=Money.input(value.amount),description=value.description,accountId=value.accountId,categoryId=value.categoryId,
+            parserNotice="Favourite draft. Review the amount, account and category before saving."))
+    }
     fun withGroupDefault(value:EntryUiState,group:Group):EntryUiState {
         val entry=value.withGroup(group)
         val default=state.value.snapshot.groupDefaults.find {it.groupId==group.id}?:return entry
-        return if(runCatching {default.rule(entry.participants)}.isSuccess) entry.copy(method=default.method,values=default.values) else entry
+        return if(runCatching {default.validate(entry.participants)}.isSuccess) entry.copy(method=default.method,values=default.values) else entry
     }
     fun recurringEntry(template:RecurringTemplate,date:java.time.LocalDate) {
+        discardDraftBill()
         change(EntryUiState(id=template.entryId(date),kind=template.kind,amount=Money.input(template.amount),description=template.description,accountId=template.accountId,date=date.atTime(12,0).toString(),notes="Recurring template · ${template.frequency}"))
     }
     fun refreshWallet() {
@@ -122,16 +160,26 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
             catch(e:Exception) { mutable.update { it.copy(busy=false,message=e.message?:"Operation failed") } }
         }
     }
-    fun saveEntry(onSaved:()->Unit) = action("Transaction saved") { repository.save(form.value.draft(),form.value.replaces); newEntry(); onSaved() }
+    fun saveEntry(onSaved:(String)->Unit) = action("Transaction saved") {
+        val id=if(billExpected.value) {require(form.value.replaces==null) {"Discard this imported attachment before correcting an existing transaction."};val bill=requireNotNull(pendingBill) {"Bill review was interrupted. Import the bill again, or discard its attachment explicitly."};repository.saveWithBill(form.value.draft(),bill)}
+        else repository.save(form.value.draft(),form.value.replaces)
+        newEntry();onSaved(id)
+    }
     fun edit(id:String,duplicate:Boolean=false,onReady:()->Unit) = action(if(duplicate) "Copy ready to review" else "Correction ready to review") {
         val d=repository.loadDraft(id)
         val original=if(duplicate) emptyMap() else repository.detail(id).entries.associate {it.accountId to it.amount}
+        discardDraftBill()
         change(EntryUiState(kind=d.kind,amount=Money.input(d.amount),description=d.description,accountId=d.accountId,destinationId=d.destinationAccountId.orEmpty(),categoryId=d.categoryId,groupId=d.groupId,shared=d.participants!=listOf("self"),participants=d.participants,paid=d.contributions.mapValues { Money.input(it.value) },method=if(d.participants!=listOf("self")) "Fixed" else "Equal",values=(d.splitRule as? SplitRule.Fixed)?.amounts?.mapValues { Money.input(it.value) }.orEmpty(),date=java.time.Instant.ofEpochMilli(d.date).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString(),notes=d.notes,replaces=if(duplicate) null else id,refundOf=d.refundOf,secondAccountId=d.selfPayments.keys.firstOrNull {it!=d.accountId}.orEmpty(),originalMovements=original,originalDate=if(duplicate) null else d.date,secondPayment=d.selfPayments.entries.firstOrNull {it.key!=d.accountId}?.value?.let(Money::input).orEmpty()));onReady()
     }
     fun parseText() {
         val parsed=RuleBasedTextParser().parse(form.value.text,state.value.snapshot.people.filter { it.id!="self" }.map { PersonRef(it.id,it.name,it.aliases) })
         val current=form.value
+        val snapshot=state.value.snapshot
+        val source=resolveParsedAccount(parsed.fromAccount,snapshot.accounts,snapshot.walletSources)
+        val destination=resolveParsedAccount(parsed.toAccount,snapshot.accounts,snapshot.walletSources)
+        val missing=parsed.missing-(if(source!=null) setOf("account") else emptySet())-(if(destination!=null) setOf("destination account") else emptySet())
         if(parsed.kind==Kind.REPAYMENT) {parsedRepayment.value=parsed;change(current.copy(parserNotice=(parsed.warnings+"Repayment draft ready. Review the person, direction, amount and account.").joinToString("\n")));return}
-        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,categoryId=state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=current.accountId,secondAccountId="",secondPayment="",destinationId="",date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(parsed.warnings+"Review all fields. Missing: ${parsed.missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
+        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,categoryId=state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=source?:current.accountId,secondAccountId="",secondPayment="",destinationId=destination.orEmpty(),date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(parsed.warnings+"Review all fields. Missing: ${missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
     }
 }
+

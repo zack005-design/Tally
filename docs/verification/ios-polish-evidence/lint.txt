@@ -1,0 +1,363 @@
+<workspace>\app\src\main\java\com\smartexpense\data\BillScanner.kt:52: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+        val orientation=runCatching {android.media.ExifInterface(java.io.ByteArrayInputStream(bytes)).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION,1)}.getOrDefault(1)
+                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\data\BillScanner.kt:52: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+        val orientation=runCatching {android.media.ExifInterface(java.io.ByteArrayInputStream(bytes)).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION,1)}.getOrDefault(1)
+                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ExifInterface":
+   The android.media.ExifInterface implementation has some known security bugs
+   in older versions of Android. There is a new implementation available of
+   this library in the support library, which is preferable.
+
+<workspace>\app\build.gradle.kts:14: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]
+        targetSdk = 36
+        ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "OldTargetApi":
+   When your application or sdk runs on a version of Android that is more
+   recent than your targetSdk specifies that it has been tested with, various
+   compatibility modes kick in. This ensures that your application continues
+   to work, but it may look out of place. For example, if the targetSdk is
+   less than 14, your app may get an option button in the UI.
+
+   To fix this issue, set the targetSdk to the highest available value. Then
+   test your app to make sure everything works correctly. You may want to
+   consult the compatibility notes to see what changes apply to each version
+   you are adding support for:
+   https://developer.android.com/reference/android/os/Build.VERSION_CODES.html
+   as well as follow this guide:
+   https://developer.android.com/distribute/best-practices/develop/target-sdk.
+   html
+
+   https://developer.android.com/distribute/best-practices/develop/target-sdk.html
+
+<workspace>\app\build.gradle.kts:10: Warning: A newer version of compileSdk than 36 is available: 37 [GradleDependency]
+    compileSdk = 36
+    ~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+<workspace>\app\src\main\java\com\smartexpense\ui\Components.kt:299: Warning: Using Configuration.screenHeightDp instead of LocalWindowInfo.current.containerSize [ConfigurationScreenWidthHeight from androidx.compose.ui]
+    val height=androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp*0.88f
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\androidTest\java\com\smartexpense\ReferenceScreenshotsTest.kt:85: Warning: Using Configuration.screenWidthDp instead of LocalWindowInfo.current.containerSize [ConfigurationScreenWidthHeight from androidx.compose.ui]
+            CompositionLocalProvider(LocalDensity provides Density(density.density * configuration.screenWidthDp / width, if (large) 2f else 1f)) {
+                                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\androidTest\java\com\smartexpense\SecondaryPreviewTest.kt:62: Warning: Using Configuration.screenWidthDp instead of LocalWindowInfo.current.containerSize [ConfigurationScreenWidthHeight from androidx.compose.ui]
+            val previewDensity=if(large) density.density*configuration.screenWidthDp/320f else density.density
+                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ConfigurationScreenWidthHeight":
+   Configuration.screenWidthDp and Configuration.screenHeightDp have different
+   insets behaviour depending on target SDK version, and are rounded to the
+   nearest Dp. This means that using these values in composition to size a
+   layout can result in issues, as these values do not accurately represent
+   the actual available window size. Instead it is recommended to use
+   WindowInfo.containerSize which accurately represents the window size.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.ui
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+<workspace>\app\src\androidTest\java\com\smartexpense\EditorialAdaptiveTest.kt:35: Warning: Reading Resources using LocalContext.current.resources [LocalContextResourcesRead from androidx.compose.ui]
+            CompositionLocalProvider(LocalDensity provides Density(androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels/412f,scale)) {
+                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\androidTest\java\com\smartexpense\LocalFeaturePreviewTest.kt:38: Warning: Reading Resources using LocalContext.current.resources [LocalContextResourcesRead from androidx.compose.ui]
+            val pixels=LocalContext.current.resources.displayMetrics.widthPixels
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\androidTest\java\com\smartexpense\PersonalWalletUiTest.kt:121: Warning: Reading Resources using LocalContext.current.resources [LocalContextResourcesRead from androidx.compose.ui]
+            val pixels=androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\androidTest\java\com\smartexpense\SecondaryLayoutAuditTest.kt:39: Warning: Reading Resources using LocalContext.current.resources [LocalContextResourcesRead from androidx.compose.ui]
+            val pixels = LocalContext.current.resources.displayMetrics.widthPixels
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\androidTest\java\com\smartexpense\UiLayoutAuditTest.kt:30: Warning: Reading Resources using LocalContext.current.resources [LocalContextResourcesRead from androidx.compose.ui]
+            val pixels = LocalContext.current.resources.displayMetrics.widthPixels
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "LocalContextResourcesRead":
+   Changes to the Configuration object will not cause
+   LocalContext.current.resources reads to be invalidated, so calls to APIs
+   suchas Resources.getString() will not be updated when the Configuration
+   changes. Instead, use LocalResources.current to retrieve the Resources -
+   this will invalidate callers when the Configuration changes, to ensure that
+   these calls reflect the latest values.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.ui
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+<workspace>\app\src\main\java\com\smartexpense\ui\LocalPlanScreens.kt:29: Warning: Creating a MutableState object with a mutable collection type [MutableCollectionMutableState from androidx.compose.runtime]
+    var values by rememberSaveable(groupId) {mutableStateOf(HashMap(existing?.values.orEmpty()))}
+                                             ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "MutableCollectionMutableState":
+   Writes to mutable collections inside a MutableState will not cause a
+   recomposition - only writes to the MutableState itself will. In most cases
+   you should either use a read-only collection (such as List or Map) and
+   assign a new instance to the MutableState when your data changes, or you
+   can use an snapshot-backed collection such as SnapshotStateList or
+   SnapshotStateMap which will correctly cause a recomposition when their
+   contents are modified.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.runtime
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+<workspace>\app\src\main\java\com\smartexpense\data\DeviceLockController.kt:45: Warning: Use @RequiresApi(28) instead of @TargetApi to propagate the requirement to callers of biometric [UseRequiresApi]
+    @android.annotation.TargetApi(28)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UseRequiresApi":
+   The @TargetApi annotation only suppresses API warnings locally.
+   @RequiresApi on the other hand will propagate the requirement out to any
+   callers of this API, making sure that they either perform API level checks
+   (using for example SDK_INT), or defining @RequiresApi annotations
+   themselves.
+
+   (The @TargetApi annotation predates @RequiresApi, and was introduced as an
+   early way to suppress lint API warnings for a particular API level.
+   Accidentally using @TargetApi can lead to crashes since there is no check
+   that other calls to this method actually check that the call is safe.)
+
+<workspace>\app\src\main\res\mipmap-anydpi-v26: Warning: This folder configuration (v26) is unnecessary; minSdkVersion is 26. Merge all the resources in this folder into mipmap-anydpi. [ObsoleteSdkInt]
+
+   Explanation for issues of type "ObsoleteSdkInt":
+   This check flags version checks that are not necessary, because the
+   minSdkVersion (or surrounding known API level) is already at least as high
+   as the version checked for.
+
+   Similarly, it also looks for resources in -vNN folders, such as values-v14
+   where the version qualifier is less than or equal to the minSdkVersion,
+   where the contents should be merged into the best folder.
+
+<workspace>\app\src\main\res\layout\quick_expense_widget.xml:4: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+     ~~~~~~~~~~~~
+<workspace>\app\src\main\res\layout\quick_expense_widget.xml:8: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+    <LinearLayout android:id="@+id/widget_add_expense" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:orientation="horizontal" android:gravity="center_vertical">
+     ~~~~~~~~~~~~
+<workspace>\app\src\main\res\layout\quick_expense_widget.xml:12: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+    <LinearLayout android:id="@+id/widget_favourite_1" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+     ~~~~~~~~~~~~
+<workspace>\app\src\main\res\layout\quick_expense_widget.xml:16: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+    <LinearLayout android:id="@+id/widget_favourite_2" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+     ~~~~~~~~~~~~
+<workspace>\app\src\main\res\layout\quick_expense_widget.xml:20: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+    <LinearLayout android:id="@+id/widget_favourite_3" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+     ~~~~~~~~~~~~
+
+   Explanation for issues of type "UseCompoundDrawables":
+   A LinearLayout which contains an ImageView and a TextView can be more
+   efficiently handled as a compound drawable (a single TextView, using the
+   drawableTop, drawableLeft, drawableRight and/or drawableBottom attributes
+   to draw one or more images adjacent to the text).
+
+   If the two widgets are offset from each other with margins, this can be
+   replaced with a drawablePadding attribute.
+
+   There's a lint quickfix to perform this conversion in the Eclipse plugin.
+
+<workspace>\app\src\main\java\com\smartexpense\ui\BillImportScreen.kt:181: Hint: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var page by remember {mutableStateOf(0)}
+                          ~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\ui\BillImportScreen.kt:182: Hint: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var pages by remember {mutableStateOf(1)}
+                           ~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\ui\LocalPlanScreens.kt:172: Hint: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+            var historyLimit by rememberSaveable(goal.id) {mutableStateOf(10)}
+                                                           ~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\ui\ProfileScreen.kt:43: Hint: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var step by rememberSaveable {mutableStateOf(0)}
+                                  ~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\ui\RemindersScreen.kt:31: Hint: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var hour by rememberSaveable {mutableStateOf(20)}
+                                  ~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\ui\RemindersScreen.kt:32: Hint: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var minute by rememberSaveable {mutableStateOf(0)}
+                                    ~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\ui\SplitScreens.kt:21: Hint: Prefer mutableLongStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var offsetAmount by rememberSaveable {mutableStateOf(0L)}
+                                          ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AutoboxingStateCreation":
+   Calling mutableStateOf<T>() when T is either backed by a primitive type on
+   the JVM or is a value class results in a state implementation that requires
+   all state values to be boxed. This usually causes an additional allocation
+   for each state write, and adds some additional work to auto-unbox values
+   when reading the value of the state. Instead, prefer to use a specialized
+   primitive state implementation for Int, Long, Float, and Double when the
+   state does not need to track null values and does not override the default
+   SnapshotMutationPolicy. See mutableIntStateOf(), mutableLongStateOf(),
+   mutableFloatStateOf(), and mutableDoubleStateOf() for more information.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.runtime
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+<workspace>\app\src\main\res\values\everyday_strings.xml:3: Warning: The resource R.string.quick_expense_hint appears to be unused [UnusedResources]
+    <string name="quick_expense_hint">Tally · review before saving</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\main\res\drawable\ic_split.xml:1: Warning: The resource R.drawable.ic_split appears to be unused [UnusedResources]
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFFFF" android:pathData="M4,3h6v6H4zM14,15h6v6h-6zM14,3h6v6h-6zM4,15h6v6H4zM11,6h2v12h-2zM6,11h12v2H6z"/></vector>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\main\res\drawable\ic_tab_activity.xml:1: Warning: The resource R.drawable.ic_tab_activity appears to be unused [UnusedResources]
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+^
+<workspace>\app\src\main\res\drawable\ic_tab_add.xml:1: Warning: The resource R.drawable.ic_tab_add appears to be unused [UnusedResources]
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+^
+<workspace>\app\src\main\res\values\launcher_colors.xml:2: Warning: The resource R.color.launcher_background appears to be unused [UnusedResources]
+    <color name="launcher_background">#0066FF</color>
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\main\res\drawable-nodpi\launcher_wallet.png: Warning: The resource R.drawable.launcher_wallet appears to be unused [UnusedResources]
+
+   Explanation for issues of type "UnusedResources":
+   Unused resources make applications larger and slow down builds.
+
+
+   The unused resource check can ignore tests. If you want to include
+   resources that are only referenced from tests, consider packaging them in a
+   test source set instead.
+
+   You can include test sources in the unused resource check by setting the
+   system property lint.unused-resources.include-tests=true, and to exclude
+   them (usually for performance reasons), use
+   lint.unused-resources.exclude-tests=true.
+
+   Available options:
+
+   **skip-libraries** (default is true):
+   Whether the unused resource check should skip reporting unused resources in libraries.
+
+   Many libraries will declare resources that are part of the library surface; other modules depending on the library will also reference the resources. To avoid reporting all these resources as unused (in the context of a library), the unused resource check normally skips reporting unused resources in libraries. Instead, run the unused resource check on the consuming app module (along with `checkDependencies=true`).
+
+   However, there are cases where you want to check that all the resources declared in a library are used; in that case, you can disable the skip option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UnusedResources">
+           <option name="skip-libraries" value="true" />
+       </issue>
+   </lint>
+   ```
+
+<workspace>\app\src\main\java\com\smartexpense\ui\LightUiComponents.kt:131: Warning: State backed values should use the lambda overload of Modifier.offset [UseOfNonLambdaOffsetOverload from androidx.compose.foundation]
+            Surface(Modifier.offset(x=thumbOffset).size(27.dp),shape=CircleShape,color=Color.White,shadowElevation=1.dp) {}
+                             ~~~~~~
+
+   Explanation for issues of type "UseOfNonLambdaOffsetOverload":
+   Modifier.offset() is recommended to be used with static arguments only to
+   avoid unnecessary recompositions. Modifier.offset{ } is preferred in the
+   cases where the arguments are backed by a State.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.foundation
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+<workspace>\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml:1: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIcon]
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+^
+
+   Explanation for issues of type "MonochromeLauncherIcon":
+   The system may use the coloring of the user's chosen wallpaper and theme to
+   tint app icons. Providing a <monochrome> layer (which will be used for
+   tinting) for every adaptive icon is strongly recommended, otherwise Android
+   16 QPR 2 and above will simply tint the color version of the icon, which
+   may look unusual. Devices running earlier Android versions will (with no
+   monochrome layer) show the untinted color icon for your app, which will
+   look inconsistent.
+
+<workspace>\app\src\main\java\com\smartexpense\data\BillScanner.kt:72: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                            val scale=2000.0/maxOf(page.width,page.height);val bitmap=Bitmap.createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
+                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\data\BillScanner.kt:87: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                renderer.openPage(pageIndex).use {page->val scale=1600.0/maxOf(page.width,page.height);Bitmap.createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888).also {it.eraseColor(Color.WHITE);page.render(it,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)}}
+                                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<workspace>\app\src\main\java\com\smartexpense\data\DeviceLockController.kt:73: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+            if(!preferences.edit().putBoolean("enabled",setting).commit()) {update(message="Could not save the device lock setting. Try again.");return}
+                ~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UseKtx":
+   The Android KTX libraries decorates the Android platform SDK as well as
+   various libraries with more convenient extension functions available from
+   Kotlin, allowing you to use default parameters, named parameters, and
+   more.
+
+   Available options:
+
+   **remove-defaults** (default is true):
+   Whether to skip arguments that match the defaults provided by the extension.
+
+   Extensions often provide default values for some of the parameters. For example:
+   ```kotlin
+   fun Path.readLines(charset: Charset = Charsets.UTF_8): List<String> { return Files.readAllLines(this, charset) }
+   ```
+   This lint check will by default automatically omit parameters that match the default, so if your code was calling
+
+   ```kotlin
+   Files.readAllLines(file, Charset.UTF_8)
+   ```
+   lint would replace this with
+   ```kotlin
+   file.readLines()
+   ```
+   rather than
+
+   ```kotlin
+   file.readLines(Charset.UTF_8
+   ```
+   You can turn this behavior off using this option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="remove-defaults" value="true" />
+       </issue>
+   </lint>
+   ```
+
+   **require-present** (default is true):
+   Whether to only offer extensions already available.
+
+   This option lets you only have lint suggest extension replacements if those extensions are already available on the class path (in other words, you're already depending on the library containing the extension method.)
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="require-present" value="true" />
+       </issue>
+   </lint>
+   ```
+
+<workspace>\app\src\main\res\layout\quick_expense_widget.xml:5: Warning: Hardcoded string "tally", should use @string resource [HardcodedText]
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="tally" android:textSize="18sp" android:textStyle="bold" android:textColor="#080B12"/>
+                                                                                                            ~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "HardcodedText":
+   Hardcoding text attributes directly in layout files is bad for several
+   reasons:
+
+   * When creating configuration variations (for example for landscape or
+   portrait) you have to repeat the actual text (and keep it up to date when
+   making changes)
+
+   * The application cannot be translated to other languages by just adding
+   new translations for existing string resources.
+
+   There are quickfixes to automatically extract this hardcoded string into a
+   resource lookup.
+
+0 errors, 32 warnings, 7 hints

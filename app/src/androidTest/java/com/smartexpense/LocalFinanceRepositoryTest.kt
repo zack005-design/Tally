@@ -15,6 +15,44 @@ import java.time.*
 @RunWith(AndroidJUnit4::class)
 class LocalFinanceRepositoryTest {
     private fun db()=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(),TrackerDatabase::class.java).build()
+    @Test fun billSpecificDefaultMethodsRoundTripWithoutInventingAmounts()=runBlocking {
+        val database=db()
+        try {
+            val repo=FinanceRepository(database);repo.initialize();repo.configureWallet(500000,gpayOpening=0)
+            val friend=repo.createPerson("Rahul");val group=repo.saveGroup("Flatmates",listOf("self",friend))
+            for(method in listOf("Fixed","Itemized")) {
+                val value=GroupDefault(group,method,emptyMap())
+                repo.saveGroupDefault(value)
+                assertEquals(value,repo.snapshot().groupDefaults.single())
+                assertTrue(runCatching {value.rule(listOf("self",friend))}.isFailure)
+                val backup=BackupService(database);val bytes=backup.export(charArrayOf());repo.deletePlan("group:$group");backup.restore(bytes,charArrayOf())
+                assertEquals(value,repo.snapshot().groupDefaults.single())
+            }
+        } finally {database.close()}
+    }
+    @Test fun planningBackupAndExplicitRecurringSaveNeverMoveGoalCash()=runBlocking {
+        val db=db()
+        try {
+            val repo=FinanceRepository(db);repo.initialize();repo.configureWallet(500000,gpayOpening=0)
+            val account=repo.snapshot().walletSources!!.walletId
+            val today=LocalDate.now()
+            val template=RecurringTemplate("rent",Kind.EXPENSE,10000,"Rent",account,today.toString(),"Monthly")
+            repo.saveTemplate(template);repo.saveGoal("Emergency",200000,"emergency");repo.allocateGoal("emergency",50000)
+            assertEquals(500000L,repo.snapshot().accounts.single {it.id==account}.balance)
+            assertTrue(repo.snapshot().records.none {it.kind==Kind.EXPENSE})
+            val draft=EntryDraft(id=template.entryId(today),amount=template.amount,description=template.description,accountId=account,date=today.atTime(12,0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+            repo.save(draft);repo.save(draft)
+            assertEquals(1,repo.snapshot().records.count {it.kind==Kind.EXPENSE})
+            assertEquals(490000L,repo.snapshot().accounts.single {it.id==account}.balance)
+            val before=repo.snapshot();val backup=BackupService(db);val bytes=backup.export(charArrayOf())
+            repo.deletePlan("goal:emergency");repo.deletePlan("template:rent");backup.restore(bytes,charArrayOf())
+            assertEquals(before.goals,repo.snapshot().goals);assertEquals(before.templates,repo.snapshot().templates)
+            val bad=org.json.JSONObject(bytes.toString(Charsets.UTF_8));val rows=bad.getJSONArray("localPlans")
+            for(i in 0 until rows.length()) {val row=rows.getJSONArray(i);if(row.getString(1)=="template") {val payload=org.json.JSONObject(row.getString(2)).put("amount",1.5);row.put(2,payload.toString())}}
+            assertTrue(runCatching {backup.restore(bad.toString().toByteArray(),charArrayOf())}.isFailure)
+            assertEquals(before.accounts,repo.snapshot().accounts)
+        } finally {db.close()}
+    }
     @Test fun manualGpayOffByDefaultAndNewDataRoundTrips()=runBlocking {
         val db=db()
         try {
@@ -76,3 +114,5 @@ class LocalFinanceRepositoryTest {
         } finally {db.close()}
     }
 }
+
+

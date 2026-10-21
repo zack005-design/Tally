@@ -14,7 +14,9 @@ import javax.inject.Singleton
     private fun <T> table(items:List<T>,encode:(T)->JSONArray)=JSONArray().apply {items.forEach {put(encode(it))}}
     suspend fun export(password:CharArray):ByteArray=withContext(Dispatchers.IO) {
         val json=db.withTransaction {JSONObject().apply {
-            put("version",4);put("currency","INR")
+            put("version",7);put("currency","INR")
+            put("receipts",table(dao.receipts()) {row(it.transactionId,it.mime,it.text,it.hash)})
+            put("receiptChunks",table(dao.receiptChunks()) {row(it.transactionId,it.position,android.util.Base64.encodeToString(it.bytes,android.util.Base64.NO_WRAP))})
             put("localPlans",table(dao.plans()) {row(it.key,it.kind,it.json)})
             put("gpaySchedule",table(listOfNotNull(dao.gpaySchedule())) {row(it.id,it.enabled,it.target,it.day,it.startMonth,it.nextMonth)})
             put("resetTargets",table(dao.resetTargets()) {row(it.transactionId,it.target)})
@@ -36,19 +38,22 @@ import javax.inject.Singleton
             put("budgets",table(dao.budgets()) {row(it.id,it.month,it.categoryId,it.amount)})
             put("revisions",table(dao.revisions()) {row(it.id,it.originalId,it.replacementId,it.date,it.reason)})
         }.toString()}
-        BackupEnvelope.encode(json.toByteArray(Charsets.UTF_8),password)
+        val payload=json.toByteArray(Charsets.UTF_8)
+        require(payload.size<=32*1024*1024) {"Backup is too large. Export reports and remove old bill attachments before trying again."}
+        BackupEnvelope.encode(payload,password).also {require(it.size<=32*1024*1024) {"Encrypted backup is too large. Remove old attachments or export without a password."}}
     }
     suspend fun inspect(data:ByteArray,password:CharArray):String=withContext(Dispatchers.IO) {val bundle=parse(data,password);bundle.validate();"${bundle.accounts.size} accounts, ${bundle.transactions.size} transactions, ${bundle.people.size-1} friends"}
     suspend fun restore(data:ByteArray,password:CharArray)=withContext(Dispatchers.IO) {
         val bundle=parse(data,password);bundle.validate()
         db.withTransaction {
             // Fixed table names, dependency order; any insert/constraint failure rolls back deletion.
-            listOf("localPlans","resetTargets","gpaySchedule","diary","localSettings","walletSources","allocations","settlements","obligations","entries","shares","contributions","revisions","transactions","members","budgets","groups","categories","accounts","people").forEach {db.openHelper.writableDatabase.execSQL("DELETE FROM `$it`")}
+            listOf("receiptChunks","receipts","localPlans","resetTargets","gpaySchedule","diary","localSettings","walletSources","allocations","settlements","obligations","entries","shares","contributions","revisions","transactions","members","budgets","groups","categories","accounts","people").forEach {db.openHelper.writableDatabase.execSQL("DELETE FROM `$it`")}
             bundle.accounts.forEach {dao.insertAccount(it)};bundle.people.forEach {dao.insertPerson(it)};bundle.groups.forEach {dao.insertGroup(it)};dao.insertMembers(bundle.members);bundle.categories.forEach {dao.insertCategory(it)}
             bundle.transactions.forEach {dao.insertTransaction(it)};dao.insertEntries(bundle.entries);dao.insertShares(bundle.shares);dao.insertContributions(bundle.contributions);dao.insertObligations(bundle.obligations);bundle.settlements.forEach {dao.insertSettlement(it)};dao.insertAllocations(bundle.allocations);bundle.budgets.forEach {dao.saveBudget(it)};bundle.revisions.forEach {dao.insertRevision(it)}
             bundle.walletSources.forEach {dao.saveWalletSources(it)}
             bundle.schedules.forEach {dao.saveGpaySchedule(it)}
             bundle.plans.forEach {dao.savePlan(it)}
+            bundle.receipts.forEach {dao.insertReceipt(it)};dao.insertReceiptChunks(bundle.chunks)
             val targets=bundle.resetTargets.associateBy {it.transactionId}
             bundle.transactions.filter {it.id.startsWith("gpay-reset:")}.forEach {dao.saveResetTarget(targets[it.id]?:ResetTargetEntity(it.id,MonthlyGpay.allocation))}
             bundle.diary.forEach {dao.saveDiary(it)}
@@ -58,27 +63,39 @@ import javax.inject.Singleton
     }
     private fun parse(data:ByteArray,password:CharArray):BackupBundle {
         val json=JSONObject(BackupEnvelope.decode(data,password).toString(Charsets.UTF_8))
-        require(json.getInt("version") in 1..4 && json.getString("currency")=="INR") {"Unsupported backup version or currency"}
+        require(json.getInt("version") in 1..7 && json.getString("currency")=="INR") {"Unsupported backup version or currency"}
         fun <T> rows(name:String,decode:(JSONArray)->T):List<T> {val array=json.getJSONArray(name);require(array.length()<=100000) {"Too many records"};return (0 until array.length()).map {decode(array.getJSONArray(it))}}
         return BackupBundle(
             rows("accounts") {AccountEntity(it.s(0),it.s(1),it.s(2),it.b(3))},rows("people") {PersonEntity(it.s(0),it.s(1),it.s(2))},rows("groups") {GroupEntity(it.s(0),it.s(1))},rows("members") {GroupMemberEntity(it.s(0),it.s(1))},rows("categories") {CategoryEntity(it.s(0),it.s(1),it.n(2),it.s(3),it.b(4))},
             rows("transactions") {TransactionEntity(it.s(0),it.s(1),it.s(2),it.n(3),it.n(4),it.optional(5),it.optional(6),it.n(7),it.s(8),it.b(9),it.optional(10))},rows("entries") {AccountEntryEntity(it.s(0),it.s(1),it.s(2),it.n(3))},rows("shares") {ShareEntity(it.s(0),it.s(1),it.n(2))},rows("contributions") {ContributionEntity(it.s(0),it.s(1),it.n(2))},rows("obligations") {ObligationEntity(it.s(0),it.s(1),it.s(2),it.s(3),it.n(4))},rows("settlements") {SettlementEntity(it.s(0),it.s(1),it.s(2),it.s(3),it.n(4))},rows("allocations") {AllocationEntity(it.s(0),it.s(1),it.n(2))},rows("budgets") {BudgetEntity(it.s(0),it.s(1),it.optional(2),it.n(3))},rows("revisions") {RevisionEntity(it.s(0),it.s(1),it.optional(2),it.n(3),it.s(4))},if(json.getInt("version")>=2) rows("walletSources") {WalletSourcesEntity(it.n(0).toInt(),it.s(1),it.s(2),it.s(3))} else emptyList(),            if(json.getInt("version")>=3) rows("gpaySchedule") {GpayScheduleEntity(it.n(0).toInt(),it.b(1),it.n(2),it.n(3).toInt(),it.s(4),it.s(5))} else emptyList(),
             if(json.getInt("version")>=3) rows("resetTargets") {ResetTargetEntity(it.s(0),it.n(1))} else emptyList(),
             if(json.getInt("version")>=3) rows("diary") {DiaryEntity(it.s(0),it.s(1))} else emptyList(),
-            if(json.getInt("version")>=3) rows("localSettings") {LocalSettingsEntity(it.n(0).toInt(),it.s(1),it.s(2),it.b(3),it.s(4))} else emptyList(),if(json.getInt("version")>=4) rows("localPlans") {PlanEntity(it.s(0),it.s(1),it.s(2))} else emptyList())
+            if(json.getInt("version")>=3) rows("localSettings") {LocalSettingsEntity(it.n(0).toInt(),it.s(1),it.s(2),it.b(3),it.s(4))} else emptyList(),if(json.getInt("version")>=4) rows("localPlans") {PlanEntity(it.s(0),it.s(1),it.s(2))} else emptyList(),
+            if(json.getInt("version")>=5) rows("receipts") {ReceiptEntity(it.s(0),it.s(1),it.s(2),it.s(3))} else emptyList(),
+            if(json.getInt("version")>=5) rows("receiptChunks") {val encoded=it.get(2);require(encoded is String && encoded.length<=700000);val position=it.n(1);require(position in 0..11);ReceiptChunkEntity(it.s(0),position.toInt(),android.util.Base64.decode(encoded,android.util.Base64.NO_WRAP))} else emptyList())
     }
-    private fun JSONArray.s(i:Int):String {val value=get(i);require(value is String && value.length<=10000) {"Invalid backup text"};return value}
+    // Free text has the same limit as export: the bounded backup envelope. Field-specific
+    // limits (diary, receipt OCR, profile and plans) are checked by BackupBundle.validate.
+    private fun JSONArray.s(i:Int):String {val value=get(i);require(value is String) {"Invalid backup text"};return value}
     private fun JSONArray.n(i:Int):Long {val value=get(i);require(value is Int || value is Long) {"Money must be stored in integer paise"};return (value as Number).toLong()}
     private fun JSONArray.b(i:Int):Boolean {val value=get(i);require(value is Boolean);return value}
     private fun JSONArray.optional(i:Int):String?=if(isNull(i)) null else s(i)
 }
 
-private data class BackupBundle(val accounts:List<AccountEntity>,val people:List<PersonEntity>,val groups:List<GroupEntity>,val members:List<GroupMemberEntity>,val categories:List<CategoryEntity>,val transactions:List<TransactionEntity>,val entries:List<AccountEntryEntity>,val shares:List<ShareEntity>,val contributions:List<ContributionEntity>,val obligations:List<ObligationEntity>,val settlements:List<SettlementEntity>,val allocations:List<AllocationEntity>,val budgets:List<BudgetEntity>,val revisions:List<RevisionEntity>,val walletSources:List<WalletSourcesEntity>,val schedules:List<GpayScheduleEntity>,val resetTargets:List<ResetTargetEntity>,val diary:List<DiaryEntity>,val settings:List<LocalSettingsEntity>,val plans:List<PlanEntity>) {
+private data class BackupBundle(val accounts:List<AccountEntity>,val people:List<PersonEntity>,val groups:List<GroupEntity>,val members:List<GroupMemberEntity>,val categories:List<CategoryEntity>,val transactions:List<TransactionEntity>,val entries:List<AccountEntryEntity>,val shares:List<ShareEntity>,val contributions:List<ContributionEntity>,val obligations:List<ObligationEntity>,val settlements:List<SettlementEntity>,val allocations:List<AllocationEntity>,val budgets:List<BudgetEntity>,val revisions:List<RevisionEntity>,val walletSources:List<WalletSourcesEntity>,val schedules:List<GpayScheduleEntity>,val resetTargets:List<ResetTargetEntity>,val diary:List<DiaryEntity>,val settings:List<LocalSettingsEntity>,val plans:List<PlanEntity>,val receipts:List<ReceiptEntity>,val chunks:List<ReceiptChunkEntity>) {
     fun validate() {
+        require(receipts.map {it.transactionId}.distinct().size==receipts.size && receipts.map {it.hash}.distinct().size==receipts.size)
+        require(chunks.sumOf {it.bytes.size.toLong()}<=ReceiptStorage.TOTAL_BYTES && chunks.all {chunk->receipts.any {it.transactionId==chunk.transactionId}})
+        receipts.forEach {receipt->
+            require(transactions.any {it.id==receipt.transactionId && it.kind==Kind.EXPENSE.name})
+            val bytes=ReceiptStorage.join(chunks.filter {it.transactionId==receipt.transactionId}.sortedBy {it.position})
+            ReceiptStorage.validate(ScannedBill(bytes,receipt.mime,receipt.text));require(ReceiptStorage.hash(bytes)==receipt.hash) {"Receipt checksum mismatch"}
+        }
         require(plans.map {it.key}.distinct().size==plans.size && plans.size<=10000) {"Invalid planning records"}
+        require(plans.count {it.kind=="favourite"}<=6) {"A backup can contain at most six favourites"}
         val planGroups=groups.map {group->Group(group.id,group.name,members.filter {it.groupId==group.id}.map {it.personId})}
         plans.forEach {PlanCodec.validate(it,planGroups,accounts.map {it.id}.toSet(),categories.map {it.id}.toSet())}
-        require(schedules.size<=1 && schedules.all {it.id==1 && it.day in 1..41 && it.target>=0 && walletSources.isNotEmpty()}) {"Invalid GPay reset settings"}
+        require(schedules.size<=1 && schedules.all {it.id==1 && it.day in 1..31 && it.target>=0 && walletSources.isNotEmpty()}) {"Invalid GPay reset settings"}
         schedules.forEach {GpaySchedule(it.enabled,it.target,it.day,it.startMonth,it.nextMonth);require(it.nextMonth>=it.startMonth)}
         require(settings.size<=1 && settings.all {it.id==1 && it.name.length<=100 && it.avatar in listOf("initials","wallet","leaf","star")}) {"Invalid local profile"}
         settings.filter {it.lastReviewMonth.isNotEmpty()}.forEach {java.time.YearMonth.parse(it.lastReviewMonth)}
@@ -153,3 +170,5 @@ private data class BackupBundle(val accounts:List<AccountEntity>,val people:List
         accounts.forEach {account->Finance.total(entries.filter {it.accountId==account.id && tx[it.transactionId]?.reversed==false}.map {it.amount})}
     }
 }
+
+

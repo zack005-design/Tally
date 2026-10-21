@@ -22,6 +22,12 @@ class PersonalWalletUiTest {
     private val day=LocalDate.of(2026,10,11)
     private val people=listOf(Person("self","You"),Person("maya","Maya"),Person("dev","Dev"))
     private val fixture=Snapshot(accounts=listOf(Account("wallet","Wallet","Cash",140000,false),Account("gpay","GPay","Bank",430000,false)),people=people,groups=listOf(Group("lunch","Lunch crew",people.map {it.id})),walletSources=WalletSources("wallet","gpay","2026-10"),dashboard=DashboardMetrics(today=30000,week=30000,month=PeriodReport(30000,0,emptyMap(),mapOf(day to 30000))),records=listOf(Record("meal",Kind.EXPENSE,"Dinner together",90000,30000,null,"lunch",day.atTime(12,0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),"",false,listOf("wallet"),people.map {it.id})))
+    private fun reveal(matcher:SemanticsMatcher):SemanticsNodeInteraction {
+        if(compose.onAllNodes(matcher).fetchSemanticsNodes().isEmpty()) compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(matcher)
+        val node=compose.onNode(matcher)
+        node.performScrollTo()
+        return node
+    }
     private fun capture(name:String) {
         compose.waitForIdle()
         val instrumentation=InstrumentationRegistry.getInstrumentation()
@@ -33,17 +39,18 @@ class PersonalWalletUiTest {
         compose.setContent {EditorialPreviewTheme {WalletBalanceCards(fixture,true,{},day)}}
         compose.onNodeWithText("Wallet").assertIsDisplayed()
         compose.onNodeWithText("GPay").assertIsDisplayed()
-        compose.onNodeWithText("₹1,400.00").assertIsDisplayed()
-        compose.onNodeWithText("₹4,300.00").assertIsDisplayed()
-        compose.onNodeWithText("Manual balance · reset off").assertIsDisplayed()
+        compose.onNodeWithText("₹1,400").assertIsDisplayed()
+        compose.onNodeWithText("₹4,300").assertIsDisplayed()
+        compose.onNodeWithText("Until your next refill").assertDoesNotExist()
         capture("wallet-balances")
     }
     @Test fun calendarShowsPersonalShareAndSelectedDay() {
         compose.setContent {EditorialPreviewTheme {SpendingCalendarScreen(fixture,{},day)}}
-        compose.onNodeWithText("Your spending").assertIsDisplayed()
-        compose.onAllNodesWithText("₹300.00").onFirst().assertIsDisplayed()
-        compose.onNodeWithContentDescription("11 October 2026, spending ₹300.00, 1 entries").performScrollTo().performClick()
-        compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasText("Dinner together"))
+        compose.onNodeWithText("Month").assertIsDisplayed()
+        reveal(hasContentDescription("11 October 2026, spending ₹300.00, 1 entries")).performClick()
+        reveal(hasText("Total spent")).assertIsDisplayed()
+        compose.onNodeWithText("₹300").assertIsDisplayed()
+        reveal(hasText("Dinner together"))
         compose.onNodeWithText("Dinner together").assertIsDisplayed()
         capture("calendar-day")
     }
@@ -65,8 +72,8 @@ class PersonalWalletUiTest {
     }
     @Test fun calendarLargeTextRemainsUsable() {
         compose.setContent {val density=LocalDensity.current;CompositionLocalProvider(LocalDensity provides Density(density.density,2f)) {EditorialPreviewTheme {SpendingCalendarScreen(fixture,{},day)}}}
-        compose.onNodeWithText("Your spending").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithContentDescription("11 October 2026, spending ₹300.00, 1 entries").performScrollTo().performClick()
+        reveal(hasText("Month")).assertIsDisplayed()
+        reveal(hasContentDescription("11 October 2026, spending ₹300.00, 1 entries")).performClick()
         capture("calendar-large-text")
     }
     @Test fun calendarKeepsWholeWeekVisibleAndCanCollapseToWeek() {
@@ -83,8 +90,8 @@ class PersonalWalletUiTest {
         compose.setContent {EditorialPreviewTheme {SpendingCalendarScreen(fixture,{},day)}}
         compose.onNodeWithContentDescription("Next calendar month").performClick()
         compose.onNodeWithText("November 2026").assertIsDisplayed()
-        compose.onNodeWithText("Today").performClick()
-        compose.onNodeWithText("October 2026").assertIsDisplayed()
+        reveal(hasText("Today")).performClick()
+        reveal(hasText("October 2026")).assertIsDisplayed()
         compose.onNodeWithContentDescription("11 October 2026, spending ₹300.00, 1 entries").assertIsSelected()
     }
     @Test fun calendarWeekArrowsMoveSevenDays() {
@@ -99,12 +106,14 @@ class PersonalWalletUiTest {
         compose.onNodeWithContentDescription("1 November 2026, spending ₹0.00, 0 entries").assertIsSelected()
         compose.onNodeWithContentDescription("26 October 2026, spending ₹0.00, 0 entries").assertExists()
     }
-    @Test fun calendarRefundChartExplainsNegativeBars() {
+    @Test fun calendarRefundKeepsSignedDayTotalAndIncomingEntry() {
         val refund=Record("refund",Kind.REFUND,"Lunch refund",5000,5000,null,null,day.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),"",false,listOf("wallet"),listOf("self"))
         compose.setContent {EditorialPreviewTheme {SpendingCalendarScreen(fixture.copy(records=fixture.records+refund),{},day)}}
-        compose.onNodeWithText("Refunds below baseline").assertIsDisplayed()
-        compose.onNodeWithContentDescription("12 October 2026, spending ₹-50.00, 1 entries").performScrollTo().performClick()
-        compose.onAllNodesWithText("−₹50.00").onFirst().assertExists()
+        reveal(hasContentDescription("12 October 2026, spending ₹-50.00, 1 entries")).performClick()
+        reveal(hasText("Total spent")).assertIsDisplayed()
+        compose.onNodeWithText("−₹50").assertExists()
+        reveal(hasText("Lunch refund")).assertIsDisplayed()
+        compose.onNodeWithText("+₹50").assertExists()
         capture("calendar-refund")
     }
     @Test fun calendarLargeTextFitsNarrowScreen() {
@@ -112,7 +121,7 @@ class PersonalWalletUiTest {
             val pixels=androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels
             CompositionLocalProvider(LocalDensity provides Density(pixels/320f,2f)) {EditorialPreviewTheme {SpendingCalendarScreen(fixture,{},day)}}
         }
-        compose.onNodeWithContentDescription("11 October 2026, spending ₹300.00, 1 entries").performScrollTo()
+        reveal(hasContentDescription("11 October 2026, spending ₹300.00, 1 entries"))
         val right=compose.onRoot().fetchSemanticsNode().boundsInRoot.right
         (5..11).forEach {date->
             val bounds=compose.onNodeWithText(date.toString(),useUnmergedTree=true).assertIsDisplayed().fetchSemanticsNode().boundsInRoot
@@ -123,8 +132,10 @@ class PersonalWalletUiTest {
     @Test fun walletSetupAcceptsCustomCash() {
         var cash:Long?=null
         compose.setContent {EditorialPreviewTheme {WalletScreen(Snapshot(),false,{value,_,_,_->cash=value},{_,_,_,_->},{_,_,_->},{},{})}}
-        compose.onNodeWithText("Cash in your Wallet (₹)").performTextInput("2000")
-        compose.onNodeWithText("Start my wallet").performScrollTo()
+        reveal(hasText("Cash in your Wallet (₹)")).apply {performTextInput("2000");performImeAction()}
+        reveal(hasText("Start my wallet")).assertIsNotEnabled()
+        reveal(hasText("Money in your GPay (₹)")).apply {performTextInput("0");performImeAction()}
+        reveal(hasText("Start my wallet"))
         capture("wallet-setup")
         compose.onNodeWithText("Start my wallet").performClick()
         assertEquals(200000L,cash)
@@ -132,22 +143,23 @@ class PersonalWalletUiTest {
     @Test fun walletHomeAndQuickGroup() {
         var chosen:String?=null
         compose.setContent {EditorialPreviewTheme {SplitScreen(fixture,{},{},{},{_,_->},{},{_,_,_,_->},onRepeatGroup={chosen=it.id})}}
-        compose.onNodeWithText("Same group again · Lunch crew").performScrollTo().assertIsDisplayed()
+        reveal(hasText("Settlement history")).performClick()
+        reveal(hasText("Same group again · Lunch crew")).assertIsDisplayed()
         capture("quick-group")
         compose.onNodeWithText("Same group again · Lunch crew").performClick()
         assertEquals("lunch",chosen)
     }
     @Test fun overviewShowsPrimaryBalances() {
         compose.setContent {EditorialPreviewTheme {HomeScreen(fixture,{_,_->},{},{},{},{})}}
-        compose.onNodeWithText("₹5,700.00").assertIsDisplayed()
+        compose.onNodeWithText("₹5,700").assertIsDisplayed()
         compose.onNodeWithText("Wallet").assertIsDisplayed()
         capture("wallet-overview")
     }
     @Test fun itemizedChargesAndDiscountControls() {
         val initial=EntryUiState(amount="300",description="Lunch",accountId="wallet",shared=true,participants=people.map {it.id},method="Itemized",items="200 = self\n100 = maya",paid=mapOf("self" to "300","maya" to "0","dev" to "0"))
-        compose.setContent {var value by remember {mutableStateOf(initial)};EditorialPreviewTheme {EntryScreen(value,fixture.accounts,people,emptyList(),fixture.groups,{value=it},{},{})}}
-        compose.onNodeWithText("Shared taxes / charges (₹)").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Bill discount (₹)").performScrollTo().assertIsDisplayed()
+        compose.setContent {var value by remember {mutableStateOf(initial)};EditorialPreviewTheme {AdvancedEntryScreen(value,fixture.accounts,people,emptyList(),fixture.groups,{value=it},{},{})}}
+        reveal(hasText("Shared taxes / charges (₹)")).assertIsDisplayed()
+        reveal(hasText("Bill discount (₹)")).assertIsDisplayed()
         capture("food-split")
     }
 }

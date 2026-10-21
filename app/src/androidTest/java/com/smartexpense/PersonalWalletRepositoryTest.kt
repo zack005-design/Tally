@@ -92,7 +92,7 @@ class PersonalWalletRepositoryTest {
             sql.execSQL("INSERT INTO entries VALUES ('entry','opening','cash',12345)")
             sql.version=1
         }
-        val db=Room.databaseBuilder(context,TrackerDatabase::class.java,name).addMigrations(AppModule.migration1To2,AppModule.migration2To3,AppModule.migration3To4).build()
+        val db=Room.databaseBuilder(context,TrackerDatabase::class.java,name).addMigrations(AppModule.migration1To2,AppModule.migration2To3,AppModule.migration3To4,AppModule.migration4To5).build()
         try {
             val repo=FinanceRepository(db);repo.initialize()
             assertEquals(12345L,repo.snapshot().accounts.single().balance)
@@ -114,10 +114,12 @@ class PersonalWalletRepositoryTest {
             val bytes=json.toString().toByteArray()
             lateinit var model:com.smartexpense.ui.AppViewModel
             val instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
-            instrumentation.runOnMainSync {model=com.smartexpense.ui.AppViewModel(repo,backup,androidx.lifecycle.SavedStateHandle());store.put("test",model);model.prepareRestore(bytes,"Old backup","")}
+            instrumentation.runOnMainSync {model=com.smartexpense.ui.AppViewModel(repo,backup,com.smartexpense.data.BillScanner(androidx.test.core.app.ApplicationProvider.getApplicationContext()),androidx.lifecycle.SavedStateHandle());store.put("test",model);model.prepareRestore(bytes,"Old backup","")}
             model.restorePrepared()
             assertEquals(500000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
             assertEquals(YearMonth.now().toString(),repo.snapshot().walletSources!!.lastResetMonth)
         } finally {androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync {store.clear()};db.close()}
     }
 }
+
+

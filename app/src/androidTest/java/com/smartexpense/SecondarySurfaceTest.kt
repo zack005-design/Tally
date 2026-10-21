@@ -25,7 +25,7 @@ class SecondarySurfaceTest {
     private fun createModel():AppViewModel {
         val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(),TrackerDatabase::class.java).build()
         database=db
-        val model=AppViewModel(FinanceRepository(db),BackupService(db),SavedStateHandle())
+        val model=AppViewModel(FinanceRepository(db),BackupService(db),BillScanner(androidx.test.core.app.ApplicationProvider.getApplicationContext()),SavedStateHandle())
         models.put("secondary-test",model)
         return model
     }
@@ -41,7 +41,7 @@ class SecondarySurfaceTest {
         val fixture=Snapshot(accounts=listOf(Account("fixture","Pocket cash","Cash",10000,false)))
         compose.setContent {TrackerTheme {AccountsScreen(fixture,model,{})}}
         compose.onNodeWithText("Account name").assertDoesNotExist()
-        compose.onNodeWithText("New account").performClick()
+        compose.onNodeWithText("Add account").performClick()
         compose.onNodeWithText("Account name").performTextInput("Unsaved bank")
         compose.onNodeWithText("Cancel").performClick()
         compose.onNodeWithText("Account name").assertDoesNotExist()
@@ -100,4 +100,5 @@ class SecondarySurfaceTest {
         assertEquals(0, saved)
     }
 }
+
 
