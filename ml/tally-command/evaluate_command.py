@@ -40,7 +40,7 @@ def main():
     report['challenge_v3'] = evaluate(model, vocabulary, challenge, threshold)
     baseline = json.loads((ROOT / 'CHALLENGE_BASELINE_V3.json').read_text(encoding='utf-8'))
     report['challenge_v2_baseline'] = {k: v for k, v in baseline.items() if k != 'results'}
-    assets = REPO / 'app' / 'src' / 'main' / 'assets'
+    assets = REPO / 'app' / 'src' / 'localAi' / 'assets'
     assets.mkdir(parents=True, exist_ok=True)
     target = assets / 'tally-command.bin'
     with target.open('wb') as stream:

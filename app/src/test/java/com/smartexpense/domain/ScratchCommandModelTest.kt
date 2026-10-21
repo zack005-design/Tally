@@ -5,7 +5,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ScratchCommandModelTest {
-    private fun model(): ScratchCommandModel = File("src/main/assets/tally-command.bin").inputStream().use(ScratchCommandModel::load)
+    private fun model(): ScratchCommandModel = File("src/localAi/assets/tally-command.bin").inputStream().use(ScratchCommandModel::load)
 
     @Test fun exactAmountsAreCopiedInsteadOfGenerated() {
         val model = model()

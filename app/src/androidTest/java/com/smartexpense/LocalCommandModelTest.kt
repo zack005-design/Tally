@@ -13,6 +13,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class LocalCommandModelTest {
     @Test fun bundledModelImprovesDraftsAndRunsLocally() {
+        org.junit.Assume.assumeTrue(BuildConfig.LOCAL_AI_ENABLED)
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val model = context.assets.open("tally-command.bin").use(ScratchCommandModel::load)
         val parser = CommandExpenseTextParser(model)

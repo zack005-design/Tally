@@ -5,6 +5,11 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
 }
+val tallyAiEnabled = providers.gradleProperty("tallyAi").map {
+    require(it == "true" || it == "false") { "tallyAi must be true or false" }
+    it.toBoolean()
+}.getOrElse(true)
+
 android {
     namespace = "com.smartexpense"
     compileSdk = 36
@@ -12,12 +17,14 @@ android {
         applicationId = "com.smartexpense"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.2.1"
+        buildConfigField("boolean", "LOCAL_AI_ENABLED", tallyAiEnabled.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets.getByName("androidTest").assets.srcDir("schemas")
-    buildFeatures { compose = true }
+    if (tallyAiEnabled) sourceSets.getByName("main").assets.srcDir("src/localAi/assets")
+    buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     testOptions { unitTests.isReturnDefaultValues = true }
 }

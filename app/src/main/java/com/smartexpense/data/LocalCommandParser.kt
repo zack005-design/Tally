@@ -2,6 +2,7 @@ package com.smartexpense.data
 
 import android.content.Context
 import android.util.Log
+import com.smartexpense.BuildConfig
 import com.smartexpense.domain.CommandExpenseTextParser
 import com.smartexpense.domain.ParsedDraft
 import com.smartexpense.domain.PersonRef
@@ -16,7 +17,7 @@ import kotlinx.coroutines.withContext
 @Singleton
 class LocalCommandParser @Inject constructor(@ApplicationContext private val context: Context) {
     private val parser by lazy {
-        val model = try {
+        val model = if (!BuildConfig.LOCAL_AI_ENABLED) null else try {
             context.assets.open("tally-command.bin").use(ScratchCommandModel::load)
         } catch (error: java.io.IOException) {
             Log.w("LocalCommandParser", "Command model unavailable; using rules", error)

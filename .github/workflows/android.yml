@@ -16,7 +16,10 @@ concurrency:
 
 jobs:
   verify:
-    name: Tests, lint and debug APK
+    name: Tests, lint and debug APK (AI=${{ matrix.tally-ai }})
+    strategy:
+      matrix:
+        tally-ai: ['true', 'false']
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -34,13 +37,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests, Android lint and compile APK
-        run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-daemon --stacktrace
+        run: ./gradlew -PtallyAi=${{ matrix.tally-ai }} :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-daemon --stacktrace
 
       - name: Save test and lint reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: android-check-reports
+          name: android-check-reports-ai-${{ matrix.tally-ai }}
           path: |
             app/build/reports/tests/testDebugUnitTest/
             app/build/test-results/testDebugUnitTest/

@@ -10,8 +10,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/download/v0.2.0-ai-20261022/tally-0.2.0-ai-debug.apk"><img src="docs/assets/download-android.svg" height="48" alt="Download Tally for Android"></a>
+  <a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-ai-debug.apk"><img src="docs/assets/download-android.svg" height="48" alt="Download Tally AI for Android"></a>
 </p>
+
+<p align="center"><a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-ai-debug.apk">Download AI APK</a> · <a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-non-ai-debug.apk">Download non-AI APK</a></p>
+
+Both editions include the calculator and receipt scanner. The AI edition bundles our scratch-trained expense-command model; the non-AI edition omits it and uses rule-based parsing. They share an app identity, so installing one replaces the other while preserving app data.
 
 <p align="center">
   <a href="#screens">Explore the app</a>

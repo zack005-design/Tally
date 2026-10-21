@@ -11,7 +11,7 @@ class CommandInputReviewTest {
     private val parser = CommandExpenseTextParser(null, fallback)
 
     @Test fun selfPaidPersonalExpenseUsesTheLearnedDescriptionAndAccount() {
-        val model = java.io.File("src/main/assets/tally-command.bin").inputStream().use(ScratchCommandModel::load)
+        val model = java.io.File("src/localAi/assets/tally-command.bin").inputStream().use(ScratchCommandModel::load)
         val parsed = CommandExpenseTextParser(model, fallback).parse("I paid 45 for coffee using cash", emptyList())
         assertEquals("coffee", parsed.description)
         assertEquals(4500L, parsed.amount)
