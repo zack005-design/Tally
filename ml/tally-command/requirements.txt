@@ -1,0 +1,4 @@
+# Training software only. This package contains no pretrained model weights.
+# CUDA 12.6 build; official source: https://pytorch.org/get-started/previous-versions/
+--index-url https://download.pytorch.org/whl/cu126
+torch==2.6.0

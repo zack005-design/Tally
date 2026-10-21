@@ -1,0 +1,16 @@
+{
+  "model": "scratch bidirectional GRU span tagger; not a generative LLM",
+  "parameters": 53142,
+  "seed": 2027,
+  "steps": 5000,
+  "pretrained_weights": false,
+  "data_provenance": "Coding-assistant-authored programmatic templates; no private records.",
+  "dataset_sha256": "470ee6c0e95be9892e92285df900431688dd31d010d0d07b3bd283249ec9c645",
+  "threshold": 0.8,
+  "deployment_guard": "Unknown words only in anchored/compact description spans; exact monetary validation and guarded rules fallback.",
+  "evaluation_status": "V3 disjoint synthetic templates plus pre-frozen challenge; not independently collected real-user language.",
+  "sha256": "c6892b7a3f6cbf12e9eabe85dfe5f7b4bf6e619f97cff2883eb00aeeb1cde7ea",
+  "bytes": 214695,
+  "format": "TCMD version 1, big-endian float32",
+  "model_version": "command-v3-5000"
+}

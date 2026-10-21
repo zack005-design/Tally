@@ -14,7 +14,7 @@ import javax.inject.Inject
 data class AppUiState(val snapshot:Snapshot=Snapshot(),val loading:Boolean=true,val busy:Boolean=false,val message:String?=null)
 data class BackupUiState(val password:String="",val visible:Boolean=false,val restoreSummary:String?=null)
 @HiltViewModel
-class AppViewModel @Inject constructor(val repository:FinanceRepository,val backup:BackupService,val billScanner:BillScanner,private val saved:SavedStateHandle):ViewModel() {
+class AppViewModel @Inject constructor(val repository:FinanceRepository,val backup:BackupService,val billScanner:BillScanner,private val saved:SavedStateHandle,private val commandParser:LocalCommandParser?=null):ViewModel() {
     private val mutable=MutableStateFlow(AppUiState())
     val state=mutable.asStateFlow()
     private val route=MutableStateFlow("home")
@@ -171,9 +171,20 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         discardDraftBill()
         change(EntryUiState(kind=d.kind,amount=Money.input(d.amount),description=d.description,accountId=d.accountId,destinationId=d.destinationAccountId.orEmpty(),categoryId=d.categoryId,groupId=d.groupId,shared=d.participants!=listOf("self"),participants=d.participants,paid=d.contributions.mapValues { Money.input(it.value) },method=if(d.participants!=listOf("self")) "Fixed" else "Equal",values=(d.splitRule as? SplitRule.Fixed)?.amounts?.mapValues { Money.input(it.value) }.orEmpty(),date=java.time.Instant.ofEpochMilli(d.date).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString(),notes=d.notes,replaces=if(duplicate) null else id,refundOf=d.refundOf,secondAccountId=d.selfPayments.keys.firstOrNull {it!=d.accountId}.orEmpty(),originalMovements=original,originalDate=if(duplicate) null else d.date,secondPayment=d.selfPayments.entries.firstOrNull {it.key!=d.accountId}?.value?.let(Money::input).orEmpty()));onReady()
     }
+    private var parseRequest = 0L
     fun parseText() {
-        val parsed=RuleBasedTextParser().parse(form.value.text,state.value.snapshot.people.filter { it.id!="self" }.map { PersonRef(it.id,it.name,it.aliases) })
-        val current=form.value
+        val request = ++parseRequest
+        val requested = form.value
+        val people = state.value.snapshot.people.filter { it.id!="self" }.map { PersonRef(it.id,it.name,it.aliases) }
+        viewModelScope.launch {
+        val parsed = try { commandParser?.parse(requested.text, people) ?: kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { CommandExpenseTextParser(null).parse(requested.text, people) } }
+        catch (error: CancellationException) { throw error }
+        catch (error: Exception) { if (request == parseRequest && form.value == requested) mutable.update { it.copy(message="Could not interpret this entry. Please enter the fields manually.") }; return@launch }
+        if (request != parseRequest || form.value != requested) return@launch
+        applyParsedText(parsed, requested)
+        }
+    }
+    private fun applyParsedText(parsed: ParsedDraft, current: EntryUiState) {
         val snapshot=state.value.snapshot
         val source=resolveParsedAccount(parsed.fromAccount,snapshot.accounts,snapshot.walletSources)
         val destination=resolveParsedAccount(parsed.toAccount,snapshot.accounts,snapshot.walletSources)

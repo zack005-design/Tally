@@ -1,0 +1,383 @@
+{
+  "count": 32,
+  "positive_count": 16,
+  "negative_count": 16,
+  "correct_positive_rate": 0.125,
+  "accepted_count": 2,
+  "accepted_precision": 1.0,
+  "negative_false_accepts": 0,
+  "results": [
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Paid 175 for masala dosa using cash",
+      "expected": {
+        "amount_paise": 17500,
+        "description": "masala dosa",
+        "account": "WALLET"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "ZestBistro 240 gpay",
+      "expected": {
+        "amount_paise": 24000,
+        "description": "ZestBistro",
+        "account": "GPAY"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Spent 87.35 on stationery through wallet",
+      "expected": {
+        "amount_paise": 8735,
+        "description": "stationery",
+        "account": "WALLET"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "I paid INR 325 for dentist using google pay",
+      "expected": {
+        "amount_paise": 32500,
+        "description": "dentist",
+        "account": "GPAY"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Rs. 65 for filter coffee using cash",
+      "expected": {
+        "amount_paise": 6500,
+        "description": "filter coffee",
+        "account": "WALLET"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Please record \u00e2\u201a\u00b942.80 for biscuits via gpay",
+      "expected": {
+        "amount_paise": 4280,
+        "description": "biscuits",
+        "account": "GPAY"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "For printer ink I paid 699 using wallet",
+      "expected": {
+        "amount_paise": 69900,
+        "description": "printer ink",
+        "account": "WALLET"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Used cash to pay 150 for badminton",
+      "expected": {
+        "amount_paise": 15000,
+        "description": "badminton",
+        "account": "WALLET"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Today's auto ride cost 91 via g-pay",
+      "expected": {
+        "amount_paise": 9100,
+        "description": "auto ride",
+        "account": "GPAY"
+      },
+      "correct": false
+    },
+    {
+      "draft": {
+        "amount_paise": 25,
+        "description": "tea",
+        "account": "WALLET"
+      },
+      "candidate": {
+        "amount_paise": 25,
+        "description": "tea",
+        "account": "WALLET"
+      },
+      "confidence": 0.9999821186065674,
+      "reason": null,
+      "text": "Spent 0.25 on tea using wallet",
+      "expected": {
+        "amount_paise": 25,
+        "description": "tea",
+        "account": "WALLET"
+      },
+      "correct": true
+    },
+    {
+      "draft": {
+        "amount_paise": 3000,
+        "description": "water bottle",
+        "account": "WALLET"
+      },
+      "candidate": {
+        "amount_paise": 3000,
+        "description": "water bottle",
+        "account": "WALLET"
+      },
+      "confidence": 0.9974752068519592,
+      "reason": null,
+      "text": "I bought a water bottle for 30 with cash",
+      "expected": {
+        "amount_paise": 3000,
+        "description": "water bottle",
+        "account": "WALLET"
+      },
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "The parking cost was 45, paid using googlepay",
+      "expected": {
+        "amount_paise": 4500,
+        "description": "parking",
+        "account": "GPAY"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Log 1,25,000.75 for laptop using gpay",
+      "expected": {
+        "amount_paise": 12500075,
+        "description": "laptop",
+        "account": "GPAY"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Yesterday I paid 210 for noodles with wallet",
+      "expected": {
+        "amount_paise": 21000,
+        "description": "noodles",
+        "account": "WALLET"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Bought shampoo; paid 189 through cash",
+      "expected": {
+        "amount_paise": 18900,
+        "description": "shampoo",
+        "account": "WALLET"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": {
+        "amount_paise": 29900,
+        "description": "subscription",
+        "account": "GPAY"
+      },
+      "confidence": 0.9903595447540283,
+      "reason": "review_required",
+      "text": "subscription 299 google pay",
+      "expected": {
+        "amount_paise": 29900,
+        "description": "subscription",
+        "account": "GPAY"
+      },
+      "correct": false
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "review_required",
+      "text": "I did not pay 45 for coffee using cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "Can I spend 80 on lunch from wallet?",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "review_required",
+      "text": "I will spend 90 on lunch through gpay",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.9997015595436096,
+      "reason": "review_required",
+      "text": "coffee -45 cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.9983003735542297,
+      "reason": "review_required",
+      "text": "coffee 45.999 cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.9983003735542297,
+      "reason": "review_required",
+      "text": "coffee 12,34 cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.9981151819229126,
+      "reason": "review_required",
+      "text": "coffee 45 cash google pay",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "coffee 45 wallet g-pay",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.9999912977218628,
+      "reason": "review_required",
+      "text": "paid 40 and 70 for coffee using cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "review_required",
+      "text": "salary 45000 gpay",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "review_required",
+      "text": "refund 45 for coffee to wallet",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "review_required",
+      "text": "transfer 120 from cash to gpay",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "split lunch 600 equally with Rahul via cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.0,
+      "reason": "unknown_word",
+      "text": "coffee 20 dollars cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.9998931884765625,
+      "reason": "review_required",
+      "text": "lunch cash",
+      "expected": null,
+      "correct": true
+    },
+    {
+      "draft": null,
+      "candidate": null,
+      "confidence": 0.9815899729728699,
+      "reason": "review_required",
+      "text": "lunch 120",
+      "expected": null,
+      "correct": true
+    }
+  ]
+}

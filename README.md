@@ -49,6 +49,8 @@
 
 ## Features
 
+**New: offline calculations and expense commands.** Open **More → Money & planning → Calculate** for arithmetic, percentages, equal bill splits, unit conversions, and simple equations. Type a request, use an example, or choose guided fields. Results show the interpreted calculation and never change your records. See the [calculator guide](ml/tally-command/CALCULATOR.md) and [scratch-trained expense model](ml/tally-command/COMMAND_MODEL.md) for supported inputs and limits. No pretrained model weights are used.
+
 <table align="center" width="100%">
   <tr>
     <td width="50%" align="left" valign="top">

@@ -1,0 +1,56 @@
+{
+  "model": "scratch bidirectional GRU span tagger; not a generative LLM",
+  "parameters": 53142,
+  "steps": 5000,
+  "training_seconds": 55.71622750000097,
+  "threshold": 0.8,
+  "deployment_guard": "Unknown words only in anchored/compact description spans; exact monetary validation and guarded rules fallback.",
+  "evaluation_status": "V3 disjoint synthetic templates plus pre-frozen challenge; not independently collected real-user language.",
+  "heldout": {
+    "count": 2000,
+    "positive_count": 1563,
+    "negative_count": 437,
+    "correct_positive_rate": 0.9974408189379399,
+    "accepted_count": 1559,
+    "accepted_precision": 1.0,
+    "negative_false_accepts": 0
+  },
+  "historical_regressions": {
+    "count": 8,
+    "positive_count": 8,
+    "negative_count": 0,
+    "correct_positive_rate": 1.0,
+    "accepted_count": 8,
+    "accepted_precision": 1.0,
+    "negative_false_accepts": 0
+  },
+  "safety_cases": {
+    "count": 30,
+    "positive_count": 6,
+    "negative_count": 24,
+    "correct_positive_rate": 0.8333333333333334,
+    "accepted_count": 5,
+    "accepted_precision": 1.0,
+    "negative_false_accepts": 0
+  },
+  "challenge_v3": {
+    "count": 32,
+    "positive_count": 16,
+    "negative_count": 16,
+    "correct_positive_rate": 0.875,
+    "accepted_count": 14,
+    "accepted_precision": 1.0,
+    "negative_false_accepts": 0
+  },
+  "challenge_v2_baseline": {
+    "count": 32,
+    "positive_count": 16,
+    "negative_count": 16,
+    "correct_positive_rate": 0.125,
+    "accepted_count": 2,
+    "accepted_precision": 1.0,
+    "negative_false_accepts": 0
+  },
+  "model_bytes": 214695,
+  "parity_cases": 220
+}

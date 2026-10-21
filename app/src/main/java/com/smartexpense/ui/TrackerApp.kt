@@ -132,6 +132,7 @@ import com.smartexpense.domain.*
                 composable("insights") {InsightsScreen(ui.snapshot,reportMonth,model::selectMonth,onBudget={_,_,_->},onPlanner={nav.navigate("planner")},onBudgetSave={month,category,amount,finished->model.action("Budget saved") {model.repository.saveBudget(month,category,amount);finished()}},busy=ui.busy,onTransactions={nav.navigate("activity")},onPeriodReport=model.repository::report)}
                 composable("budgets") {BudgetsScreen(ui.snapshot,reportMonth,model::selectMonth,{nav.popBackStack()},{month,category,amount,finished->model.action("Budget saved") {model.repository.saveBudget(month,category,amount);finished()}},ui.busy)}
                 composable("planner") {MoneyPlannerScreen(ui.snapshot,onBack={nav.popBackStack()})}
+                composable("calculator") {CalculatorScreen(onBack={nav.popBackStack()})}
                 composable("accounts") {AccountsScreen(ui.snapshot,model,::detail,onCheck={nav.navigate("balance-check")})}
                 composable("balance-check") {BalanceCheckScreen(ui.snapshot,ui.busy,::detail,{id->model.newEntry();model.change(model.entry.value.copy(accountId=id));nav.navigate("add")}) {id,target,expected,reason,done->model.action("Balance adjustment recorded") {model.repository.reconcile(id,target,expected,reason);done()}}}
                 composable("categories") {CategoriesScreen(ui.snapshot,model)}

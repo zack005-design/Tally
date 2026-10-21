@@ -1,0 +1,10 @@
+[
+  {"text":"Lunch 180 GPay","draft":{"amount_paise":18000,"description":"lunch","account":"GPAY"}},
+  {"text":"Coffee 45 cash","draft":{"amount_paise":4500,"description":"coffee","account":"WALLET"}},
+  {"text":"Paid 120 for groceries using wallet","draft":{"amount_paise":12000,"description":"groceries","account":"WALLET"}},
+  {"text":"Spent 99.50 on snacks through google pay","draft":{"amount_paise":9950,"description":"snacks","account":"GPAY"}},
+  {"text":"Record 250 for fuel via cash","draft":{"amount_paise":25000,"description":"fuel","account":"WALLET"}},
+  {"text":"Dinner was 450 and I paid with GPay","draft":{"amount_paise":45000,"description":"dinner","account":"GPAY"}},
+  {"text":"Please add my bus ticket, 35 rupees, cash","draft":{"amount_paise":3500,"description":"bus ticket","account":"WALLET"}},
+  {"text":"I used wallet for tea costing 12.75","draft":{"amount_paise":1275,"description":"tea","account":"WALLET"}}
+]
