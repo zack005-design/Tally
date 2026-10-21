@@ -1,0 +1,32 @@
+{
+  "verified_release": "v0.1.0-ios-polish-20261021",
+  "release_commit": "cb1882471375cff7874a7633319939a5e1a3c1c2",
+  "ui_source_matches_current_main": true,
+  "capture_type": "Real Android emulator captures with fictional fixture data; reused and visually inspected, not newly captured for this README edit.",
+  "screens": [
+    {
+      "file": "overview.png",
+      "sha256": "307c9e8d7342395c4784f7bbb1819cde76a6f55cd8d2cbe827e1eb1292198b8d",
+      "width": 1080,
+      "height": 2400,
+      "source_capture": "docs/screenshots/home.png",
+      "capture_test": "AllScreensPreviewTest.overview"
+    },
+    {
+      "file": "shared-bill.png",
+      "sha256": "85113d1b04d83a002ef17dbe6124cacb025fe7f0dcb9c129ae10b12683103258",
+      "width": 1080,
+      "height": 2400,
+      "source_capture": "docs/screenshots/all-screens/shared-review.png",
+      "capture_test": "ReferenceScreenshotsTest shared-review capture"
+    },
+    {
+      "file": "calendar.png",
+      "sha256": "07d8e1982fb9ca4b7547f51bf068e2fa3d36b8f7887c04b24e245ea999b9f487",
+      "width": 1080,
+      "height": 2400,
+      "source_capture": "artifacts/ios-polish-gallery/calendar-week.png",
+      "capture_test": "AllScreensPreviewTest.calendarWeek"
+    }
+  ]
+}
