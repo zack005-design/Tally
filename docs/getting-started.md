@@ -2,16 +2,16 @@
 
 # Download and setup
 
-Tally is an Android expense tracker for manually maintained accounts and shared bills. The current published download is **version 0.1.0**, a development build for **Android 8.0 or later**.
+Tally is an Android expense tracker for manually maintained accounts and shared bills. The current published AI download is **version 0.2.0**, a development build for **Android 8.0 or later** with local expense suggestions and an offline calculator.
 
 ## Install Tally
 
-1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.1.0-ios-polish-20261021).
-2. Download **tally-ios-polish-debug.apk** to your Android device.
+1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.0-ai-20261022).
+2. Download **tally-0.2.0-ai-debug.apk** to your Android device.
 3. Open the downloaded APK. If Android asks, allow installation from the app you used to open it.
 4. Complete installation and open Tally.
 
-The release also includes two plugin ZIP files. They are separate Codex plugins, not Android installers. The APK filename contains “ios-polish” to identify its visual update; the app runs on Android.
+The expense-command model is bundled in the AI APK and requires no separate download. The [Companion plugin ZIPs](features/companion.md) remain available from the earlier release; they are separate Codex plugins, not Android installers.
 
 ## Set up your records
 
@@ -28,6 +28,6 @@ Create a [full backup](features/reports-and-backups.md#create-a-restorable-backu
 
 ## Release scope
 
-This is a development APK, not a production store release. INR is the core currency; foreign bills use manually entered exchange rates. Recorded test results and device-testing limits are in the [verification report](verification/ios-polish-report.md).
+This is a development APK, not a production store release. INR is the core currency; foreign bills use manually entered exchange rates. Read the [expense-suggestion guide](features/on-device-ai.md) and [calculator guide](features/calculator.md) for capabilities and recorded checks. The [earlier visual-update report](verification/ios-polish-report.md) covers UI testing and device limits.
 
 [Everyday money →](features/everyday-money.md) · [All feature guides](README.md)

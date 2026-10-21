@@ -2,7 +2,7 @@
 
 # Privacy and app lock
 
-Tally stores your finance records on your device. The Android app has no Internet permission, and its bundled receipt-recognition model runs locally.
+Tally stores your finance records on your device. The Android app has no Internet permission. Receipt recognition and the AI edition's expense-command model run locally. The calculator uses deterministic rules and does not write ledger records.
 
 ## Accounts you maintain yourself
 

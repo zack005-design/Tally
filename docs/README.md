@@ -8,6 +8,8 @@ Learn how to record everyday spending, manage shared bills, and keep control of 
 
 | Guide | What you will learn |
 | --- | --- |
+| [On-device expense suggestions](features/on-device-ai.md) | Short English commands, editable drafts, and the model's limits. |
+| [Offline calculator](features/calculator.md) | Totals, percentages, splits, equations, and conversions. |
 | [Everyday money](features/everyday-money.md) | Accounts, transactions, transfers, and balance reconciliation. |
 | [Shared bills](features/shared-bills.md) | Split methods, multiple payers, and repayments. |
 | [Your payment and your share](features/payment-and-share.md) | Cash movements, personal spending, and outstanding settlements. |

@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Your everyday money, clearly accounted for.</strong><br>
-  An offline Android app for personal spending, account balances, and shared expenses.
+  An offline Android app for personal spending, shared expenses, and on-device expense suggestions.
 </p>
 
 <p align="center">
@@ -45,13 +45,23 @@
   </tr>
 </table>
 
-*Real app captures with fictional data. Click any screen to open it at full size, or [browse the complete gallery](docs/screenshots/all-screens/README.md).*
+*Real app captures with fictional data from the 0.1.0 visual update; AI and calculator capabilities are described in their guides. Click any screen to open it at full size, or [browse the complete gallery](docs/screenshots/all-screens/README.md).*
 
 ## Features
 
-**New: offline calculations and expense commands.** Open **More → Money & planning → Calculate** for arithmetic, percentages, equal bill splits, unit conversions, and simple equations. Type a request, use an example, or choose guided fields. Results show the interpreted calculation and never change your records. See the [calculator guide](ml/tally-command/CALCULATOR.md) and [scratch-trained expense model](ml/tally-command/COMMAND_MODEL.md) for supported inputs and limits. No pretrained model weights are used.
+**Offline assistance, with you in control.** The AI edition includes a small expense-command model trained from scratch. Both editions include a deterministic calculator. Neither tool saves financial records automatically.
 
 <table align="center" width="100%">
+  <tr>
+    <td width="50%" align="left" valign="top">
+      <h3><a href="docs/features/on-device-ai.md">On-device expense suggestions</a></h3>
+      <p>Turn a short English expense command into an editable draft. The AI edition suggests the description, INR amount, and account locally. Review every field before saving.</p>
+    </td>
+    <td width="50%" align="left" valign="top">
+      <h3><a href="docs/features/calculator.md">Offline calculator</a></h3>
+      <p>Calculate totals, percentages, equal splits, unit conversions, and simple equations. Supply your own exchange rate for currency conversions. Results stay separate from ledger records.</p>
+    </td>
+  </tr>
   <tr>
     <td width="50%" align="left" valign="top">
       <h3><a href="docs/features/everyday-money.md">Everyday money</a></h3>
@@ -104,7 +114,7 @@ Repayments reduce what is owed without becoming new income. Transfers between yo
 
 ## Privacy
 
-**Your records stay on your device.** Tally has no Internet permission, and receipt recognition uses a bundled on-device model.
+**Your records stay on your device.** Tally has no Internet permission. Receipt recognition and expense suggestions run locally; calculator results do not change your records.
 
 - **No bank connection.** Wallet and GPay are balances you maintain manually; Tally does not access banks, Google Pay, SMS messages, or payment credentials.
 - **Optional app lock.** Restrict access with supported device credentials or biometric authentication.
@@ -125,7 +135,7 @@ These plugins run separately in Codex. Tally does not send your records automati
 
 ## Release information
 
-**Android 8.0+ · Version 0.1.0 · Development build**
+**Android 8.0+ · Version 0.2.0 · Development build**
 
 INR is the core currency. Foreign bills can use a manually entered exchange rate. See [download and setup](docs/getting-started.md) for installation and release details, or the [verification report](docs/verification/ios-polish-report.md) for recorded test results and device-testing limits.
 
