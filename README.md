@@ -50,31 +50,31 @@
 <table align="center" width="100%">
   <tr>
     <td width="50%" align="left" valign="top">
-      <h3><a href="docs/screenshots/all-screens/accounts.png">Everyday money</a></h3>
+      <h3><a href="docs/features/everyday-money.md">Everyday money</a></h3>
       <p>Track Wallet, GPay, and other account balances. Record expenses, income, and personal refunds; add funds, transfer money, and reconcile your balances.</p>
     </td>
     <td width="50%" align="left" valign="top">
-      <h3><a href="docs/screenshots/readme/shared-bill.png">Shared bills and repayments</a></h3>
+      <h3><a href="docs/features/shared-bills.md">Shared bills and repayments</a></h3>
       <p>Split equally or by amounts, percentages, weights, or items. Handle multiple payers, track what friends owe, and record partial repayments.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" align="left" valign="top">
-      <h3><a href="docs/screenshots/all-screens/receipt-review.png">Receipts, without retyping</a></h3>
+      <h3><a href="docs/features/receipts.md">Receipts, without retyping</a></h3>
       <p>Import a photo or PDF and review text recognized on your device. Confirm the items, amounts, and payment details before saving.</p>
     </td>
     <td width="50%" align="left" valign="top">
-      <h3><a href="docs/screenshots/all-screens/budgets.png">Spending and planning</a></h3>
+      <h3><a href="docs/features/spending-and-planning.md">Spending and planning</a></h3>
       <p>Explore transactions by day and category. Set monthly budgets, plan allowances, create recurring drafts, and track savings goals.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" align="left" valign="top">
-      <h3><a href="docs/screenshots/all-screens/export.png">Reports and backups</a></h3>
+      <h3><a href="docs/features/reports-and-backups.md">Reports and backups</a></h3>
       <p>Export monthly CSV or PDF reports for review. Create a separate, password-encrypted full backup when you need a restorable copy of your data.</p>
     </td>
     <td width="50%" align="left" valign="top">
-      <h3><a href="docs/screenshots/all-screens/favourites.png">Quicker daily entry</a></h3>
+      <h3><a href="docs/features/quick-entry.md">Quicker daily entry</a></h3>
       <p>Reuse favourite expenses or repeat a recent purchase. Reach entry through the home-screen widget or launcher shortcut, with explicit confirmation before saving.</p>
     </td>
   </tr>
@@ -107,7 +107,7 @@ Repayments restore your balance and reduce the debt without becoming new income.
 
 ## Tally Companion
 
-Review an exported Transactions CSV with your custom Codex plugins. The [export screen](https://github.com/zack005-design/Tally/blob/main/docs/screenshots/ios-polish/companion-export.png) guides you through preparing the file; you explicitly attach it in Codex.
+Review an exported Transactions CSV with your custom Codex plugins. The [export guide](docs/features/reports-and-backups.md#review-an-export-with-tally-companion) explains how to prepare the file; you explicitly attach it in Codex.
 
 [Download Tally Companion](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-companion-0.1.0.zip) &nbsp;·&nbsp; [Download Tally Toolkit](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-toolkit-0.1.0.zip)
 
