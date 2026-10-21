@@ -1,86 +1,128 @@
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases"><img src="docs/screenshots/ios-polish/launcher.png" width="88" alt="Tally app logo — open releases"></a>
+  <a href="https://github.com/zack005-design/Tally/releases"><img src="docs/assets/readme-hero.svg" width="100%" alt="Tally — Clarity for every rupee. Personal spending, shared bills, and a clearer picture of your money."></a>
 </p>
 
 <h1 align="center">Tally</h1>
 
 <p align="center">
-  Personal spending and shared expenses, clearly accounted for.
+  <strong>Your everyday money, clearly accounted for.</strong><br>
+  An offline Android app for personal spending, account balances, and shared expenses.
 </p>
 
 <p align="center">
-  <strong>Android 8.0+ · Offline · INR</strong>
+  <a href="https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-ios-polish-debug.apk"><img src="docs/assets/download-android.svg" height="48" alt="Download Tally for Android"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-ios-polish-debug.apk">Download for Android</a>
+  <a href="#screens">Explore the app</a>
+  &nbsp;·&nbsp;
+  <a href="#features">Features</a>
+  &nbsp;·&nbsp;
+  <a href="#privacy">Privacy</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/zack005-design/Tally/releases">Releases</a>
-  &nbsp;·&nbsp;
-  <a href="https://github.com/zack005-design/Tally/issues">Report an issue</a>
 </p>
 
-Tally brings account balances, everyday spending, and shared bills into one place. Keep track of the money available to you, understand your share of each expense, and see who still needs to settle up.
-
-## Inside the app
+## Screens
 
 <table>
   <tr>
-    <th><a href="docs/screenshots/readme/overview.png">Overview</a></th>
-    <th><a href="docs/screenshots/readme/shared-bill.png">Shared bills</a></th>
-    <th><a href="docs/screenshots/readme/calendar.png">Spending calendar</a></th>
+    <th><a href="docs/screenshots/readme/overview.png">Your money at a glance</a></th>
+    <th><a href="docs/screenshots/readme/shared-bill.png">A clear view of every split</a></th>
+    <th><a href="docs/screenshots/readme/calendar.png">Spending, day by day</a></th>
   </tr>
   <tr>
-    <td><a href="docs/screenshots/readme/overview.png"><img src="docs/screenshots/readme/overview.png" width="240" alt="Overview showing available funds, Wallet and GPay balances, and recent spending"></a></td>
-    <td><a href="docs/screenshots/readme/shared-bill.png"><img src="docs/screenshots/readme/shared-bill.png" width="240" alt="Shared-bill review separating the amount paid, personal share, and outstanding settlements"></a></td>
-    <td><a href="docs/screenshots/readme/calendar.png"><img src="docs/screenshots/readme/calendar.png" width="240" alt="Weekly spending calendar with a selected day and its transactions"></a></td>
+    <td align="center"><a href="docs/screenshots/readme/overview.png"><img src="docs/screenshots/readme/overview.png" width="240" alt="Overview showing available funds, Wallet and GPay balances, and recent transactions"></a></td>
+    <td align="center"><a href="docs/screenshots/readme/shared-bill.png"><img src="docs/screenshots/readme/shared-bill.png" width="240" alt="Shared-bill review showing payments, personal shares, and outstanding settlements"></a></td>
+    <td align="center"><a href="docs/screenshots/readme/calendar.png"><img src="docs/screenshots/readme/calendar.png" width="240" alt="Weekly calendar showing the selected day's spending and transactions"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Balances, recent activity, and quick actions.</sub></td>
+    <td align="center"><sub>What you paid, your share, and who owes whom.</sub></td>
+    <td align="center"><sub>Daily totals with the transactions behind them.</sub></td>
   </tr>
 </table>
 
-*Actual app screens with fictional test data. Click a screen to open it at full size, or [browse the gallery](docs/screenshots/all-screens/README.md).*
+*Real app captures with fictional data. Click any screen to open it at full size, or [browse the complete gallery](docs/screenshots/all-screens/README.md).*
 
-## Everyday money, organized
+## Features
 
-| Feature | What it helps you do |
-| --- | --- |
-| **[Accounts and balances](docs/screenshots/all-screens/accounts.png)** | Track Wallet, GPay, and other accounts; add funds, move money between accounts, and check recorded balances. |
-| **[Expenses and income](docs/screenshots/all-screens/expense.png)** | Record purchases, income, and personal refunds. Use favourite templates or repeat a recent expense to reduce entry time. |
-| **[Shared bills](docs/screenshots/readme/shared-bill.png)** | Split expenses equally or by amounts, percentages, weights, or individual items. Record multiple payers and shared charges. |
-| **[Friends and repayments](docs/screenshots/all-screens/friends.png)** | See outstanding balances, record partial repayments, and keep a history of settlements and group expenses. |
-| **[Receipts](docs/screenshots/all-screens/receipt-review.png)** | Import a receipt photo or PDF, review text recognized on the device, and confirm the details before saving. |
-| **[Spending and planning](docs/screenshots/all-screens/spending.png)** | Explore transactions by day or category, set monthly budgets, plan allowances, and track savings goals. |
-| **[Reports and reminders](docs/screenshots/all-screens/export.png)** | Export monthly CSV or PDF reports, create recurring expense drafts, and enable optional local reminders. |
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3><a href="docs/screenshots/all-screens/accounts.png">Everyday money</a></h3>
+      <p>Track Wallet, GPay, and other account balances. Record expenses, income, and personal refunds; add funds, transfer money, and reconcile your balances.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3><a href="docs/screenshots/readme/shared-bill.png">Shared bills and repayments</a></h3>
+      <p>Split equally or by amounts, percentages, weights, or items. Handle multiple payers, track what friends owe, and record partial repayments.</p>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h3><a href="docs/screenshots/all-screens/receipt-review.png">Receipts, without retyping</a></h3>
+      <p>Import a photo or PDF and review text recognized on your device. Confirm the items, amounts, and payment details before saving.</p>
+    </td>
+    <td valign="top">
+      <h3><a href="docs/screenshots/all-screens/budgets.png">Spending and planning</a></h3>
+      <p>Explore transactions by day and category. Set monthly budgets, plan allowances, create recurring drafts, and track savings goals.</p>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h3><a href="docs/screenshots/all-screens/export.png">Reports and backups</a></h3>
+      <p>Export monthly CSV or PDF reports for review. Create a separate, password-encrypted full backup when you need a restorable copy of your data.</p>
+    </td>
+    <td valign="top">
+      <h3><a href="docs/screenshots/all-screens/favourites.png">Quicker daily entry</a></h3>
+      <p>Reuse favourite expenses or repeat a recent purchase. Reach entry through the home-screen widget or launcher shortcut, with explicit confirmation before saving.</p>
+    </td>
+  </tr>
+</table>
 
-A home-screen widget and launcher shortcut make expense entry easier to reach. Entries are saved only after you confirm them.
+## Your payment and your share
 
-## Shared expenses that reflect your actual money
+Paying the bill does not mean spending the entire bill yourself.
 
-What you pay and what you spend are not always the same. Tally tracks both.
+For a **₹900 dinner split equally among three people**, when you pay the whole amount:
 
-If you pay a **₹900 dinner bill** shared equally by three people, your account decreases by ₹900, your personal spending is ₹300, and your friends owe you ₹600. Their repayments restore your account balance and reduce the outstanding debt without being counted as new income.
+<table>
+  <tr>
+    <td align="center" width="33%"><h3>₹900</h3>Leaves your account</td>
+    <td align="center" width="33%"><h3>₹300</h3>Your personal spending</td>
+    <td align="center" width="33%"><h3>₹600</h3>Owed to you by friends</td>
+  </tr>
+</table>
 
-Transfers between your own accounts stay separate from spending. Calculations use integer paise so payments and shares reconcile exactly.
+Repayments restore your balance and reduce the debt without becoming new income. Transfers between your own accounts stay separate from spending. Integer-paise calculations keep payments and shares exact.
 
-## Private by design
+## Privacy
 
-Your financial records and receipt attachments stay on your device. Tally has no Internet permission, and receipt recognition uses a bundled on-device model.
+**Your records stay on your device.** Tally has no Internet permission, and receipt recognition uses a bundled on-device model.
 
-- **Manual accounts:** Wallet and GPay are balances you maintain. Tally does not access banks, Google Pay, SMS messages, or payment credentials.
-- **Optional app lock:** Use your device's supported biometric or credential authentication to restrict access.
-- **Encrypted backups:** Export a password-protected full backup for restoration. Automatic Android cloud backup is disabled.
+- **No bank connection.** Wallet and GPay are balances you maintain manually; Tally does not access banks, Google Pay, SMS messages, or payment credentials.
+- **Optional app lock.** Restrict access with supported device credentials or biometric authentication.
+- **Encrypted backups.** Export a password-protected full backup. Automatic Android cloud backup is disabled.
+- **Sharing is your choice.** CSV and PDF reports are for reading and analysis, not database restoration. You choose when and where to export them.
 
-CSV and PDF reports are separate from backups: they are for reading and analysis, not for restoring the database. You choose when and where to export or share a file.
+## Tally Companion
 
-## Reports and Tally Companion
+Review an exported Transactions CSV with your custom Codex plugins. The [export screen](docs/screenshots/ios-polish/companion-export.png) guides you through preparing the file; you explicitly attach it in Codex.
 
-The [export screen](docs/screenshots/ios-polish/companion-export.png) includes a guide for reviewing a Transactions CSV with **[Tally Companion](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-companion-0.1.0.zip)** or **[Tally Toolkit](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-toolkit-0.1.0.zip)**.
+[Download Tally Companion](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-companion-0.1.0.zip) &nbsp;·&nbsp; [Download Tally Toolkit](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-toolkit-0.1.0.zip)
 
-These are separate Codex plugins. You explicitly attach the exported CSV for review; Tally does not send your records automatically.
+These plugins run separately in Codex. Tally does not send your records automatically.
 
-## Availability
+## Release information
 
-The current download is an Android **0.1.0 development build**, with INR as its core currency. Foreign bills can be converted using a manually entered exchange rate.
+**Android 8.0+ · Version 0.1.0 · Development build**
 
-Recorded verification covers unit tests, selected Android emulator flows, accessibility-related layouts, and reduced-motion behavior. See the [verification report](docs/verification/ios-polish-report.md) for results and device-testing limits.
+INR is the core currency. Foreign bills can use a manually entered exchange rate. See the [verification report](docs/verification/ios-polish-report.md) for recorded test results and device-testing limits.
 
-Found a problem or have a suggestion? [Open an issue](https://github.com/zack005-design/Tally/issues) with the app version and a short description of what happened.
+<p align="center">
+  <a href="https://github.com/zack005-design/Tally/releases">Latest release</a>
+  &nbsp;·&nbsp;
+  <a href="docs/screenshots/all-screens/README.md">Screen gallery</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/zack005-design/Tally/issues">Feedback and issues</a>
+</p>

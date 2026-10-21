@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title description">
+  <title id="title">Tally — Clarity for every rupee</title>
+  <desc id="description">A blue Tally mark beside the words Personal spending, shared bills, and a clearer picture of your money.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1280" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1830"/><stop offset="1" stop-color="#102C52"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="930" y1="100" x2="1130" y2="310" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#57ADFF"/><stop offset="1" stop-color="#0560EE"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="420" rx="26" fill="url(#background)"/>
+  <circle cx="1155" cy="15" r="250" fill="#2787FF" opacity=".07"/>
+  <circle cx="1180" cy="420" r="220" fill="#2787FF" opacity=".06"/>
+  <path d="M870 0V420" stroke="#B1D5FF" opacity=".12"/>
+  <text x="70" y="76" fill="#80BBFF" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="3">TALLY / PERSONAL FINANCE</text>
+  <text x="66" y="162" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="60" font-weight="700" letter-spacing="-2">Clarity for</text>
+  <text x="66" y="232" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="60" font-weight="700" letter-spacing="-2">every rupee.</text>
+  <text x="70" y="292" fill="#BDCCE0" font-family="Arial, sans-serif" font-size="23">Personal spending. Shared bills.</text>
+  <text x="70" y="325" fill="#BDCCE0" font-family="Arial, sans-serif" font-size="23">A clearer picture of your money.</text>
+  <rect x="70" y="359" width="7" height="7" rx="3.5" fill="#71BAFF"/>
+  <text x="90" y="369" fill="#91A9C6" font-family="Arial, sans-serif" font-size="15" letter-spacing="1">ANDROID · OFFLINE · INR</text>
+  <rect x="918" y="108" width="226" height="226" rx="58" fill="#05132C" opacity=".35"/>
+  <rect x="918" y="96" width="226" height="226" rx="58" fill="url(#blue)"/>
+  <rect x="918.5" y="96.5" width="225" height="225" rx="57.5" fill="none" stroke="#BCE1FF" opacity=".32"/>
+  <g transform="translate(937 115) scale(5.85)" fill="none" stroke="#FFF" stroke-width="2.8" stroke-linecap="round">
+    <path d="M9 10V23M15 8V23M21 6V23M5 24L26 12"/>
+  </g>
+  <text x="1031" y="363" text-anchor="middle" fill="#D1E2F7" font-family="Arial, sans-serif" font-size="19" letter-spacing="5">TALLY</text>
+</svg>
