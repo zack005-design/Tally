@@ -18,6 +18,8 @@
   &nbsp;·&nbsp;
   <a href="#features">Features</a>
   &nbsp;·&nbsp;
+  <a href="docs/README.md">Guides</a>
+  &nbsp;·&nbsp;
   <a href="#privacy">Privacy</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/zack005-design/Tally/releases">Releases</a>
@@ -107,6 +109,8 @@ Repayments reduce what is owed without becoming new income. Transfers between yo
 - **Encrypted backups.** Export a password-protected full backup. Automatic Android cloud backup is disabled.
 - **Sharing is your choice.** CSV and PDF reports are for reading and analysis, not database restoration. You choose when and where to export them.
 
+[Read about privacy and app lock →](docs/features/privacy.md)
+
 ## Tally Companion
 
 Review an exported Transactions CSV with your custom Codex plugins. The [export guide](docs/features/reports-and-backups.md#review-an-export-with-tally-companion) explains how to prepare the file; you explicitly attach it in Codex.
@@ -115,11 +119,13 @@ Review an exported Transactions CSV with your custom Codex plugins. The [export 
 
 These plugins run separately in Codex. Tally does not send your records automatically.
 
+[Learn how to use Tally Companion →](docs/features/companion.md)
+
 ## Release information
 
 **Android 8.0+ · Version 0.1.0 · Development build**
 
-INR is the core currency. Foreign bills can use a manually entered exchange rate. See the [verification report](docs/verification/ios-polish-report.md) for recorded test results and device-testing limits.
+INR is the core currency. Foreign bills can use a manually entered exchange rate. See [download and setup](docs/getting-started.md) for installation and release details, or the [verification report](docs/verification/ios-polish-report.md) for recorded test results and device-testing limits.
 
 <p align="center">
   <a href="https://github.com/zack005-design/Tally/releases">Latest release</a>
