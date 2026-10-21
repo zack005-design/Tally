@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-ios-polish-debug.apk"><img src="docs/assets/download-android.svg" height="48" alt="Download Tally for Android"></a>
+  <a href="https://github.com/zack005-design/Tally/releases/download/v0.2.0-ai-20261022/tally-0.2.0-ai-debug.apk"><img src="docs/assets/download-android.svg" height="48" alt="Download Tally for Android"></a>
 </p>
 
 <p align="center">
