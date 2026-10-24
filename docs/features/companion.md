@@ -8,8 +8,8 @@ Use your custom Codex plugins to review a Transactions CSV exported from Tally. 
 
 | Plugin | Purpose |
 | --- | --- |
-| [Tally Companion](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-companion-0.1.0.zip) | Review exported spending, compare categories or months, and explain shared-bill cash movements. |
-| [Tally Toolkit](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-toolkit-0.1.0.zip) | Work on the Tally project and review user-provided expense exports. |
+| [Tally Companion](../downloads.md#tally-companion) | Review exported spending, compare categories or months, and explain shared-bill cash movements. |
+| [Tally Toolkit](../downloads.md#tally-toolkit) | Work on the Tally project and review user-provided expense exports. |
 
 These are separate Codex plugin packages, not additional Android apps. Use them in Codex through its plugin setup.
 

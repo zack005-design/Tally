@@ -4,7 +4,7 @@
 
 Learn how to record everyday spending, manage shared bills, and keep control of your data.
 
-**New to Tally?** Start with [download and setup](getting-started.md).
+**New to Tally?** Choose an edition in [Downloads](downloads.md), then follow [download and setup](getting-started.md).
 
 | Guide | What you will learn |
 | --- | --- |

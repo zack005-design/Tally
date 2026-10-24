@@ -10,10 +10,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/tag/v0.2.1-20261022"><img src="docs/assets/download-android.svg" height="48" alt="Open Tally Android downloads"></a>
+  <a href="docs/downloads.md"><img src="docs/assets/download-android.svg" height="48" alt="Open Tally Android downloads"></a>
 </p>
 
-<p align="center"><a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-ai-debug.apk">Download AI APK</a> · <a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-non-ai-debug.apk">Download non-AI APK</a></p>
+<p align="center"><a href="docs/downloads.md#android-ai-edition">Download AI APK</a> · <a href="docs/downloads.md#android-non-ai-edition">Download non-AI APK</a></p>
 
 **To download:** Open the release page in your phone's browser, expand **Assets**, and tap the APK you want. This repository is private, so sign in with a GitHub account that has access. If an in-app browser opens the page without downloading, choose **Open in browser**. [Installation help](docs/getting-started.md#install-tally).
 
@@ -133,7 +133,7 @@ Repayments reduce what is owed without becoming new income. Transfers between yo
 
 Review an exported Transactions CSV with your custom Codex plugins. The [export guide](docs/features/reports-and-backups.md#review-an-export-with-tally-companion) explains how to prepare the file; you explicitly attach it in Codex.
 
-[Download Tally Companion](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-companion-0.1.0.zip) &nbsp;·&nbsp; [Download Tally Toolkit](https://github.com/zack005-design/Tally/releases/download/v0.1.0-ios-polish-20261021/tally-toolkit-0.1.0.zip)
+[Download Tally Companion](docs/downloads.md#tally-companion) &nbsp;·&nbsp; [Download Tally Toolkit](docs/downloads.md#tally-toolkit)
 
 These plugins run separately in Codex. Tally does not send your records automatically.
 

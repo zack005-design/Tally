@@ -6,6 +6,8 @@ Tally is an Android expense tracker for manually maintained accounts and shared 
 
 ## Install Tally
 
+Use the [download guide](downloads.md) to choose the AI or non-AI edition and find the correct asset.
+
 1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.1-20261022) in your Android browser. Sign in to a GitHub account with access to this private repository.
 2. Expand **Assets** below the release notes.
 3. Tap **tally-0.2.1-ai-debug.apk** for local expense suggestions, or **tally-0.2.1-non-ai-debug.apk** for rule-based expense parsing.
