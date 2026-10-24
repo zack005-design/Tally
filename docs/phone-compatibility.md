@@ -14,7 +14,7 @@ Biometric unlock uses Android's available authentication methods. Receipt scanni
 
 ## Verification boundaries
 
-The planned compatibility expansion targets disposable emulators on API26, API35 and API36 for migration, backup, reminders, model and distribution checks. A configured CI job is not a passing result. Local device runs and their actual results are recorded in the [task ledger](unfinished-work.md).
+The compatibility workflow targets disposable emulators on API26, API35 and API36 for migration, backup, reminders, model, distribution and layout checks. A configured CI job is not a passing result. Local device runs and their actual results are recorded in the [task ledger](unfinished-work.md).
 
 Layout checks cover compact widths and large system text. An Android emulator can exercise Android16 and alternative display sizes but does not reproduce Xiaomi firmware, thermal limits or the physical display's refresh behavior. Smooth 120 Hz rendering, battery consumption and camera/biometric reliability remain unmeasured until tested on hardware. No universal every-phone performance guarantee is implied.
 

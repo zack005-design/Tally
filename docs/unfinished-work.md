@@ -9,7 +9,7 @@ Continue the existing offline Kotlin/Room/Compose app. Preserve exact integer-pa
 ## Tasks
 
 - [x] Reduce reminder reconciliation overhead. Disabled/denied reminders avoid ledger reads; enabled reminders load scheduling inputs without rebuilding balances, debts or reports. Query-tracing regressions failed before the fix and pass afterward, including reversed occurrence IDs and archived accounts.
-- [ ] Extend compatibility verification to Android 8/API26 as well as modern Android. Cover compact/large-text layouts, navigation, restore, model execution and reminders with isolated test data.
+- [ ] Complete remote compatibility verification on Android 8/API26, API35 and API36. The expanded CI matrix now runs migration, restore, reminder, model, distribution and layout checks with per-API reports. All 37 targeted device/layout checks passed locally on API36; API26/API35 results remain pending CI.
 - [ ] Check Xiaomi 17T-relevant behavior: Android 16, tall high-density display, gestures/keyboard, large text, interrupted/background work and offline inference. An emulator cannot prove HyperOS background delivery, camera behavior, biometric hardware or 120 Hz frame performance.
 - [ ] Implement dedicated shared-bill refund distribution. Started by tracing repository, debt, UI and backup contracts and writing a local design. Exact participant shares, actual cash recipients, partial/repeated refunds, existing repayments, reversal, idempotency and backup validation must ship together. Existing personal refunds continue rejecting shared bills until that complete path is verified.
 - [x] Resume a bounded separate local LLM research run. All 15 research tests passed; a fresh seed-43 run completed 1,200 steps on synthetic data. It matched 11/32 held-out synthetic commands and 7/8 historical commands. This is insufficient for app integration. The app model remains unchanged; the research workspace and all artifacts remain ignored. Broader independent evaluation is still future work.
@@ -25,6 +25,10 @@ Private development release 0.2.3 includes history import, encrypted-backup safe
 ## Current source verification
 
 The reminder update passed the shared checkout's 183 JVM tests, debug assembly, Android lint (zero errors; existing warnings), and 13 targeted API36 instrumentation tests for reminder efficiency/delivery, exports, populated migrations, restore safety, model execution and distribution assets. Tests used the disposable `com.smartexpense.safety` identity and synthetic data. Independent review found no material issue. The 0.2.3 download assets have not been replaced by these source changes.
+
+All 24 layout scenarios also passed on API36: widths 320/360/393/412/440/600dp, each at font scales 1.0/1.3/1.5/2.0. Checks exercise navigation, balances, entry review/save actions, shared-bill review and history filters. Wider scenarios now fit their full logical width into the test display; stale navigation/filter selectors were updated to the current app. These are logical layout checks, not a physical Xiaomi 17T benchmark.
+
+The published 0.2.3 AI APK passed `zipalign -c -P 16 4`; its ARM64 and x86_64 native libraries have at least 16 KB load alignment. This is structural packaging evidence, not proof of firmware behavior or 120 Hz frame performance.
 
 ## Device reference
 

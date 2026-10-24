@@ -52,7 +52,11 @@ jobs:
           retention-days: 7
 
   data-safety:
-    name: Database upgrades and restore safety
+    name: Database and phone compatibility (API ${{ matrix.api }})
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [26, 35, 36]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -72,6 +76,16 @@ jobs:
       - name: Test migrations and rejected restores on a disposable emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: ${{ matrix.api }}
           arch: x86_64
-          script: ./gradlew -I tools/data-safety-build.init.gradle :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smartexpense.InstallationDataSafetyTest,com.smartexpense.BackupTest --no-daemon --console=plain --max-workers=2
+          script: ./gradlew -I tools/data-safety-build.init.gradle :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smartexpense.InstallationDataSafetyTest,com.smartexpense.BackupTest,com.smartexpense.LocalReminderAndExportTest,com.smartexpense.ReminderEfficiencyTest,com.smartexpense.LocalCommandModelTest,com.smartexpense.DistributionVariantTest,com.smartexpense.EditorialAdaptiveTest --no-daemon --console=plain --max-workers=2
+      - name: Save device test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phone-compatibility-api-${{ matrix.api }}
+          path: |
+            .build-cache/data-safety/app/reports/androidTests/
+            .build-cache/data-safety/app/outputs/androidTest-results/
+          if-no-files-found: ignore
+          retention-days: 7

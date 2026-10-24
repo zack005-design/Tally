@@ -21,7 +21,7 @@ import org.junit.Assert.assertTrue
 class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
     companion object {
         @JvmStatic @Parameterized.Parameters(name="width={0} font={1}")
-        fun sizes()=listOf(320,360,393,412).flatMap {w->listOf(1f,1.3f,1.5f,2f).map {f->arrayOf<Any>(w,f)}}
+        fun sizes()=listOf(320,360,393,412,440,600).flatMap {w->listOf(1f,1.3f,1.5f,2f).map {f->arrayOf<Any>(w,f)}}
     }
     @get:Rule val compose=createComposeRule()
     @Test fun allFiveScreensKeepAmountsActionsAndNavigationReachable() {
@@ -32,7 +32,9 @@ class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
         val split=EntryUiState(amount="890",description="Dinner with friends",accountId="bank",shared=true,participants=people.map {it.id},paid=mapOf("self" to "500","r" to "290","k" to "100","a" to "0"))
         compose.setContent {
             val density=LocalDensity.current
-            CompositionLocalProvider(LocalDensity provides Density(androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels/412f,scale)) {
+            // Fit the entire requested logical width, including wide phones and tablets,
+            // into the emulator's physical display instead of silently testing 412dp again.
+            CompositionLocalProvider(LocalDensity provides Density(androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels/maxOf(width,412).toFloat(),scale)) {
                 TrackerTheme {Box(Modifier.width(width.dp).fillMaxHeight()) {
                     Scaffold(bottomBar={LedgerNavigation(if(stage.intValue==0) "home" else "add",{})}) {padding->Box(Modifier.fillMaxSize().padding(padding)) {
                         key(stage.intValue) {when(stage.intValue) {
@@ -46,9 +48,10 @@ class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
                 }}
             }
         }
-        listOf("Today","Friends","Activity").forEach {label->
-            compose.onNodeWithText(label).assertIsDisplayed().assertHasClickAction()
-            val bounds=compose.onNodeWithText(label).fetchSemanticsNode().boundsInRoot
+        listOf("Overview","Spending","Friends").forEach {label->
+            val tab=compose.onNode(hasText(label) and hasClickAction())
+            tab.assertIsDisplayed()
+            val bounds=tab.fetchSemanticsNode().boundsInRoot
             assertTrue("$label crosses the navigation width",bounds.left>=0 && bounds.right<=compose.onRoot().fetchSemanticsNode().boundsInRoot.right)
         }
         // With one account, total and account balance are both intentionally shown.
@@ -65,7 +68,8 @@ class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
         compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasText("Save transaction"))
         compose.onNodeWithText("Save transaction").assertIsDisplayed().assertIsEnabled()
         compose.runOnIdle {stage.intValue=4}
-        compose.onNodeWithText("Expenses").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Filter").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Apply filters").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("Shared dinner").assertExists()
     }
 }
