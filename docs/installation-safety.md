@@ -4,7 +4,7 @@
 
 Install APKs only from the project's trusted release channel. A checksum detects a damaged or substituted file only when compared with a checksum from a trusted source. It is not a malware scan or a substitute for checking the signing certificate.
 
-An in-place update must keep `com.smartexpense`, a compatible signing certificate and a nondecreasing version code. This source update uses version 0.2.2, code 4. Both AI options retain the same app identity and database. Never resolve an update failure by telling users to uninstall or clear storage: those operations remove local records.
+An in-place update must keep `com.smartexpense`, a compatible signing certificate and a nondecreasing version code. This source update uses version 0.2.3, code 5. Both AI options retain the same app identity and database. Never resolve an update failure by telling users to uninstall or clear storage: those operations remove local records.
 
 The previously downloaded 0.2.1 APK in this workspace is signed by an Android Debug certificate, SHA-256 `7ddc9c94f93053522c6048694ff19436bc1333a18654d10be26d646e32b8b865`. This is a development identity, not the trusted production identity. Do not silently replace it with a new signing key and claim existing users can update. A production transition needs either a tested supported signing transition or an explicit migration: export an encrypted backup from the old app, verify it in a separate test installation, and retain that backup before any user chooses to replace the installation. Never uninstall on the user's behalf.
 
@@ -17,7 +17,7 @@ Set `TALLY_KEYSTORE_FILE`, `TALLY_KEYSTORE_PASSWORD`, `TALLY_KEY_ALIAS` and `TAL
 Build with `gradlew.bat :app:testReleaseUnitTest :app:lintRelease :app:assembleRelease`. Then run:
 
 ```powershell
-.\tools\verify-apk.ps1 -Apk app/build/outputs/apk/release/app-release.apk -ExpectedCertificateSha256 <trusted-certificate-sha256> -ExpectedVersionCode 4 -SdkRoot <android-sdk>
+.\tools\verify-apk.ps1 -Apk app/build/outputs/apk/release/app-release.apk -ExpectedCertificateSha256 <trusted-certificate-sha256> -ExpectedVersionCode 5 -SdkRoot <android-sdk>
 ```
 
 Obtain the expected certificate fingerprint independently from the maintained signing identity, not from an untrusted APK. The script verifies the signature, trusted certificate, package, version, non-debuggable status, absence of Internet permission and disabled automatic Android backup. It writes an adjacent `.sha256` only after all checks pass. Distribution remains a separate, explicit step; no artifacts are uploaded by this tool.
