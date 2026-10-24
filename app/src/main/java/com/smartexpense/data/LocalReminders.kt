@@ -49,12 +49,12 @@ interface ReminderGateway {
     private val mutex=Mutex()
     suspend fun syncNotifications(expectedAt:Long?=null)=mutex.withLock {
         val settings=repository.reminderSettings()
-        val snapshot=repository.snapshot(Int.MAX_VALUE)
-        val templates=snapshot.templates.filter {template->snapshot.accounts.any {it.id==template.accountId && !it.archived}}
-        val recorded=snapshot.records.map {it.id}.toSet()
+        if(!settings.enabled || !gateway.allowed()) {gateway.reconcile(null,false);return@withLock}
+        val inputs=repository.reminderInputs()
+        val templates=inputs.templates
+        val recorded=inputs.recorded
         val now=clock.instant().atZone(ZoneId.systemDefault())
         val due=templates.any {template->template.occurrences(now.toLocalDate()).any {template.entryId(it) !in recorded}}
-        if(!settings.enabled || !gateway.allowed()) {gateway.reconcile(null,false);return@withLock}
         if(expectedAt!=null) {
             val expected=Instant.ofEpochMilli(expectedAt).atZone(now.zone)
             val valid=expectedAt>0 && !expected.isAfter(now) && ReminderSchedule.matches(settings,expected) && settings.lastNotifiedDate!=now.toLocalDate().toString()

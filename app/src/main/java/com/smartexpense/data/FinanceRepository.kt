@@ -15,6 +15,8 @@ class LocalDataFailure(cause:Throwable):Exception("Could not save local data. Yo
 /** Widget-safe shortcut metadata; never includes an amount, account, or history. */
 data class WidgetFavourite(val id:String,val name:String,val categoryName:String,val categoryIcon:String)
 
+data class ReminderInputs(val templates:List<RecurringTemplate>,val recorded:Set<String>)
+
 @Singleton
 class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     private val dao=db.dao()
@@ -64,7 +66,15 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
             .filter {it.accountId in activeAccounts && (it.categoryId==null || it.categoryId in activeCategories)}
             .take(3).map {value->val category=activeCategories[value.categoryId];WidgetFavourite(value.id,value.description,category?.name.orEmpty(),category?.icon.orEmpty())}.toList()
     }}
-    suspend fun reminderSettings():ReminderSettings=storage {dao.plans().find {it.key=="settings:reminder"}?.let(PlanCodec::reminder)?:ReminderSettings()}
+    suspend fun reminderSettings():ReminderSettings=storage {dao.reminderSettingsRow()?.let(PlanCodec::reminder)?:ReminderSettings()}
+    /** Scheduling needs templates and stable occurrence IDs, never balances or reports. */
+    suspend fun reminderInputs():ReminderInputs=storage {db.withTransaction {
+        val templates=dao.reminderTemplates().map(PlanCodec::template)
+        if(templates.isEmpty()) return@withTransaction ReminderInputs(emptyList(),emptySet())
+        val active=dao.accounts().filterNot {it.archived}.map {it.id}.toSet()
+        val available=templates.filter {it.accountId in active}
+        ReminderInputs(available,if(available.isEmpty()) emptySet() else dao.recordedRecurringIds().toSet())
+    }}
     suspend fun saveReminderSettings(value:ReminderSettings)=storage {db.withTransaction {
         val previous=reminderSettings();dao.savePlan(PlanCodec.reminder(value.copy(lastNotifiedDate=previous.lastNotifiedDate)))
     }}
