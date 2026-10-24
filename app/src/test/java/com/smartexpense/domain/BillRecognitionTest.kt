@@ -4,6 +4,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BillRecognitionTest {
+    @Test fun abbreviatedAmountHeaderAndSpacedRateKeepOnlyItemNames() {
+        val bill=BillRecognition.parse("Test Cafe\nItem Qty Rate Amt\nTea 2 25. 00 50.00\nBread 1 30.00 30.00\nTotal 80.00")
+        assertEquals(listOf(BillItem("Tea",5000),BillItem("Bread",3000)),bill.items)
+    }
+    @Test fun paymentAmountIsNotAnAdditionalPurchase() {
+        val bill=BillRecognition.parse("Test Cafe\nTea 50.00\nGrand Total 50.00\nPaid Amount 50.00\nBalance 0.00")
+        assertEquals(listOf(BillItem("Tea",5000)),bill.items)
+    }
+    @Test fun yearFirstReceiptDateIsStrictAndConflictsStillNeedReview() {
+        assertEquals("2026-02-06",BillRecognition.parse("Test Cafe\nDate: 2026-02-06 19:32\nTotal 50.00").date)
+        assertNull(BillRecognition.parse("Test Cafe\nDate: 2026-02-30\nTotal 50.00").date)
+        assertNull(BillRecognition.parse("Test Cafe\n2026-02-06\n07/02/2026\nTotal 50.00").date)
+    }
     @Test fun finalPayableTotalTakesPrecedenceOverPreTaxTotal() {
         val bill=BillRecognition.parse("Cafe\nTea 100.00\nTotal 100.00\nCGST 2.50\nSGST 2.50\nGrand Total 105.00")
         assertEquals(10500L,bill.total)

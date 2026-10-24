@@ -21,4 +21,6 @@ For photos, Tally uses recognised text positions to join item names and prices a
 
 Recognition helps with entry; you remain responsible for confirming the bill details. Tally has no Internet permission, so receipt recognition does not upload your receipt to a cloud service.
 
+Tables headed “Amt” are supported alongside “Amount”. Year-first dates such as `2026-02-06` are recognised, and a separate “Paid Amount” is kept out of the purchase list. Check item spelling against the photo; recognition can still misread individual letters.
+
 [View receipt review](../screenshots/all-screens/receipt-review.png) · [Shared bills →](shared-bills.md)

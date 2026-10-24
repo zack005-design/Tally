@@ -15,12 +15,12 @@ object BillRecognition {
     }
     private val totalLabel=Regex("^(?:grand\\s+total|total(?:\\s+amount)?|amount\\s+(?:due|payable)|net\\s+(?:total|amount))\\b",RegexOption.IGNORE_CASE)
     private val excluded=Regex("^(?:sub\\s*total|tax(?:able\\s+(?:value|amount))?|gst|cgst|sgst|igst|vat|cess|tip|service\\s+(?:charge|fee)s?|delivery\\s+(?:charge|fee)s?|packing|packaging|handling\\s+(?:charge|fee)s?|convenience\\s+(?:charge|fee)s?|discount|round|change|cash|card|balance|date|invoice|bill\\s*no|phone|tel)\\b",RegexOption.IGNORE_CASE)
-    private val metadata=Regex("^(?:gstin|gst\\s+reg|total\\s+(?:items?|qty|quantity)|pager|pax|emb|outlet|visa|mastercard|amex|upi|payment|table|counter|pos)\\b|^\\d+(?:\\.\\d+)?\\s*%\\s*(?:gst|cgst|sgst|igst|vat|tax)\\b",RegexOption.IGNORE_CASE)
+    private val metadata=Regex("^(?:gstin|gst\\s+reg|total\\s+(?:items?|qty|quantity)|paid\\s+amount|pager|pax|emb|outlet|visa|mastercard|amex|upi|payment|table|counter|pos)\\b|^\\d+(?:\\.\\d+)?\\s*%\\s*(?:gst|cgst|sgst|igst|vat|tax)\\b",RegexOption.IGNORE_CASE)
     private val payableLabel=Regex("^(?:grand\\s+total|amount\\s+(?:due|payable)|net\\s+(?:total|amount))\\b",RegexOption.IGNORE_CASE)
     private val adjustmentLabel=Regex("^(?:tax|gst|cgst|sgst|igst|vat|cess|tip|service\\s+(?:charge|fee)s?|delivery\\s+(?:charge|fee)s?|packing|packaging|handling\\s+(?:charge|fee)s?|convenience\\s+(?:charge|fee)s?|discount|round)\\b|^\\d+(?:\\.\\d+)?\\s*%\\s*(?:gst|cgst|sgst|igst|vat|tax)\\b",RegexOption.IGNORE_CASE)
     private val subtotalLabel=Regex("^sub\\s*total\\b",RegexOption.IGNORE_CASE)
-    private val tableHeader=Regex("\\b(?:qty|quantity)\\b.*\\b(?:rate|price)\\b.*\\b(?:amount|total)\\b",RegexOption.IGNORE_CASE)
-    private val quantityAndRate=Regex("\\s+\\d+(?:\\.\\d+)?\\s+(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?\\d[\\d,]*(?:\\.\\d{1,2})?\\s*$",RegexOption.IGNORE_CASE)
+    private val tableHeader=Regex("\\b(?:qty|quantity)\\b.*\\b(?:rate|price)\\b.*\\b(?:amount|amt|total)\\b",RegexOption.IGNORE_CASE)
+    private val quantityAndRate=Regex("\\s+\\d+(?:\\.\\d+)?\\s+(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?\\d[\\d,]*(?:\\.\\s*\\d{1,2})?\\s*$",RegexOption.IGNORE_CASE)
     private fun value(line:String):Long?=amountMatch(line)?.groupValues?.get(1)?.replace(",","")?.let {runCatching {Money.parse(it)}.getOrNull()}
     /** Recover adjacent label/amount pairs, but never guess the ordering of a whole column. */
     private fun receiptLines(text:String):List<String> {
@@ -45,8 +45,11 @@ object BillRecognition {
         val totalLines=lines.filter {totalLabel.containsMatchIn(it) && !metadata.containsMatchIn(it) && value(it)?.let {amount->amount>0}==true}
         val payableLines=totalLines.filter {payableLabel.containsMatchIn(it)}
         val totals=(payableLines.ifEmpty {totalLines}).mapNotNull(::value).distinct()
-        val dates=Regex("\\b[0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4}\\b").findAll(text).mapNotNull {match->
-            runCatching {LocalDate.parse(match.value.replace('.','/').replace('-','/'),DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT)).toString()}.getOrNull()
+        val dates=Regex("\\b(?:[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4})\\b").findAll(text).mapNotNull {match->
+            runCatching {
+                if(match.value.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}"))) LocalDate.parse(match.value).toString()
+                else LocalDate.parse(match.value.replace('.','/').replace('-','/'),DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT)).toString()
+            }.getOrNull()
         }.distinct().toList()
         val items=lines.filterNot {totalLabel.containsMatchIn(it) || excluded.containsMatchIn(it) || metadata.containsMatchIn(it)}.mapNotNull {line->
             val match=amountMatch(line)?:return@mapNotNull null
