@@ -2,6 +2,8 @@
 
 # Tally Companion
 
+To bring spending from a ChatGPT conversation into Tally, use the new [chat history import workflow](chat-history-import.md) with Tally Companion 0.2.0 and the updated Android app. The existing export-review workflow below remains available.
+
 Use your custom Codex plugins to review a Transactions CSV exported from Tally. The Android app prepares the file; you choose whether to share it with Codex.
 
 ## Choose the plugin

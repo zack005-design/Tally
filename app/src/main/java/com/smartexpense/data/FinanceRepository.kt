@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteException
 import androidx.room.withTransaction
 import com.smartexpense.domain.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 import java.util.UUID
 import javax.inject.Inject
@@ -21,6 +22,41 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     private suspend fun <T> storage(block:suspend ()->T):T = try { block() } catch(e:CancellationException) { throw e } catch(e:SQLiteException) { throw LocalDataFailure(e) }
     val changes:Flow<Unit> = combine(listOf(dao.transactionChanges(),dao.accountChanges(),dao.personChanges(),dao.categoryChanges(),dao.budgetChanges(),dao.groupChanges(),dao.walletSourceChanges(),dao.scheduleChanges(),dao.diaryChanges(),dao.settingsChanges(),dao.planChanges())) { Unit }
     val snapshots:Flow<Snapshot> = changes.map {snapshot()}
+
+    private class HistoryPreviewRollback(val preview:HistoryLedgerPreview):RuntimeException()
+
+    /** Runs the real ledger write path, then rolls back every write before returning. */
+    suspend fun previewChatHistory(history:ChatHistory,selectedSourceIds:Set<String>,accountMapping:Map<String,String>,categoryMapping:Map<String,String>):HistoryLedgerPreview = storage {
+        try {
+            db.withTransaction {
+                val reviewDay=java.time.LocalDate.now()
+                val before=snapshot()
+                val drafts=ChatHistoryImport.preview(history,before,accountMapping,categoryMapping=categoryMapping).selected(selectedSourceIds)
+                require(drafts.isNotEmpty()) {"Select at least one supported record"}
+                val token=historyReviewToken(drafts)
+                val skipped=drafts.count {dao.transaction(it.id)!=null}
+                drafts.forEach {kotlinx.coroutines.currentCoroutineContext().ensureActive();save(it)}
+                require(java.time.LocalDate.now()==reviewDay) {"The day changed while preparing this batch. Preview again."}
+                val after=snapshot()
+                throw HistoryPreviewRollback(HistoryLedgerPreview(token,before.accounts.associate {it.id to it.balance},after.accounts.associate {it.id to it.balance},drafts.size-skipped,skipped))
+            }
+        } catch(rollback:HistoryPreviewRollback) {rollback.preview}
+    }
+
+    suspend fun importChatHistory(history:ChatHistory,selectedSourceIds:Set<String>,accountMapping:Map<String,String>,categoryMapping:Map<String,String>,expectedReviewToken:String):HistoryImportResult = storage {db.withTransaction {
+        val reviewDay=java.time.LocalDate.now()
+        val drafts=ChatHistoryImport.preview(history,snapshot(),accountMapping,categoryMapping=categoryMapping).selected(selectedSourceIds)
+        require(drafts.isNotEmpty()) {"Select at least one supported record"}
+        require(historyReviewToken(drafts)==expectedReviewToken) {"Your accounts or history changed. Preview the import again before confirming."}
+        val skipped=drafts.count {dao.transaction(it.id)!=null}
+        drafts.forEach {kotlinx.coroutines.currentCoroutineContext().ensureActive();save(it)}
+        require(java.time.LocalDate.now()==reviewDay) {"The day changed while importing. Nothing was saved; preview again."}
+        HistoryImportResult(drafts.size-skipped,skipped,history.entries.size-drafts.size)
+    }}
+
+    private suspend fun historyReviewToken(drafts:List<EntryDraft>):String = ChatHistoryImport.reviewToken(
+        listOf(drafts.toString(),dao.transactions().toString(),dao.balances().toString(),dao.categories().toString(),dao.gpaySchedule().toString(),dao.walletSources().toString(),dao.resetTargets().toString())
+    )
     suspend fun widgetFavourites():List<WidgetFavourite> = storage {db.withTransaction {
         val activeAccounts=dao.accounts().filterNot {it.archived}.map {it.id}.toSet()
         val activeCategories=dao.categories().filterNot {it.archived}.associateBy {it.id}

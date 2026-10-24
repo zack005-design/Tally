@@ -1,0 +1,25 @@
+{
+  "interface": {
+    "capabilities": [],
+    "category": "Productivity",
+    "defaultPrompt": "Review my Tally CSV export and explain my personal spending and cash flow.",
+    "developerName": "zack",
+    "displayName": "Tally Companion",
+    "longDescription": "Analyze Tally CSV exports and prepare spending history from the current chat as a Tally import file. Review coverage, unresolved entries and possible duplicates before importing in the Android app. No direct device or bank connection.",
+    "shortDescription": "Understand your Tally spending"
+  },
+  "name": "tally-companion",
+  "version": "0.2.0",
+  "description": "Review Tally spending exports and prepare chat spending history for reviewed import into Tally.",
+  "author": {
+    "name": "zack",
+    "email": "anirudhj329@gmail.com"
+  },
+  "keywords": [
+    "tally",
+    "expenses",
+    "csv",
+    "spending"
+  ],
+  "skills": "./skills"
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "email": "anirudhj329@gmail.com",
+    "name": "zack"
+  },
+  "description": "Review Tally spending exports and prepare chat spending history for reviewed import into Tally.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "capabilities": [],
+        "category": "Productivity",
+        "defaultPrompt": "Review my Tally CSV export and explain my personal spending and cash flow.",
+        "developerName": "zack",
+        "displayName": "Tally Companion",
+        "longDescription": "Analyze Tally CSV exports and prepare spending history from the current chat as a Tally import file. Review coverage, unresolved entries and possible duplicates before importing in the Android app. No direct device or bank connection.",
+        "shortDescription": "Understand your Tally spending"
+      }
+    }
+  },
+  "keywords": [
+    "tally",
+    "expenses",
+    "csv",
+    "spending"
+  ],
+  "name": "tally-companion",
+  "version": "0.2.0"
+}

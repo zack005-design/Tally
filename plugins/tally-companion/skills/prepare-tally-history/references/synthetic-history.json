@@ -1,0 +1,14 @@
+{
+  "format": "tally-chat-history",
+  "formatVersion": 1,
+  "currency": "INR",
+  "historyId": "synthetic-pressure-test-1",
+  "coverage": "20 October 2026, visible messages only. Earlier messages inaccessible. Synthetic example, not user records.",
+  "entries": [
+    {"sourceId":"message-1-lunch","kind":"EXPENSE","date":"2026-10-20","description":"Lunch","amount":"240.00","account":"Cash","notes":"Corrected from 250 in message 2; repeated mention is not another purchase."},
+    {"sourceId":"message-3-lunch","kind":"EXPENSE","date":"2026-10-20","description":"Lunch","amount":"240.00","account":"Cash","notes":"Explicitly a second purchase."},
+    {"sourceId":"message-4-refund","kind":"REFUND","date":"2026-10-20","description":"Purchase refund","amount":"50.00","account":"Cash","unresolved":["Link to original expense using Tally refund workflow."]},
+    {"sourceId":"message-5-dinner","kind":"EXPENSE","date":"2026-10-20","description":"Shared dinner","amount":"900.00","account":"Cash","shared":true,"details":"Bill total INR 900; personal share INR 300; user paid INR 900.","unresolved":["Review participants and payments using Tally shared-bill workflow."]},
+    {"sourceId":"message-6-coffee","kind":"EXPENSE","date":null,"description":"Coffee","amount":"80.00","account":"Cash","details":"Source says yesterday; source message date unavailable.","unresolved":["Missing reliable date anchor."]}
+  ]
+}

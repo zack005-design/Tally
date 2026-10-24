@@ -55,6 +55,8 @@ Both editions include the calculator and receipt scanner. The AI edition bundles
 
 ## Features
 
+**Bring your chat history into Tally.** Tally Companion 0.2.0 prepares recorded spending from a ChatGPT conversation for [reviewed import](docs/features/chat-history-import.md). Use an Android build with **Import from ChatGPT** under History & reports; earlier APKs only support export review.
+
 **Offline assistance, with you in control.** The AI edition includes a small expense-command model trained from scratch. Both editions include a deterministic calculator. Neither tool saves financial records automatically.
 
 <table align="center" width="100%">

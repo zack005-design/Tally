@@ -109,6 +109,7 @@ import com.smartexpense.domain.*
                 composable("bill-import") {BillImportScreen(model.billScanner,model.repository,ui.snapshot,{bill,suggestion,category->model.prepareBill(bill,suggestion,category);nav.navigate("add")},::detail)}
                 composable("category-rules") {CategoryRulesScreen(ui.snapshot,ui.busy,{value->model.action("Merchant rule saved") {model.repository.saveCategoryRule(value)}},{key->model.action("Merchant rule removed") {model.repository.deletePlan(key)}})}
                 composable("export") {LocalExportScreen(model)}
+                composable("history-import") {ChatHistoryImportScreen(model.repository,ui.snapshot) {nav.popBackStack()}}
                 composable("app-lock") {AppLockSettingsScreen()}
                 composable("reminders") {RemindersScreen(model)}
                 composable("foreign-entry") {ManualExchangeScreen {currency,amount,rate,date,inr->
