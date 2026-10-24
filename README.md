@@ -10,10 +10,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-ai-debug.apk"><img src="docs/assets/download-android.svg" height="48" alt="Download Tally AI for Android"></a>
+  <a href="https://github.com/zack005-design/Tally/releases/tag/v0.2.1-20261022"><img src="docs/assets/download-android.svg" height="48" alt="Open Tally Android downloads"></a>
 </p>
 
 <p align="center"><a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-ai-debug.apk">Download AI APK</a> · <a href="https://github.com/zack005-design/Tally/releases/download/v0.2.1-20261022/tally-0.2.1-non-ai-debug.apk">Download non-AI APK</a></p>
+
+**To download:** Open the release page in your phone's browser, expand **Assets**, and tap the APK you want. This repository is private, so sign in with a GitHub account that has access. If an in-app browser opens the page without downloading, choose **Open in browser**. [Installation help](docs/getting-started.md#install-tally).
 
 Both editions include the calculator and receipt scanner. The AI edition bundles our scratch-trained expense-command model; the non-AI edition omits it and uses rule-based parsing. They share an app identity, so installing one replaces the other while preserving app data.
 
@@ -139,7 +141,7 @@ These plugins run separately in Codex. Tally does not send your records automati
 
 ## Release information
 
-**Android 8.0+ · Version 0.2.0 · Development build**
+**Android 8.0+ · Version 0.2.1 · Development build**
 
 INR is the core currency. Foreign bills can use a manually entered exchange rate. See [download and setup](docs/getting-started.md) for installation and release details, or the [verification report](docs/verification/ios-polish-report.md) for recorded test results and device-testing limits.
 

@@ -2,14 +2,19 @@
 
 # Download and setup
 
-Tally is an Android expense tracker for manually maintained accounts and shared bills. The current published AI download is **version 0.2.0**, a development build for **Android 8.0 or later** with local expense suggestions and an offline calculator.
+Tally is an Android expense tracker for manually maintained accounts and shared bills. The current download is **version 0.2.1**, a development build for **Android 8.0 or later**, available in AI and non-AI editions. Both include the offline calculator and receipt scanner.
 
 ## Install Tally
 
-1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.0-ai-20261022).
-2. Download **tally-0.2.0-ai-debug.apk** to your Android device.
-3. Open the downloaded APK. If Android asks, allow installation from the app you used to open it.
-4. Complete installation and open Tally.
+1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.1-20261022) in your Android browser. Sign in to a GitHub account with access to this private repository.
+2. Expand **Assets** below the release notes.
+3. Tap **tally-0.2.1-ai-debug.apk** for local expense suggestions, or **tally-0.2.1-non-ai-debug.apk** for rule-based expense parsing.
+4. Open the downloaded APK. If Android asks, allow installation from the app you used to open it.
+5. Complete installation and open Tally.
+
+If a chat or app's built-in browser opens the link but nothing downloads, use its **Open in browser** option and sign in there. A 404 page can mean the browser is signed out or the account lacks repository access.
+
+Choose an **.apk** asset to install the app. **Source code (zip)** and **Source code (tar.gz)** are project files, not Android installers. The two app editions replace one another rather than installing side by side; create a backup before switching or updating.
 
 The expense-command model is bundled in the AI APK and requires no separate download. The [Companion plugin ZIPs](features/companion.md) remain available from the earlier release; they are separate Codex plugins, not Android installers.
 
