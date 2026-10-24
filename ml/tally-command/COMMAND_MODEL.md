@@ -1,5 +1,7 @@
 # App command model v3
 
+The [100K → 500K → 1M research ladder](MODEL_LADDER.md) adds experimental capability data and size comparisons. Research candidates do not automatically replace this bundled model.
+
 The app now has a small model trained from scratch specifically for expense
 drafts. It identifies amount, description and account spans in one pass instead
 of generating JSON one character at a time. Exact decimal code converts the

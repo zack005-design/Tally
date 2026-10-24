@@ -19,10 +19,16 @@ def main():
     run = parser.parse_args().run_dir
     state = torch.load(run / 'model.pt', map_location='cpu', weights_only=True)
     vocabulary = state['vocabulary']
-    model = CommandModel(len(vocabulary))
+    if state.get('expanded'):
+        raise ValueError('Expanded candidates require separate Android alias/guard parity verification before app export. Use compare_ladder.py for research evaluation.')
+    model = CommandModel(len(vocabulary), state.get('embedding', 48), state.get('hidden', 64))
     model.load_state_dict(state['state_dict'])
+    if model.hidden_size > 128:
+        raise ValueError('This candidate exceeds the current Android runtime width; use compare_ladder.py for research evaluation instead of app export.')
     model.eval()
     threshold = state['threshold']
+    if threshold is None:
+        raise ValueError('Development-rejected checkpoints cannot be exported')
     dataset = json.loads((run / 'dataset.json').read_text(encoding='utf-8'))
     previous = json.loads((run / 'report.json').read_text(encoding='utf-8'))
     historical = json.loads((ROOT / 'manual_eval.json').read_text())
@@ -48,7 +54,7 @@ def main():
     metadata = {k: report[k] for k in ('model', 'parameters', 'seed', 'steps', 'pretrained_weights',
                                        'data_provenance', 'dataset_sha256', 'threshold', 'deployment_guard', 'evaluation_status')}
     metadata.update(sha256=hashlib.sha256(target.read_bytes()).hexdigest(), bytes=target.stat().st_size,
-                    format='TCMD version 1, big-endian float32', model_version='command-v3-5000')
+                    format='TCMD version 1, big-endian float32', model_version=f'{run.name}-{state["steps"]}')
     (assets / 'tally-command.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
     cases = dataset['test'][:150] + historical + safety + challenge
     lines = []

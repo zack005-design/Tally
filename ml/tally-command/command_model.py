@@ -1,9 +1,21 @@
 """Randomly initialized compact span model plus a runtime-independent export."""
 import struct
+import math
 import torch
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from command_data import tokenize, decode_spans, unknown_description_allowed
+
+
+def size_profile(vocabulary_size, target):
+    """Closest supported GRU width; no unused padding parameters to hit a headline size."""
+    if target not in (100000, 500000, 1000000) or not 2 <= vocabulary_size <= 4096:
+        raise ValueError('Unsupported target or vocabulary size')
+    embedding = 64 if target == 100000 else 128
+    def count(hidden):
+        return vocabulary_size * embedding + 6 * hidden * (embedding + hidden) + 24 * hidden + 6
+    hidden = min(range(1, 513), key=lambda width: abs(count(width) - target))
+    return embedding, hidden
 
 
 class CommandModel(nn.Module):
@@ -98,24 +110,41 @@ def load_portable(stream):
     if stream.read(4) != b'TCMD' or integer() != 1:
         raise ValueError('Unsupported model format')
     size, embedding, hidden = integer(), integer(), integer()
-    if not (2 <= size <= 4096 and 1 <= embedding <= 128 and 1 <= hidden <= 128):
+    if not (2 <= size <= 4096 and 1 <= embedding <= 128 and 1 <= hidden <= 512):
         raise ValueError('Invalid model dimensions')
     threshold = struct.unpack('>f', stream.read(4))[0]
+    if not math.isfinite(threshold) or not 0 <= threshold <= 1:
+        raise ValueError('Invalid threshold')
     vocabulary = {text(): i for i in range(size)}
+    if len(vocabulary) != size or vocabulary.get('<pad>') != 0 or vocabulary.get('<unknown>') != 1:
+        raise ValueError('Invalid vocabulary')
     model = CommandModel(size, embedding, hidden)
+    expected = model.state_dict()
+    if sum(t.numel() for t in expected.values()) > 1_500_000:
+        raise ValueError('Model exceeds the research size limit')
     state = {}
-    for _ in range(integer()):
+    if integer() != len(expected):
+        raise ValueError('Invalid tensor count')
+    for _ in range(len(expected)):
         name = text()
+        if name not in expected or name in state:
+            raise ValueError('Unexpected or duplicate tensor')
         dimensions = integer()
         if dimensions not in (1, 2):
             raise ValueError('Invalid tensor rank')
         shape = tuple(integer() for _ in range(dimensions))
+        if shape != tuple(expected[name].shape):
+            raise ValueError('Invalid tensor shape')
         count = 1
         for dim in shape:
             count *= dim
         if not 1 <= count <= 1_000_000:
             raise ValueError('Invalid tensor size')
         values = struct.unpack('>' + 'f' * count, stream.read(count * 4))
+        if not all(math.isfinite(value) for value in values):
+            raise ValueError('Non-finite weights')
         state[name] = torch.tensor(values).reshape(shape)
+    if stream.read(1):
+        raise ValueError('Trailing model data')
     model.load_state_dict(state)
     return model.eval(), vocabulary, threshold

@@ -12,6 +12,9 @@ AMOUNT = re.compile(r'(?:[0-9]+|[1-9][0-9]{0,2}(?:,[0-9]{3})+|[1-9][0-9]?(?:,[0-
 UNSUPPORTED = re.compile(r'\b(?:transfer|transferred|refund|refunded|income|salary|earned|received|repay|repaid|repayment|returned|split|shared|owe|owed|owes|between|dollars|usd|eur|gbp|balance|budget|delete|remove|cancel|not|never|didn\W?t|don\W?t|haven\W?t|tomorrow|plan|planning)\b|[$€£]|\?', re.I)
 ACCOUNTS = {'cash': 'WALLET', 'wallet': 'WALLET', 'gpay': 'GPAY', 'google pay': 'GPAY', 'g pay': 'GPAY'}
 ACCOUNTS.update({'g-pay': 'GPAY', 'googlepay': 'GPAY'})
+BASE_ACCOUNTS = tuple(ACCOUNTS)
+# A small explicit allowlist, never fuzzy correction of arbitrary account names.
+ACCOUNTS.update({'gpy': 'GPAY', 'gpaay': 'GPAY', 'gooogle pay': 'GPAY', 'wallett': 'WALLET', 'walllet': 'WALLET'})
 DESCRIPTIONS = ('lunch', 'coffee', 'tea', 'dinner', 'groceries', 'breakfast', 'bus ticket',
                 'office lunch', 'ice cream', 'phone recharge', 'movie', 'milk', 'fuel',
                 'books', 'snacks', 'rent', 'medicine', 'vegetables', 'train', 'taxi',
@@ -98,6 +101,49 @@ DESCRIPTIONS += ('stationery', 'dentist', 'biscuits', 'printer ink', 'badminton'
                  'toothpaste', 'soap', 'sunscreen', 'consultation', 'delivery fee',
                  'almonds', 'apples', 'rice', 'flour', 'yogurt', 'battery', 'socks')
 UNSUPPORTED = re.compile(UNSUPPORTED.pattern + r'|\bi\s+(?:will|would|might|may|could|should)\b', re.I)
+UNSUPPORTED = re.compile(UNSUPPORTED.pattern + r'|\b(?:nahi|nahin|mat|kal|karunga|karungi|karenge|dunga|dungi)\b', re.I)
+
+HINGLISH_TRAIN = (
+    'maine {amount} {description} ke liye {account} se diye',
+    '{description} pe {amount} {account} se kharch kiye',
+    'aaj {description} ka {amount} {account} se payment kiya',
+    'maine {account} se {description} par {amount} kharch kiye',
+    '{description} ke {amount} rupaye {account} se diye',
+    'aaj maine {description} pe {amount} {account} se kharch kiye',
+)
+HINGLISH_DEV = (
+    'aaj {description} ke liye {account} se {amount} diye',
+    '{description} ka {account} se payment kiya {amount}',
+)
+HINGLISH_TEST = (
+    '{account} se {description} ke liye {amount} diye',
+    '{description} ka payment {amount} {account} se kiya',
+    'maine {amount} rupaye {account} se {description} pe kharch kiye',
+    '{description} par aaj {account} se {amount} kharch kiye',
+)
+HINGLISH_NEGATIVES = (
+    'maine {description} pe {amount} {account} se nahi diye',
+    'kal {description} pe {amount} {account} se kharch karunga',
+    'mat add {description} {amount} {account}',
+)
+DESCRIPTION_FILLERS = frozenset(('entry', "today's", 'today', 'please', 'record', 'log', 'note',
+                               'add', 'spent', 'paid', 'payment', 'i', 'my', 'for', 'on', 'at',
+                               'via', 'using', 'aaj', 'maine', 'the'))
+DESCRIPTION_END = frozenset(('using', 'through', 'with', 'paid', 'amount', 'via', 'was', 'cost',
+                            'costing', 'came', 'for', 'from', 'rupees', 'inr', 'rs', 'ke', 'pe',
+                            'par', 'ka', 'rupaye', 'se', 'out', 'and'))
+
+
+def description_boundary_allowed(tokens, descriptions):
+    first, last = descriptions[0], descriptions[-1]
+    if tokens[first].text.lower() in DESCRIPTION_FILLERS:
+        return False
+    if last + 1 == len(tokens):
+        return True
+    following = tokens[last + 1].text.lower()
+    if following == 'and':
+        return last + 2 < len(tokens) and tokens[last + 2].text.lower() == 'paid'
+    return NUMBER.fullmatch(following) is not None or following in DESCRIPTION_END or following in (',', ':', ';', '.', '₹')
 
 
 @dataclass(frozen=True)
@@ -158,6 +204,8 @@ def decode_spans(text, tokens, tags):
         return None
     if descriptions != list(range(descriptions[0], descriptions[-1] + 1)) or accounts != list(range(accounts[0], accounts[-1] + 1)):
         return None
+    if not description_boundary_allowed(tokens, descriptions):
+        return None
     account_text = ' '.join(tokens[i].text.lower() for i in accounts)
     account = ACCOUNTS.get(account_text)
     # Every explicit account mention must agree; two accounts need clarification.
@@ -193,7 +241,7 @@ def render(template, values, positive=True):
     return {'text': text, 'tags': tags, 'intent': int(positive), 'draft': draft, 'template': template}
 
 
-def make_corpus(train_count=60000, dev_count=2000, test_count=2000, seed=2027):
+def make_corpus(train_count=60000, dev_count=2000, test_count=2000, seed=2027, expanded=False):
     rng = random.Random(seed)
     seen = set()
 
@@ -212,11 +260,18 @@ def make_corpus(train_count=60000, dev_count=2000, test_count=2000, seed=2027):
             description = rng.choice(DESCRIPTIONS)
             if rng.random() < .1:
                 description = rng.choice(('cedar', 'lotus', 'maple', 'silver', 'orange')) + ' ' + description
-            values = {'description': description, 'amount': amount, 'account': rng.choice(tuple(ACCOUNTS)),
+            values = {'description': description, 'amount': amount, 'account': rng.choice(tuple(ACCOUNTS) if expanded else BASE_ACCOUNTS),
                       'currency': rng.choice(('', '', '₹', 'INR ', 'Rs. ', 'rs '))}
             positive = rng.random() >= .20
             negatives = {'train': NEGATIVES, 'dev': NEGDEV, 'test': NEGTEST}[split]
-            template = rng.choice(templates if positive else negatives)
+            if expanded and positive and rng.random() < .25:
+                template = rng.choice({'train': HINGLISH_TRAIN, 'dev': HINGLISH_DEV, 'test': HINGLISH_TEST}[split])
+            elif expanded and not positive and rng.random() < .25:
+                # Distinct surface forms for negative dev/test rather than training on challenge rows.
+                prefix = {'train': '', 'dev': 'aaj ', 'test': 'please '}[split]
+                template = prefix + rng.choice(HINGLISH_NEGATIVES)
+            else:
+                template = rng.choice(templates if positive else negatives)
             row = render(template, values, positive)
             if positive and row['draft'] is None:
                 continue

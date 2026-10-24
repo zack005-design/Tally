@@ -1,9 +1,26 @@
 import unittest
 
-from command_data import tokenize, amount_paise, make_corpus, decode_spans, unknown_description_allowed
+from command_data import tokenize, amount_paise, make_corpus, decode_spans, unknown_description_allowed, render
 
 
 class CommandDataTests(unittest.TestCase):
+    def test_partial_descriptions_and_command_fillers_are_refused(self):
+        for text, tags in [
+            ("today's entry: laundry 1 paid with gpay", [0, 1, 0, 0, 2, 0, 0, 3]),
+            ("today's entry: pet food 1 paid with gpay", [0, 0, 0, 1, 0, 2, 0, 0, 3]),
+        ]:
+            self.assertIsNone(decode_spans(text, tokenize(text), tags))
+        text = "today's entry: pet food 1 paid with gpay"
+        self.assertEqual(decode_spans(text, tokenize(text), [0, 0, 0, 1, 1, 2, 0, 0, 3])['description'], 'pet food')
+
+    def test_expanded_capabilities_copy_spans_and_reject_hindi_negation(self):
+        values = {'description': 'chai', 'amount': '25', 'account': 'wallett', 'currency': ''}
+        row = render('maine {description} pe {amount} {account} se kharch kiye', values, True)
+        self.assertEqual(row['draft'], {'amount_paise': 2500, 'description': 'chai', 'account': 'WALLET'})
+        for prefix in ('nahi ', 'nahin ', 'mat ', 'kal ', 'kharch karunga '):
+            row = render(prefix + '{description} {amount} {account}', values, True)
+            self.assertIsNone(row['draft'])
+
     def test_unknown_words_require_a_description_span_and_a_clear_anchor(self):
         vocabulary = {'paid': 2, '<number>': 3, 'for': 4, 'using': 5, 'cash': 6, 'gpay': 7, 'coffee': 8}
         self.assertTrue(unknown_description_allowed(tokenize('paid 45 for ZestBistro using cash'), [0, 2, 0, 1, 0, 3], vocabulary))
@@ -45,6 +62,13 @@ class CommandDataTests(unittest.TestCase):
             for row in split:
                 if row['draft'] is not None:
                     self.assertEqual(decode_spans(row['text'], tokenize(row['text']), row['tags']), row['draft'])
+
+    def test_expanded_splits_are_disjoint_and_contain_hinglish(self):
+        corpus = make_corpus(1000, 100, 100, seed=81, expanded=True)
+        for left, right in ((0, 1), (0, 2), (1, 2)):
+            self.assertFalse({x['template'] for x in corpus[left]} & {x['template'] for x in corpus[right]})
+        for rows in corpus:
+            self.assertTrue(any(' kharch ' in row['text'].lower() or ' diye' in row['text'].lower() for row in rows))
 
 
 if __name__ == '__main__':
