@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
@@ -35,27 +36,69 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
         val text=if(pdf) pdfText(bytes) else imageText(bytes)
         ScannedBill(bytes,mime,text.take(10000))
     }
-    private suspend fun recognize(bitmap:Bitmap):String {
+    private data class ReceiptLine(val text:String,val bounds:Rect?)
+    private suspend fun recognize(bitmap:Bitmap):Text {
         val recognizer=TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         try {
             // Do not recycle the bitmap until ML Kit completes, even after coroutine cancellation.
             return suspendCoroutine {continuation->recognizer.process(InputImage.fromBitmap(bitmap,0))
-                .addOnSuccessListener {continuation.resume(it.text)}
+                .addOnSuccessListener {continuation.resume(it)}
                 .addOnFailureListener {continuation.resumeWithException(it)}}
         } finally {recognizer.close()}
     }
-    private fun decode(bytes:ByteArray):Bitmap {
+    /** ML Kit groups columns into separate blocks. Rebuild printed rows before parsing prices. */
+    private fun receiptText(lines:List<ReceiptLine>):String {
+        if(lines.any {it.bounds==null}) return lines.joinToString("\n") {it.text}
+        val rows=mutableListOf<MutableList<Pair<Rect,String>>>()
+        for(line in lines.sortedWith(compareBy<ReceiptLine> {it.bounds!!.centerY()}.thenBy {it.bounds!!.left})) {
+            val bounds=line.bounds!!
+            val row=rows.lastOrNull()
+            val anchor=row?.first()?.first
+            if(row!=null && anchor!=null && kotlin.math.abs(bounds.centerY()-anchor.centerY())<=minOf(bounds.height(),anchor.height())*0.6f) {
+                row.add(bounds to line.text)
+            } else rows.add(mutableListOf(bounds to line.text))
+        }
+        return rows.joinToString("\n") {row->row.sortedBy {it.first.left}.joinToString(" ") {it.second}}
+    }
+    private suspend fun bitmapText(bitmap:Bitmap):String {
+        val lines=mutableListOf<ReceiptLine>()
+        // Overlap protects letters near a cut. Each line belongs to one core region by position,
+        // so identical purchases on different rows are preserved rather than deduplicated by text.
+        val coreHeight=1600
+        for(coreTop in 0 until bitmap.height step coreHeight) {
+            currentCoroutineContext().ensureActive()
+            val coreBottom=minOf(coreTop+coreHeight,bitmap.height)
+            val cropTop=maxOf(0,coreTop-128)
+            val cropBottom=minOf(bitmap.height,coreBottom+128)
+            val crop=Bitmap.createBitmap(bitmap,0,cropTop,bitmap.width,cropBottom-cropTop)
+            try {
+                for(line in recognize(crop).textBlocks.flatMap {it.lines}) {
+                    if(line.text.isBlank()) continue
+                    val bounds=line.boundingBox?.let {Rect(it).apply {offset(0,cropTop)}}
+                    if(bounds==null || bounds.centerY() in coreTop until coreBottom) lines+=ReceiptLine(line.text,bounds)
+                }
+            } finally {if(crop!==bitmap) crop.recycle()}
+        }
+        return receiptText(lines)
+    }
+    private fun decode(bytes:ByteArray,forRecognition:Boolean=false):Bitmap {
         val bounds=BitmapFactory.Options().apply {inJustDecodeBounds=true};BitmapFactory.decodeByteArray(bytes,0,bytes.size,bounds)
         require(bounds.outWidth>0 && bounds.outHeight>0) {"Choose a readable bill image or PDF"}
-        var sample=1;while(bounds.outWidth/sample>2400 || bounds.outHeight/sample>2400) sample*=2
-        val bitmap=BitmapFactory.decodeByteArray(bytes,0,bytes.size,BitmapFactory.Options().apply {inSampleSize=sample})?:throw IllegalArgumentException("Cannot decode this bill image")
         val orientation=runCatching {android.media.ExifInterface(java.io.ByteArrayInputStream(bytes)).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION,1)}.getOrDefault(1)
+        val width=if(orientation in 5..8) bounds.outHeight else bounds.outWidth
+        val height=if(orientation in 5..8) bounds.outWidth else bounds.outHeight
+        var sample=1
+        // A long receipt must retain its text width. Previews keep their smaller memory budget.
+        while(if(forRecognition) width/sample>2400 || height/sample>16000 ||
+            (width.toLong()/sample)*(height.toLong()/sample)>12_000_000L
+            else bounds.outWidth/sample>2400 || bounds.outHeight/sample>2400) sample*=2
+        val bitmap=BitmapFactory.decodeByteArray(bytes,0,bytes.size,BitmapFactory.Options().apply {inSampleSize=sample})?:throw IllegalArgumentException("Cannot decode this bill image")
         val matrix=Matrix()
         when(orientation) {2->matrix.setScale(-1f,1f);3->matrix.setRotate(180f);4->matrix.setScale(1f,-1f);5->{matrix.setRotate(90f);matrix.postScale(-1f,1f)};6->matrix.setRotate(90f);7->{matrix.setRotate(270f);matrix.postScale(-1f,1f)};8->matrix.setRotate(270f)}
         if(orientation !in 2..8) return bitmap
         return Bitmap.createBitmap(bitmap,0,0,bitmap.width,bitmap.height,matrix,true).also {if(it!==bitmap) bitmap.recycle()}
     }
-    private suspend fun imageText(bytes:ByteArray):String {val bitmap=decode(bytes);try {return recognize(bitmap)} finally {bitmap.recycle()}}
+    private suspend fun imageText(bytes:ByteArray):String {val bitmap=decode(bytes,forRecognition=true);try {return bitmapText(bitmap)} finally {bitmap.recycle()}}
     private suspend fun pdfText(bytes:ByteArray):String {
         val file=File.createTempFile("bill-",".pdf",context.cacheDir)
         try {
@@ -70,7 +113,7 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
                         if(embedded.isNotBlank()) texts+=embedded
                         else {
                             val scale=2000.0/maxOf(page.width,page.height);val bitmap=Bitmap.createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
-                            try {bitmap.eraseColor(Color.WHITE);page.render(bitmap,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);texts+=recognize(bitmap)} finally {bitmap.recycle()}
+                            try {bitmap.eraseColor(Color.WHITE);page.render(bitmap,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);texts+=bitmapText(bitmap)} finally {bitmap.recycle()}
                         }
                     }
                 }
