@@ -15,6 +15,15 @@ captures/
 *.dex
 *.class
 
+# Script dependencies and disposable tool caches
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+/.tmp/
+
 # Machine-specific settings and IDE state
 local.properties
 *.iml
