@@ -10,15 +10,24 @@ sealed interface CalculationOutcome {
 
 /** Offline calculation tool; never creates transactions or executes user code. */
 object NaturalCalculator {
+    private val percentWord = Regex("\\bpercent\\b")
+    private val percentSpacing = Regex("\\s+%")
+    private val smallNumbers = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split(' ').withIndex().associate { it.value to it.index } + mapOf("twenty" to 20, "thirty" to 30, "forty" to 40, "fifty" to 50, "sixty" to 60, "seventy" to 70, "eighty" to 80, "ninety" to 90))
+    private val numberScales = mapOf("thousand" to 1000L, "lakh" to 100000L, "crore" to 10000000L, "million" to 1000000L)
+    private val numberWords = (smallNumbers.keys + numberScales.keys + "hundred" + "point").sortedByDescending(String::length).joinToString("|")
+    private val magnitudePattern = Regex("([0-9]+(?:\\.[0-9]+)?)\\s+(thousand|lakh|crore|million)\\b")
+    private val hyphenatedNumber = Regex("\\b(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)-(one|two|three|four|five|six|seven|eight|nine)\\b")
+    private val spokenNumber = Regex("\\b(?:$numberWords)(?: +(?:$numberWords))*\\b")
     fun calculate(input: String): CalculationOutcome = try {
         if (input.length > 1000) problem("Please shorten the calculation to 1,000 characters.")
         var text = input.lowercase(Locale.ROOT).trim().removeSuffix("?")
             .replace("×", "*").replace("÷", "/").replace("−", "-").replace("π", "pi")
-            .replace("²", "^2").replace("³", "^3").replace("percent", "%")
+            .replace("²", "^2").replace("³", "^3").replace(percentWord, "%").replace(percentSpacing, "%")
             .replace(Regex("^(please |what is |calculate |work out )+"), "")
         if (text.isBlank()) problem("Enter a calculation, such as 120 + 85, or choose a guided calculation.")
         text = spoken(text)
-        if (text.startsWith("split ")) {
+        val capability = CalculatorCapabilities.calculate(text)
+        if (capability != null) capability else if (text.startsWith("split ")) {
             val m = Regex("split [₹]?([0-9.,]+) (?:between|among|by) ([0-9]+)(?: people| persons)?").matchEntire(text)
                 ?: problem("How much should be split, and between how many people? Try: split 100 between 3 people.")
             val count = m.groupValues[2].toIntOrNull() ?: problem("Enter a whole number of people.")
@@ -61,12 +70,11 @@ object NaturalCalculator {
       catch (_: IllegalArgumentException) { CalculationOutcome.NeedsInput("Check the amount and use at most two decimal places for a bill split.") }
 
     private fun spoken(source: String): String {
-        val small = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split(' ').withIndex().associate { it.value to it.index } + mapOf("twenty" to 20, "thirty" to 30, "forty" to 40, "fifty" to 50, "sixty" to 60, "seventy" to 70, "eighty" to 80, "ninety" to 90))
-        val scale = mapOf("thousand" to 1000L, "lakh" to 100000L, "crore" to 10000000L, "million" to 1000000L)
-        val words = (small.keys + scale.keys + "hundred" + "point").sortedByDescending(String::length).joinToString("|")
-        val expanded = Regex("([0-9]+(?:\\.[0-9]+)?)\\s+(thousand|lakh|crore|million)\\b").replace(source) { "(${it.groupValues[1]}*${scale.getValue(it.groupValues[2])})" }
-        val hyphens = Regex("\\b(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)-(one|two|three|four|five|six|seven|eight|nine)\\b").replace(expanded, "$1 $2")
-        val result = Regex("\\b(?:$words)(?: +(?:$words))*\\b").replace(hyphens) { match ->
+        val small = smallNumbers
+        val scale = numberScales
+        val expanded = magnitudePattern.replace(source) { "(${it.groupValues[1]}*${scale.getValue(it.groupValues[2])})" }
+        val hyphens = hyphenatedNumber.replace(expanded, "$1 $2")
+        val result = spokenNumber.replace(hyphens) { match ->
             var sum = 0L; var current = 0L; var previousScale = Long.MAX_VALUE
             val halves = match.value.split(" point ", limit = 2)
             val wholeWords = halves[0].split(Regex("[ -]+"))

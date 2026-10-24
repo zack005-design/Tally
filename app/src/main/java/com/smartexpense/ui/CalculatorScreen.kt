@@ -42,7 +42,7 @@ import kotlinx.coroutines.withContext
             item { OutlinedTextField(input, { changed(); input = it }, label = { Text("What would you like to calculate?") }, modifier = Modifier.fillMaxWidth(), minLines = 2) }
             item { Column {
                 Text("Try an example", style = MaterialTheme.typography.titleSmall)
-                listOf("120 + 85 + 40", "add 5% tax to 450", "split 100 between 3 people", "convert 2.5 km to m").forEach { example ->
+                listOf("120 + 85 + 40", "add 5% tax to 450", "split 100 between 3 people", "convert 2.5 km to m", "tip 10% on 500", "average 10, 20, 30").forEach { example ->
                     TextButton(onClick = { changed(); input = example }, modifier = Modifier.heightIn(min = 48.dp)) { Text(example) }
                 }
             } }
@@ -64,6 +64,6 @@ import kotlinx.coroutines.withContext
                 null -> Unit
             }
         } }
-        item { Text("Supports arithmetic, percentages, equal bill splits, common unit conversions, and equations up to degree two. Use sin_deg or sin_rad for angles. Currency conversion needs a rate you supply.", style = MaterialTheme.typography.bodySmall) }
+        item { Text("Supports arithmetic, percentages, equal bill splits, conversions, statistics, ratios, tips, reverse tax and equations up to degree two. Try percentage change from 80 to 100, or simple interest on 1000 at 10% per year for 2 years. Compound interest requires a schedule such as compounded monthly. Use sin_deg or sin_rad for angles. Currency conversion needs a rate you supply.", style = MaterialTheme.typography.bodySmall) }
     }
 }
