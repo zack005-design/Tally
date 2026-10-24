@@ -7,13 +7,15 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 object BackupEnvelope {
+    const val MIN_PASSWORD_LENGTH=8
+    fun isValidExportPassword(password:CharArray)=password.size>=MIN_PASSWORD_LENGTH && password.any {!it.isWhitespace()}
     private val header="SETB1".toByteArray(Charsets.US_ASCII)
     private fun key(password:CharArray,salt:ByteArray):SecretKeySpec {
         val spec=PBEKeySpec(password,salt,210000,256)
         return try {SecretKeySpec(SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded,"AES")} finally {spec.clearPassword()}
     }
     fun encode(data:ByteArray,password:CharArray):ByteArray {
-        if(password.isEmpty()) return data
+        require(isValidExportPassword(password)) {"Use a backup password of at least $MIN_PASSWORD_LENGTH characters; it cannot contain only spaces."}
         val random=SecureRandom();val salt=ByteArray(16).also(random::nextBytes);val nonce=ByteArray(12).also(random::nextBytes)
         val cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.ENCRYPT_MODE,key(password,salt),GCMParameterSpec(128,nonce));cipher.updateAAD(header)
         return header+salt+nonce+cipher.doFinal(data)

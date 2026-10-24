@@ -206,7 +206,8 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
     }
 }
 @Composable fun EditorialPrimaryButton(label:String,enabled:Boolean=true,onClick:()->Unit) {
-    Button(onClick,Modifier.fillMaxWidth().heightIn(min=48.dp),enabled=enabled,shape=Tokens.field,
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Button(lightHapticAction(onClick),Modifier.fillMaxWidth().heightIn(min=48.dp).softPress(interaction),interactionSource=interaction,enabled=enabled,shape=Tokens.field,
         colors=ButtonDefaults.buttonColors(containerColor=Tokens.accent,contentColor=MaterialTheme.colorScheme.onPrimary,
             disabledContainerColor=MaterialTheme.colorScheme.surfaceContainerHighest,disabledContentColor=Tokens.muted),
         contentPadding=PaddingValues(horizontal=20.dp,vertical=12.dp)) {
@@ -331,8 +332,3 @@ fun editorialMoney(paise:Long):String {
     val formatter=java.text.NumberFormat.getNumberInstance(java.util.Locale.US).apply {minimumFractionDigits=2;maximumFractionDigits=2}
     return (if(paise<0) "−₹" else "₹")+formatter.format(amount.abs())
 }
-
-
-
-
-

@@ -29,7 +29,7 @@ class ReceiptRepositoryTest {
             backup.restore(encrypted,"fixture password".toCharArray())
             assertArrayEquals(bill.bytes,repo.receipt(draft.id)!!.bytes)
             val before=repo.snapshot().accounts
-            val damaged=org.json.JSONObject(backup.export(charArrayOf()).toString(Charsets.UTF_8))
+            val damaged=org.json.JSONObject(backup.exportFixture().toString(Charsets.UTF_8))
             val chunks=damaged.getJSONArray("receiptChunks");chunks.remove(chunks.length()-1)
             assertTrue(runCatching {backup.restore(damaged.toString().toByteArray(),charArrayOf())}.isFailure)
             assertEquals(before,repo.snapshot().accounts);assertArrayEquals(bill.bytes,repo.receipt(draft.id)!!.bytes)
@@ -47,7 +47,7 @@ class ReceiptRepositoryTest {
             assertArrayEquals(bill.bytes,repo.receipt(draft.id)!!.bytes)
             assertTrue(runCatching {repo.saveWithBill(draft.copy(id="duplicate"),bill)}.isFailure)
             assertNull(db.dao().transaction("duplicate"))
-            val backup=BackupService(db);backup.restore(backup.export(charArrayOf()),charArrayOf())
+            val backup=BackupService(db);backup.restore(backup.exportFixture(),charArrayOf())
             assertArrayEquals(bill.bytes,repo.receipt(draft.id)!!.bytes)
             repo.removeReceipt(draft.id)
             assertNull(repo.receipt(draft.id));assertEquals(90000L,repo.snapshot().accounts.single {it.id==draft.accountId}.balance)

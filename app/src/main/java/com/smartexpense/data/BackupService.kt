@@ -13,6 +13,7 @@ import javax.inject.Singleton
     private fun row(vararg values:Any?):JSONArray=JSONArray().apply {values.forEach {put(it?:JSONObject.NULL)}}
     private fun <T> table(items:List<T>,encode:(T)->JSONArray)=JSONArray().apply {items.forEach {put(encode(it))}}
     suspend fun export(password:CharArray):ByteArray=withContext(Dispatchers.IO) {
+        require(BackupEnvelope.isValidExportPassword(password)) {"Use a backup password of at least ${BackupEnvelope.MIN_PASSWORD_LENGTH} characters; it cannot contain only spaces."}
         val json=db.withTransaction {JSONObject().apply {
             put("version",7);put("currency","INR")
             put("receipts",table(dao.receipts()) {row(it.transactionId,it.mime,it.text,it.hash)})
@@ -39,8 +40,10 @@ import javax.inject.Singleton
             put("revisions",table(dao.revisions()) {row(it.id,it.originalId,it.replacementId,it.date,it.reason)})
         }.toString()}
         val payload=json.toByteArray(Charsets.UTF_8)
-        require(payload.size<=32*1024*1024) {"Backup is too large. Export reports and remove old bill attachments before trying again."}
-        BackupEnvelope.encode(payload,password).also {require(it.size<=32*1024*1024) {"Encrypted backup is too large. Remove old attachments or export without a password."}}
+        try {
+            require(payload.size<=32*1024*1024-49) {"Backup is too large. Export reports and remove old bill attachments before trying again."}
+            BackupEnvelope.encode(payload,password)
+        } finally {payload.fill(0)}
     }
     suspend fun inspect(data:ByteArray,password:CharArray):String=withContext(Dispatchers.IO) {val bundle=parse(data,password);bundle.validate();"${bundle.accounts.size} accounts, ${bundle.transactions.size} transactions, ${bundle.people.size-1} friends"}
     suspend fun restore(data:ByteArray,password:CharArray)=withContext(Dispatchers.IO) {

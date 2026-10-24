@@ -17,7 +17,7 @@ Reports are for reading, sharing, and analysis. A CSV or PDF cannot restore your
 
 ## Create a restorable backup
 
-Use the backup screen to export a full backup. Set a password when creating a password-protected backup, and keep both the file and password somewhere you can access later. Restore through the backup flow using a compatible backup file.
+Use the backup screen to export a full backup. New backups require a password of at least eight characters and use authenticated encryption. Use a long, unique passphrase and keep the file and password somewhere you can access later. Older unencrypted backups and encrypted backups with shorter passwords remain importable. Restore through the backup flow using a compatible backup file.
 
 Automatic Android cloud backup is disabled. You decide where to store your exported backup.
 

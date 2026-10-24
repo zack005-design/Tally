@@ -9,6 +9,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import com.smartexpense.domain.*
 
 @Composable fun TrackerApp(model:AppViewModel) {
@@ -76,11 +77,11 @@ import com.smartexpense.domain.*
                 // Compose's animation clock respects Android's animator duration scale, including zero.
                 enterTransition = {
                     if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(180))
-                    else slideInHorizontally(tween(280)) { it / 5 } + fadeIn(tween(220))
+                    else slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { it / 8 } + fadeIn(tween(240))
                 },
                 exitTransition = { fadeOut(tween(140)) },
-                popEnterTransition = { slideInHorizontally(tween(260)) { -it / 12 } + fadeIn(tween(180)) },
-                popExitTransition = { slideOutHorizontally(tween(260)) { it / 5 } + fadeOut(tween(160)) }
+                popEnterTransition = { slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 16 } + fadeIn(tween(220)) },
+                popExitTransition = { slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 8 } + fadeOut(tween(180)) }
             ) {
                 composable("balance-setup") {BalanceSetupScreen(ui.snapshot,ui.busy) {wallet,gpay,walletId,gpayId->
                     model.action("Balances saved") {

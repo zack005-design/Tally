@@ -40,7 +40,9 @@ class BackupSurfaceTest {
         lateinit var m:AppViewModel;compose.runOnIdle {m=model()}
         var show by mutableStateOf(true)
         compose.setContent {EditorialPreviewTheme {if(show) BackupScreen(m) else Text("Recreating")}}
-        compose.onNodeWithText("Password (optional)").performTextInput("fixture password")
+        compose.onNodeWithText("Export backup").assertIsNotEnabled()
+        compose.onNodeWithText("Backup password").performTextInput("fixture password")
+        compose.onNodeWithText("Export backup").assertIsEnabled()
         capture("backup")
         val bytes=runBlocking {m.backup.export("fixture password".toCharArray())}
         compose.runOnIdle {m.prepareRestore(bytes,"2 accounts · 4 records (fictional preview)","fixture password");show=false}

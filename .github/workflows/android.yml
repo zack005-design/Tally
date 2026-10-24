@@ -50,3 +50,28 @@ jobs:
             app/build/reports/lint-results-debug.*
           if-no-files-found: ignore
           retention-days: 7
+
+  data-safety:
+    name: Database upgrades and restore safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: jetbrains
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Test migrations and rejected restores on a disposable emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          script: ./gradlew -I tools/data-safety-build.init.gradle :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smartexpense.InstallationDataSafetyTest,com.smartexpense.BackupTest --no-daemon --console=plain --max-workers=2

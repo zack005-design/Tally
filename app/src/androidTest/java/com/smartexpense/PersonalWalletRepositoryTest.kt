@@ -37,7 +37,7 @@ class PersonalWalletRepositoryTest {
             assertEquals(500000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
             assertEquals(100000L,repo.snapshot().records.single {it.id=="gpay-reset:${sources.gpayId}:2026-11"}.amount)
             assertEquals(70000L,repo.snapshot().records.single {it.description=="GPay reset recalculation"}.amount)
-            val backup=BackupService(db);backup.restore(backup.export(charArrayOf()),charArrayOf())
+            val backup=BackupService(db);backup.restore(backup.exportFixture(),charArrayOf())
             repo.refreshMonthlyGpay(LocalDate.of(2027,1,3))
             assertEquals(3,repo.snapshot().records.count {it.description.startsWith("GPay monthly reset")})
         } finally {db.close()}
@@ -57,7 +57,7 @@ class PersonalWalletRepositoryTest {
             assertEquals(460000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
             repo.recordRepayment(b,"self",10000,sources.gpayId,"Part repayment")
             assertEquals(470000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
-            val backup=BackupService(db);backup.restore(backup.export(charArrayOf()),charArrayOf())
+            val backup=BackupService(db);backup.restore(backup.exportFixture(),charArrayOf())
             assertEquals(20000L,repo.snapshot().debts.single {it.outstanding>0}.outstanding)
             assertEquals(470000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
             try {repo.save(draft.copy(id="bad",selfPayments=mapOf(sources.walletId to 1L)));fail("Invalid source allocation")} catch(_:IllegalArgumentException) {}
@@ -70,7 +70,7 @@ class PersonalWalletRepositoryTest {
             val repo=FinanceRepository(db);repo.initialize();val wallet=repo.createAccount("Cash","Cash",150000);val gpay=repo.createAccount("UPI","Bank",123000)
             repo.configureWallet(0,wallet,gpay)
             assertEquals(123000L,repo.snapshot().accounts.single {it.id==gpay}.balance)
-            val backup=BackupService(db);val json=org.json.JSONObject(backup.export(charArrayOf()).toString(Charsets.UTF_8));json.put("version",1);json.remove("walletSources")
+            val backup=BackupService(db);val json=org.json.JSONObject(backup.exportFixture().toString(Charsets.UTF_8));json.put("version",1);json.remove("walletSources")
             backup.restore(json.toString().toByteArray(),charArrayOf())
             assertNull(repo.snapshot().walletSources)
             assertEquals(150000L,repo.snapshot().accounts.single {it.id==wallet}.balance)
@@ -106,7 +106,7 @@ class PersonalWalletRepositoryTest {
             val repo=FinanceRepository(db);repo.initialize();repo.configureWallet(200000,gpayOpening=500000)
             val sources=repo.snapshot().walletSources!!
             repo.save(EntryDraft(amount=100000,description="Old meal",accountId=sources.gpayId))
-            val backup=BackupService(db);val json=org.json.JSONObject(backup.export(charArrayOf()).toString(Charsets.UTF_8))
+            val backup=BackupService(db);val json=org.json.JSONObject(backup.exportFixture().toString(Charsets.UTF_8))
             val previous=YearMonth.now().minusMonths(1)
             json.getJSONArray("walletSources").getJSONArray(0).put(3,previous.toString())
             json.put("gpaySchedule",org.json.JSONArray().put(org.json.JSONArray().put(1).put(true).put(500000).put(1).put(previous.toString()).put(YearMonth.now().toString())))

@@ -32,6 +32,8 @@ private val lightTabs = listOf(
 
 /** Floating grouped navigation and a separate compose action, with an expanded large-text layout. */
 @Composable fun EditorialBottomNavigation(route: String?, onNavigate: (String) -> Unit) {
+    val addInteraction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val addAction = lightHapticAction { onNavigate("add") }
     val density = LocalDensity.current
     val style = MaterialTheme.typography.labelSmall
     val measurer = rememberTextMeasurer()
@@ -42,10 +44,12 @@ private val lightTabs = listOf(
             val stackedTabs = maxWidth - 12.dp < (labelWidth + 10.dp) * lightTabs.size
             val tab: @Composable (Triple<String, String, Int>, Modifier) -> Unit = { (destination, label, icon), modifier ->
                 val selected = route == destination
+                val selectAction = lightHapticAction { onNavigate(destination) }
+                val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                 val tint by animateColorAsState(if (selected) Tokens.accent else Tokens.muted, tween(180), label = "Tab tint")
                 val fill by animateColorAsState(if (selected) Tokens.secondarySurface else Color.Transparent, tween(220), label = "Tab selection")
-                val target = modifier.clip(Tokens.card).background(fill)
-                    .selectable(selected, role = Role.Tab, onClick = { onNavigate(destination) })
+                val target = modifier.softPress(interaction).clip(Tokens.card).background(fill)
+                    .selectable(selected, interactionSource = interaction, indication = androidx.compose.foundation.LocalIndication.current, role = Role.Tab, onClick = { if (!selected) selectAction() })
                     .heightIn(min = 54.dp)
                 if (stackedTabs) Row(target.padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -70,15 +74,15 @@ private val lightTabs = listOf(
             }
             if (expanded) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 tabs(Modifier.fillMaxWidth())
-                Button({ onNavigate("add") }, Modifier.align(Alignment.End).heightIn(min = 48.dp).semantics { contentDescription = "Add expense" }, shape = CircleShape) {
+                Button(addAction, Modifier.align(Alignment.End).heightIn(min = 48.dp).softPress(addInteraction).semantics { contentDescription = "Add expense" }, shape = CircleShape, interactionSource = addInteraction) {
                     Icon(painterResource(R.drawable.ic_compose), null, Modifier.size(22.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Add expense")
                 }
             } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 tabs(Modifier.weight(1f))
-                Surface(onClick = { onNavigate("add") }, shape = CircleShape, color = Tokens.accent,
-                    contentColor = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(60.dp), shadowElevation = 1.dp) {
+                Surface(onClick = addAction, interactionSource = addInteraction, shape = CircleShape, color = Tokens.accent,
+                    contentColor = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(60.dp).softPress(addInteraction), shadowElevation = 3.dp) {
                     Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ic_compose), "Add expense", Modifier.size(26.dp)) }
                 }
             }

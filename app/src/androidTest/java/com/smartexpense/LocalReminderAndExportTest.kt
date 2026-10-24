@@ -33,7 +33,7 @@ class LocalReminderAndExportTest {
             gateway.allow=true;coordinator.syncNotifications(expected.toEpochMilli());coordinator.syncNotifications(expected.toEpochMilli())
             assertEquals(1,gateway.shown);assertNotNull(gateway.next)
             assertEquals(day.toString(),repo.reminderSettings().lastNotifiedDate)
-            val saved=repo.reminderSettings();val backup=BackupService(db);backup.restore(backup.export(charArrayOf()),charArrayOf())
+            val saved=repo.reminderSettings();val backup=BackupService(db);backup.restore(backup.exportFixture(),charArrayOf())
             assertEquals(saved,repo.reminderSettings())
             repo.saveReminderSettings(saved.copy(enabled=false));coordinator.syncNotifications();assertNull(gateway.next)
             assertEquals(100000L,repo.snapshot().accounts.single {it.id==account}.balance)

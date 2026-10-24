@@ -143,7 +143,9 @@ These plugins run separately in Codex. Tally does not send your records automati
 
 ## Release information
 
-**Android 8.0+ · Version 0.2.1 · Development build**
+**Android 8.0+ · Version 0.2.2 · Development build**
+
+This update adds reviewed ChatGPT-history import, required encryption for new backups, restore and migration checks, and refined app-lock layout and motion. The private release includes AI and non-AI APKs plus Tally Companion 0.2.0. [Release checks](docs/releases/0.2.2.md) · [Update and data safety](docs/installation-safety.md).
 
 INR is the core currency. Foreign bills can use a manually entered exchange rate. See [download and setup](docs/getting-started.md) for installation and release details, or the [verification report](docs/verification/ios-polish-report.md) for recorded test results and device-testing limits.
 

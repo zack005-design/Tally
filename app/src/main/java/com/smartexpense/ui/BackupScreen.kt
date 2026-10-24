@@ -56,9 +56,9 @@ import java.time.*
         }}
         item {GroupedCard {Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             ReferenceValueRow("Last export",if(status.lastExport==0L) "Not yet" else Instant.ofEpochMilli(status.lastExport).atZone(ZoneId.systemDefault()).toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy")))
-            OutlinedTextField(password,model::setBackupPassword,enabled=!appState.busy,modifier=Modifier.fillMaxWidth(),shape=Tokens.field,label={Text("Password (optional)")},visualTransformation=if(visible) VisualTransformation.None else PasswordVisualTransformation(),trailingIcon={IconButton(model::toggleBackupPassword) {Icon(painterResource(R.drawable.ic_visibility),if(visible) "Hide password" else "Show password")}},colors=OutlinedTextFieldDefaults.colors(unfocusedContainerColor=Tokens.paper,focusedContainerColor=Tokens.paper,unfocusedBorderColor=Tokens.border,focusedBorderColor=Tokens.accent))
-            Text(if(password.isEmpty()) "Add a password to encrypt your backup file." else "Password-protected encryption. Keep your password safe.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
-            EditorialPrimaryButton("Export backup",!appState.busy) {model.prepareExport(password);export.launch("smart-expense-${java.time.LocalDate.now()}.setbackup")}
+            OutlinedTextField(password,model::setBackupPassword,enabled=!appState.busy,modifier=Modifier.fillMaxWidth(),shape=Tokens.field,label={Text("Backup password")},visualTransformation=if(visible) VisualTransformation.None else PasswordVisualTransformation(),trailingIcon={IconButton(model::toggleBackupPassword) {Icon(painterResource(R.drawable.ic_visibility),if(visible) "Hide password" else "Show password")}},colors=OutlinedTextFieldDefaults.colors(unfocusedContainerColor=Tokens.paper,focusedContainerColor=Tokens.paper,unfocusedBorderColor=Tokens.border,focusedBorderColor=Tokens.accent))
+            Text("New backups require a password of at least ${BackupEnvelope.MIN_PASSWORD_LENGTH} characters. Use a long, unique passphrase. Leave blank only when importing an old unencrypted backup.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
+            EditorialPrimaryButton("Export backup",!appState.busy && password.length>=BackupEnvelope.MIN_PASSWORD_LENGTH && password.isNotBlank()) {model.prepareExport(password);export.launch("smart-expense-${java.time.LocalDate.now()}.setbackup")}
         }}}
         item {GroupedCard {GroupedRow("Choose backup to restore",R.drawable.ic_document_outline) {if(!appState.busy) import.launch(arrayOf("application/octet-stream","application/json","*/*"))}}}
         item {Text("Password cannot be recovered. Keep your file safe.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)}
@@ -69,7 +69,7 @@ import java.time.*
         if(denied) item {ReferenceInfo("Notification permission was not granted. Backup reminders remain off.")}
         item {TextButton({details=!details}) {Text(if(details) "Hide backup details" else "Backup details & moving phones")}}
         if(details) item {GroupedCard {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text("Backups with a password use AES-256-GCM encryption. Without a password, the exported file is not encrypted.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
+            Text("New backups use AES-256-GCM encryption and require a password. Older unencrypted backups can still be restored.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
             Text("Export to a safe location, move the file to your other phone, then choose Backup & restore there. Restore replaces that phone’s current records.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
             Text("Last export records a completed export, not whether the file still exists. Weekly reminders follow your selected schedule, or the existing seven-day interval. No cloud upload.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
         }}}

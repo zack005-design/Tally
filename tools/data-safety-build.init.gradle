@@ -1,0 +1,10 @@
+// Isolate test builds and installation from the user's actual app and other verification sessions.
+allprojects { project ->
+    def moduleName = project.path == ':' ? 'root' : project.path.substring(1).replace(':', '/')
+    project.layout.buildDirectory.set(new File(project.rootDir, '.build-cache/data-safety/' + moduleName))
+    project.plugins.withId('com.android.application') {
+        project.androidComponents.finalizeDsl { dsl ->
+            dsl.defaultConfig.applicationId = 'com.smartexpense.safety'
+        }
+    }
+}

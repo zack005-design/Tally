@@ -25,7 +25,7 @@ class LocalFinanceRepositoryTest {
                 repo.saveGroupDefault(value)
                 assertEquals(value,repo.snapshot().groupDefaults.single())
                 assertTrue(runCatching {value.rule(listOf("self",friend))}.isFailure)
-                val backup=BackupService(database);val bytes=backup.export(charArrayOf());repo.deletePlan("group:$group");backup.restore(bytes,charArrayOf())
+                val backup=BackupService(database);val bytes=backup.exportFixture();repo.deletePlan("group:$group");backup.restore(bytes,charArrayOf())
                 assertEquals(value,repo.snapshot().groupDefaults.single())
             }
         } finally {database.close()}
@@ -44,7 +44,7 @@ class LocalFinanceRepositoryTest {
             repo.save(draft);repo.save(draft)
             assertEquals(1,repo.snapshot().records.count {it.kind==Kind.EXPENSE})
             assertEquals(490000L,repo.snapshot().accounts.single {it.id==account}.balance)
-            val before=repo.snapshot();val backup=BackupService(db);val bytes=backup.export(charArrayOf())
+            val before=repo.snapshot();val backup=BackupService(db);val bytes=backup.exportFixture()
             repo.deletePlan("goal:emergency");repo.deletePlan("template:rent");backup.restore(bytes,charArrayOf())
             assertEquals(before.goals,repo.snapshot().goals);assertEquals(before.templates,repo.snapshot().templates)
             val bad=org.json.JSONObject(bytes.toString(Charsets.UTF_8));val rows=bad.getJSONArray("localPlans")
@@ -64,7 +64,7 @@ class LocalFinanceRepositoryTest {
             repo.saveDiary("2026-10-11","Lunch with friends\nKeep receipts")
             repo.saveProfile("Aniru","star");repo.finishWelcome()
             val before=repo.snapshot();assertEquals(323000L,Finance.total(before.accounts.map {it.balance}))
-            val backup=BackupService(db);val bytes=backup.export(charArrayOf())
+            val backup=BackupService(db);val bytes=backup.exportFixture()
             repo.saveDiary("2026-10-11","");repo.saveProfile("Changed","leaf")
             backup.restore(bytes,charArrayOf())
             val restored=repo.snapshot()
@@ -94,7 +94,7 @@ class LocalFinanceRepositoryTest {
             assertEquals(1,repo.snapshot().records.count {it.id.startsWith("gpay-reset:")})
             repo.save(EntryDraft(amount=1000,description="Before first reset",accountId=sources.gpayId,date=now.atTime(12,0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()))
             assertEquals(120000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
-            val backup=BackupService(db);backup.restore(backup.export(charArrayOf()),charArrayOf())
+            val backup=BackupService(db);backup.restore(backup.exportFixture(),charArrayOf())
             assertEquals(120000L,db.dao().resetTargets().first().target)
         } finally {db.close()}
     }

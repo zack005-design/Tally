@@ -18,9 +18,11 @@ When app lock is enabled, Tally locks when you leave it and blocks screenshots a
 
 Automatic Android cloud backup is disabled. You choose when to export files and where to save them.
 
-- Use a password-protected full backup when you need an encrypted, restorable copy.
+- New full backups require a password of at least eight characters and are encrypted. Older unencrypted backups remain importable.
 - Use CSV or PDF for readable reports. These files are separate from the backup format.
 - Review the contents before sharing a report with another person or service.
+
+[Installation and update safety](../installation-safety.md) explains release verification, signing compatibility, and protecting records when moving phones.
 
 ## Companion plugins
 

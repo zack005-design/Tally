@@ -30,7 +30,7 @@ import org.junit.runner.RunWith
             repo.save(EntryDraft(amount=20000,description="First",accountId=account,participants=listOf("self",rahul),contributions=mapOf("self" to 20000L,rahul to 0L)))
             repo.save(EntryDraft(amount=20000,description="Second",accountId=account,participants=listOf("self",kevin),contributions=mapOf("self" to 0L,kevin to 20000L)))
             val payment=repo.recordRepayment(rahul,kevin,10000,null,"Net settlement");assertEquals(80000L,repo.snapshot().accounts.single().balance);assertTrue(repo.snapshot().debts.all {it.outstanding==0L});assertEquals(2,repo.detail(payment).allocations.size)
-            val backup=BackupService(db);val bytes=backup.export(charArrayOf());backup.restore(bytes,charArrayOf());assertTrue(repo.snapshot().debts.all {it.outstanding==0L})
+            val backup=BackupService(db);val bytes=backup.exportFixture();backup.restore(bytes,charArrayOf());assertTrue(repo.snapshot().debts.all {it.outstanding==0L})
             repo.reverse(payment);assertEquals(20000L,repo.snapshot().debts.sumOf {it.outstanding})
         } finally {db.close()}
     }
@@ -50,7 +50,7 @@ import org.junit.runner.RunWith
             val balance=repo.snapshot().accounts.single().balance;repo.recordOffset(friend,"self",2000)
             assertEquals(balance,repo.snapshot().accounts.single().balance);assertEquals(3000L,repo.snapshot().debts.sumOf {it.outstanding})
             val offset=repo.snapshot().records.first {it.kind==Kind.OFFSET};repo.reverse(offset.id);assertEquals(7000L,repo.snapshot().debts.sumOf {it.outstanding})
-            val backup=BackupService(db);backup.restore(backup.export(charArrayOf()),charArrayOf());assertEquals(balance,repo.snapshot().accounts.single().balance)
+            val backup=BackupService(db);backup.restore(backup.exportFixture(),charArrayOf());assertEquals(balance,repo.snapshot().accounts.single().balance)
         } finally {db.close()}
     }
     @Test fun groupOffsetOnlyAppliesToSelectedGroup()=runBlocking {

@@ -44,7 +44,7 @@ internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray }
 }
 
 @Composable internal fun GroupedCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Surface(modifier.fillMaxWidth(), shape = Tokens.card, color = Tokens.paper, border = BorderStroke(.7.dp, Tokens.border.copy(alpha = .65f))) { Column(content = content) }
+    Surface(modifier.fillMaxWidth(), shape = Tokens.card, color = Tokens.paper, shadowElevation = 1.dp, border = BorderStroke(.5.dp, Tokens.border.copy(alpha = .5f))) { Column(content = content) }
 }
 
 @Composable internal fun GroupedDivider(inset: androidx.compose.ui.unit.Dp = 64.dp) {
@@ -53,6 +53,8 @@ internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray }
 
 /** A button row; decorative icons are excluded and visible text supplies the accessible label. */
 @Composable internal fun GroupedRow(label: String, icon: Int, supporting: String? = null, value: String? = null, tone: ReferenceTone = ReferenceTone.Blue, showChevron: Boolean = true, leading: (@Composable () -> Unit)? = null, roomy: Boolean = false, bareIcon: Boolean = false, color: Color = Tokens.paper, onClick: () -> Unit) {
+    val rowAction = lightHapticAction(onClick)
+    val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val style = MaterialTheme.typography.bodyLarge
@@ -62,7 +64,7 @@ internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray }
     val labelWidth = measurer.measure(label, style).size.width
     val valueWidth = value?.let { measurer.measure(it, style).size.width } ?: 0
     val large = density.fontScale > 1.3f || value != null && labelWidth + valueWidth > available
-    Surface(onClick = onClick, color = color, modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp)) {
+    Surface(onClick = rowAction, interactionSource = interaction, color = color, modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp).softPress(interaction)) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = if(roomy) 16.dp else 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             if(leading!=null) leading() else if(bareIcon) Icon(painterResource(icon),null,Modifier.size(30.dp),tint=Tokens.accent) else ReferenceIcon(icon, tone)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -98,7 +100,8 @@ internal fun referenceMoney(paise: Long): String = editorialMoney(paise).let { i
 }
 
 @Composable internal fun ReferenceAction(label: String, icon: Int, enabled: Boolean = true, onClick: () -> Unit) {
-    Surface(onClick = onClick, enabled = enabled, color = Tokens.secondarySurface, contentColor = Tokens.accent, shape = Tokens.field, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+    val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Surface(onClick = lightHapticAction(onClick), interactionSource = interaction, enabled = enabled, color = Tokens.secondarySurface, contentColor = Tokens.accent, shape = Tokens.field, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).softPress(interaction)) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(icon), null, Modifier.size(20.dp))
             Text(label, style = MaterialTheme.typography.labelLarge)
@@ -118,7 +121,8 @@ internal fun referenceMoney(paise: Long): String = editorialMoney(paise).let { i
 }
 
 @Composable internal fun ReferenceToggleRow(label: String, checked: Boolean, onChanged: ((Boolean) -> Unit)?, enabled: Boolean = true, supporting: String? = null) {
-    val modifier = if (onChanged != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onChanged)
+    val toggleFeedback = lightHapticAction {}
+    val modifier = if (onChanged != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = { value -> toggleFeedback(); onChanged(value) })
         else Modifier.semantics(mergeDescendants = true) { stateDescription = if (checked) "On" else "Off" }
     Row(modifier.fillMaxWidth().heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

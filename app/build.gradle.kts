@@ -9,6 +9,19 @@ val tallyAiEnabled = providers.gradleProperty("tallyAi").map {
     require(it == "true" || it == "false") { "tallyAi must be true or false" }
     it.toBoolean()
 }.getOrElse(true)
+// Never fall back to a debug key for release distribution.
+val releaseSigningValues = listOf("TALLY_KEYSTORE_FILE", "TALLY_KEYSTORE_PASSWORD", "TALLY_KEY_ALIAS", "TALLY_KEY_PASSWORD")
+    .associateWith { providers.environmentVariable(it).orNull }
+val releaseSigningReady = releaseSigningValues.values.all { !it.isNullOrBlank() }
+
+val validateReleaseSigning = tasks.register("validateReleaseSigning") {
+    doLast {
+        check(releaseSigningReady) {
+            "Release signing is required. Set TALLY_KEYSTORE_FILE, TALLY_KEYSTORE_PASSWORD, TALLY_KEY_ALIAS and TALLY_KEY_PASSWORD. Use the existing app signing identity for updates."
+        }
+        check(file(releaseSigningValues.getValue("TALLY_KEYSTORE_FILE")!!).isFile) { "Release keystore file does not exist" }
+    }
+}
 
 android {
     namespace = "com.smartexpense"
@@ -17,16 +30,37 @@ android {
         applicationId = "com.smartexpense"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.2.1"
+        versionCode = 4
+        versionName = "0.2.2"
         buildConfigField("boolean", "LOCAL_AI_ENABLED", tallyAiEnabled.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets.getByName("androidTest").assets.srcDir("schemas")
+    signingConfigs {
+        if (releaseSigningReady) create("distribution") {
+            storeFile = file(releaseSigningValues.getValue("TALLY_KEYSTORE_FILE")!!)
+            storePassword = releaseSigningValues.getValue("TALLY_KEYSTORE_PASSWORD")
+            keyAlias = releaseSigningValues.getValue("TALLY_KEY_ALIAS")
+            keyPassword = releaseSigningValues.getValue("TALLY_KEY_PASSWORD")
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isDebuggable = false
+            if (releaseSigningReady) signingConfig = signingConfigs.getByName("distribution")
+        }
+    }
     if (tallyAiEnabled) sourceSets.getByName("main").assets.srcDir("src/localAi/assets")
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     testOptions { unitTests.isReturnDefaultValues = true }
+}
+tasks.configureEach {
+    if (name == "preReleaseBuild" || name == "validateSigningRelease" || name == "packageRelease" || name == "signReleaseBundle") {
+        dependsOn(validateReleaseSigning)
+    }
 }
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }

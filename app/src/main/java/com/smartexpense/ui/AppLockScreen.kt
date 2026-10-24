@@ -16,14 +16,25 @@ val LocalDeviceLock=staticCompositionLocalOf<DeviceLockController?> {null}
 @Composable fun SecureLedgerSurface(view:DeviceLockView,onUnlock:(Boolean)->Unit,content:@Composable ()->Unit) {
     val stateHolder=rememberSaveableStateHolder()
     if(!view.enabled || view.unlocked) stateHolder.SaveableStateProvider("ledger") {content()}
-    else Page("Tally is locked") {
-        item {ReferenceHero("", "Your local finances stay private", R.drawable.ic_lock_outline)}
-        item {Panel {
-            Text("Authenticate using Android's secure prompt to view your ledger.",style=MaterialTheme.typography.bodyLarge)
-            view.message?.let {Text(it,color=Tokens.muted)}
-            EditorialPrimaryButton(if(view.busy) "Authenticating…" else "Unlock Tally",!view.busy) {onUnlock(false)}
-            OutlinedButton({onUnlock(true)},Modifier.fillMaxWidth(),enabled=!view.busy) {Text("Use device PIN / pattern / password")}
-        }}
+    // This gate sits outside TrackerApp's Scaffold, so it owns its background and insets.
+    else Surface(Modifier.fillMaxSize(),color=Tokens.background,contentColor=Tokens.text) {
+        Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+            Page("Tally is locked") {
+                item {Column(Modifier.fillMaxWidth().padding(vertical=18.dp),
+                    horizontalAlignment=Alignment.CenterHorizontally,
+                    verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    ReferenceIcon(R.drawable.ic_lock_outline,size=76.dp)
+                    Text("Your local finances stay private",style=MaterialTheme.typography.bodyMedium,
+                        color=Tokens.muted,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+                }}
+                item {Panel {
+                    Text("Authenticate using Android's secure prompt to view your ledger.",style=MaterialTheme.typography.bodyLarge)
+                    view.message?.let {Text(it,color=Tokens.muted)}
+                    EditorialPrimaryButton(if(view.busy) "Authenticating…" else "Unlock Tally",!view.busy) {onUnlock(false)}
+                    OutlinedButton({onUnlock(true)},Modifier.fillMaxWidth(),enabled=!view.busy) {Text("Use device PIN / pattern / password")}
+                }}
+            }
+        }
     }
 }
 
