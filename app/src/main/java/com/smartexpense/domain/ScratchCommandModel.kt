@@ -12,13 +12,16 @@ import kotlin.math.tanh
  */
 class ScratchCommandModel private constructor(
     private val vocabulary: Map<String, Int>, private val embeddingSize: Int,
-    private val hidden: Int, private val threshold: Float, private val weights: Map<String, FloatArray>
+    private val hidden: Int, private val threshold: Float, private val weights: Map<String, FloatArray>,
+    private val enhanced: Boolean
 ) {
+    private val names = if (enhanced) enhancedAccountNames else accountNames
     data class Suggestion(val description: String, val amount: Long, val account: String, val confidence: Float)
     private data class Token(val text: String, val start: Int, val end: Int)
 
     fun suggest(text: String): Suggestion? {
-        if (text.length > 240 || unsupported.containsMatchIn(text) || future.containsMatchIn(text) || text.any { it.isLetter() && it.code > 127 }) return null
+        if (text.length > 240 || unsupported.containsMatchIn(text) || future.containsMatchIn(text) ||
+            (enhanced && hindiNonAction.containsMatchIn(text)) || text.any { it.isLetter() && it.code > 127 }) return null
         val tokens = tokenizer.findAll(text).map { Token(it.value, it.range.first, it.range.last + 1) }.toList()
         if (tokens.isEmpty() || tokens.size > 48) return null
         val numbers = tokens.indices.filter { number.matches(tokens[it].text) }
@@ -61,6 +64,7 @@ class ScratchCommandModel private constructor(
         val descriptions = tags.indices.filter { tags[it] == 1 }
         val accounts = tags.indices.filter { tags[it] == 3 }
         if (!contiguous(descriptions) || !contiguous(accounts)) return null
+        if (enhanced && !descriptionBoundaryAllowed(tokens, descriptions)) return null
         if (unknown.isNotEmpty()) {
             if (unknown.any { tags[it] != 1 }) return null
             val first = descriptions.first(); val last = descriptions.last()
@@ -68,10 +72,10 @@ class ScratchCommandModel private constructor(
             val compact = first == 0 && last + 2 < tags.size && tags[last + 1] == 2 && tags.drop(last + 2).all { it == 3 }
             if (!anchored && !compact) return null
         }
-        val account = accountNames[accounts.joinToString(" ") { tokens[it].text.lowercase(Locale.ROOT) }] ?: return null
-        val mentions = tokens.mapNotNull { accountNames[it.text.lowercase(Locale.ROOT)] }.toMutableSet()
+        val account = names[accounts.joinToString(" ") { tokens[it].text.lowercase(Locale.ROOT) }] ?: return null
+        val mentions = tokens.mapNotNull { names[it.text.lowercase(Locale.ROOT)] }.toMutableSet()
         tokens.zipWithNext().forEach { (left, right) ->
-            accountNames[left.text.lowercase(Locale.ROOT) + " " + right.text.lowercase(Locale.ROOT)]?.let(mentions::add)
+            names[left.text.lowercase(Locale.ROOT) + " " + right.text.lowercase(Locale.ROOT)]?.let(mentions::add)
         }
         if (mentions.isNotEmpty() && mentions != setOf(account)) return null
         val description = text.substring(tokens[descriptions.first()].start, tokens[descriptions.last()].end).trim()
@@ -87,11 +91,13 @@ class ScratchCommandModel private constructor(
         val bh = requireNotNull(weights["encoder.bias_hh_l0$suffix"])
         var state = FloatArray(hidden)
         val output = MutableList(vectors.size) { FloatArray(hidden) }
+        val inputGates = FloatArray(hidden * 3)
+        val hiddenGates = FloatArray(hidden * 3)
         val order = if (reverse) vectors.indices.reversed() else vectors.indices
         for (index in order) {
-            val inputGates = multiply(wi, vectors[index], hidden * 3, bi)
-            val hiddenGates = multiply(wh, state, hidden * 3, bh)
-            val next = FloatArray(hidden)
+            multiplyInto(wi, vectors[index], bi, inputGates)
+            multiplyInto(wh, state, bh, hiddenGates)
+            val next = output[index]
             for (j in 0 until hidden) {
                 val reset = sigmoid(inputGates[j] + hiddenGates[j])
                 val update = sigmoid(inputGates[hidden + j] + hiddenGates[hidden + j])
@@ -114,6 +120,18 @@ class ScratchCommandModel private constructor(
         private val unsupported = Regex("\\b(?:transfer|transferred|refund|refunded|income|salary|earned|received|repay|repaid|repayment|returned|split|shared|owe|owed|owes|between|dollars|usd|eur|gbp|balance|budget|delete|remove|cancel|not|never|didn\\W?t|don\\W?t|haven\\W?t|tomorrow|plan|planning)\\b|[\u0024€£]|\\?", RegexOption.IGNORE_CASE)
         private val future = Regex("\\bi\\s+(?:will|would|might|may|could|should)\\b", RegexOption.IGNORE_CASE)
         private val accountNames = mapOf("cash" to "WALLET", "wallet" to "WALLET", "gpay" to "GPAY", "google pay" to "GPAY", "g pay" to "GPAY", "g-pay" to "GPAY", "googlepay" to "GPAY")
+        private val enhancedAccountNames = accountNames + mapOf("gpy" to "GPAY", "gpaay" to "GPAY", "gooogle pay" to "GPAY", "wallett" to "WALLET", "walllet" to "WALLET")
+        private val hindiNonAction = Regex("\\b(?:nahi|nahin|mat|kal|karunga|karungi|karenge|dunga|dungi)\\b", RegexOption.IGNORE_CASE)
+        private val descriptionFillers = setOf("entry", "today's", "today", "please", "record", "log", "note", "add", "spent", "paid", "payment", "i", "my", "for", "on", "at", "via", "using", "aaj", "maine", "the")
+        private val descriptionEnd = setOf("using", "through", "with", "paid", "amount", "via", "was", "cost", "costing", "came", "for", "from", "rupees", "inr", "rs", "ke", "pe", "par", "ka", "rupaye", "se", "out")
+        private fun descriptionBoundaryAllowed(tokens: List<Token>, description: List<Int>): Boolean {
+            if (tokens[description.first()].text.lowercase(Locale.ROOT) in descriptionFillers) return false
+            val last = description.last()
+            if (last + 1 == tokens.size) return true
+            val next = tokens[last + 1].text.lowercase(Locale.ROOT)
+            if (next == "and") return last + 2 < tokens.size && tokens[last + 2].text.equals("paid", true)
+            return number.matches(next) || next in descriptionEnd || next in setOf(",", ":", ";", ".", "₹")
+        }
         private fun contiguous(indices: List<Int>) = indices.isNotEmpty() && indices == (indices.first()..indices.last()).toList()
         private fun sigmoid(value: Float) = (1.0 / (1.0 + exp(-value.toDouble()))).toFloat()
         private fun softmax(logits: FloatArray): FloatArray {
@@ -123,19 +141,25 @@ class ScratchCommandModel private constructor(
             return FloatArray(values.size) { values[it] / sum }
         }
         private fun multiply(matrix: FloatArray, input: FloatArray, rows: Int, bias: FloatArray): FloatArray =
-            FloatArray(rows) { row ->
+            FloatArray(rows).also { multiplyInto(matrix, input, bias, it) }
+        private fun multiplyInto(matrix: FloatArray, input: FloatArray, bias: FloatArray, output: FloatArray) {
+            for (row in output.indices) {
                 var sum = bias[row]
-                for (column in input.indices) sum += matrix[row * input.size + column] * input[column]
-                sum
+                val offset = row * input.size
+                for (column in input.indices) sum += matrix[offset + column] * input[column]
+                output[row] = sum
             }
+        }
 
         /** The bundled format is bounded and all expected tensor shapes are checked. */
-        fun load(stream: InputStream): ScratchCommandModel {
+        fun load(stream: InputStream): ScratchCommandModel = load(stream, false)
+        fun load(stream: InputStream, enhanced: Boolean): ScratchCommandModel {
             try {
                 val input = DataInputStream(stream)
                 require(input.readInt() == 0x54434D44 && input.readInt() == 1) { "Unsupported command model" }
                 val size = input.readInt(); val embedding = input.readInt(); val hidden = input.readInt()
-                require(size in 2..4096 && embedding in 1..128 && hidden in 1..128)
+                require(size in 2..4096 && embedding in 1..128 && hidden in 1..512)
+                require(size.toLong() * embedding + 6L * hidden * (embedding + hidden) + 24L * hidden + 6 <= 1_500_000) { "Model exceeds parameter budget" }
                 val threshold = input.readFloat()
                 require(threshold.isFinite() && threshold in 0f..1f)
                 fun text(): String {
@@ -164,7 +188,7 @@ class ScratchCommandModel private constructor(
                     weights[name] = FloatArray(shape.reduce(Int::times)) { input.readFloat().also { require(it.isFinite()) } }
                 }
                 require(input.read() == -1) { "Trailing model data" }
-                return ScratchCommandModel(vocabulary, embedding, hidden, threshold, weights)
+                return ScratchCommandModel(vocabulary, embedding, hidden, threshold, weights, enhanced)
             } catch (error: java.io.IOException) {
                 throw IllegalArgumentException("Invalid command model", error)
             }

@@ -1,0 +1,20 @@
+{
+  "model": "scratch bidirectional GRU expense-span extension",
+  "parameters": 999150,
+  "compatibility_parameters": 53142,
+  "combined_parameters": 1052292,
+  "embedding": 128,
+  "hidden": 342,
+  "threshold": 0.8,
+  "seed": 29173,
+  "selected_step": 6000,
+  "pretrained_weights": false,
+  "sha256": "dcf3212c92f1c042adc41137d243e019d7f27a2409d6c6b91b36776638b2da1e",
+  "compatibility_sha256": "c6892b7a3f6cbf12e9eabe85dfe5f7b4bf6e619f97cff2883eb00aeeb1cde7ea",
+  "bytes": 3998956,
+  "model_version": "command-v4-1m",
+  "guard_revision": "description-boundary-v1",
+  "routing": "compatibility first, extension on abstention",
+  "evaluation": "Synthetic templates and regression suites only; not independent real-user accuracy.",
+  "data_provenance": "Assistant-authored synthetic templates; no private financial records."
+}

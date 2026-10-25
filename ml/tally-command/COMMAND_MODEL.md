@@ -1,5 +1,7 @@
 # App command model v3
 
+**Current source:** the [improved 1M extension](IMPROVED_1M.md) adds broader English, bounded Hinglish and account-typo capabilities. This v3 model is retained as the first-checked compatibility model. The measurements below describe that historical compatibility artifact, not the whole current two-model system.
+
 The [100K → 500K → 1M research ladder](MODEL_LADDER.md) adds experimental capability data and size comparisons. Research candidates do not automatically replace this bundled model.
 
 The app now has a small model trained from scratch specifically for expense

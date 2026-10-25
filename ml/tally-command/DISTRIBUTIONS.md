@@ -17,3 +17,5 @@ Build the non-AI edition:
 Copy each APK before building the other: both commands write `app/build/outputs/apk/debug/app-debug.apk`. With `tools/command-build.init.gradle`, outputs are redirected beneath `.build-cache/command-output/app/`.
 
 AI assets live in `app/src/localAi/assets/` and are added to the main asset source set only when `tallyAi=true`. `BuildConfig.LOCAL_AI_ENABLED` also disables model loading in the non-AI edition. Invalid property values fail configuration. Instrumentation `DistributionVariantTest` verifies that model asset presence matches the flag; the model-specific instrumentation test is skipped in non-AI builds.
+
+The current AI source includes both `tally-command.bin` (compatibility) and `tally-command-extended.bin` (999,150-parameter extension), each with JSON metadata. Both model bundles are absent from non-AI APKs. See [the improved 1M model](IMPROVED_1M.md) for routing, capabilities and verification.

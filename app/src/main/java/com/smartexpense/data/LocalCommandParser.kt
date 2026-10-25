@@ -26,7 +26,16 @@ class LocalCommandParser @Inject constructor(@ApplicationContext private val con
             Log.w("LocalCommandParser", "Command model invalid; using rules", error)
             null
         }
-        CommandExpenseTextParser(model)
+        val extension = if (!BuildConfig.LOCAL_AI_ENABLED) null else try {
+            context.assets.open("tally-command-extended.bin").use { ScratchCommandModel.load(it, true) }
+        } catch (error: java.io.IOException) {
+            Log.w("LocalCommandParser", "Extended command model unavailable; using compatibility model", error)
+            null
+        } catch (error: IllegalArgumentException) {
+            Log.w("LocalCommandParser", "Extended command model invalid; using compatibility model", error)
+            null
+        }
+        CommandExpenseTextParser(model, extension = extension)
     }
 
     suspend fun parse(text: String, people: List<PersonRef>): ParsedDraft =

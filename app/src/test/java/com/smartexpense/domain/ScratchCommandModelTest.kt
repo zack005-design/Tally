@@ -1,10 +1,39 @@
 package com.smartexpense.domain
 
 import java.io.File
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import org.junit.Assert.*
 import org.junit.Test
 
 class ScratchCommandModelTest {
+    @Test fun boundedOneMillionParameterModelLoadsAndRefusesWithoutEvidence() {
+        val stream = ByteArrayOutputStream()
+        DataOutputStream(stream).use { out ->
+            out.writeInt(0x54434D44); out.writeInt(1)
+            val vocabulary = 201; val embedding = 128; val hidden = 342
+            out.writeInt(vocabulary); out.writeInt(embedding); out.writeInt(hidden); out.writeFloat(.9f)
+            fun text(value: String) { val bytes = value.toByteArray(Charsets.UTF_8); out.writeInt(bytes.size); out.write(bytes) }
+            repeat(vocabulary) { text(when (it) { 0 -> "<pad>"; 1 -> "<unknown>"; else -> "word$it" }) }
+            val shapes = linkedMapOf("embedding.weight" to listOf(vocabulary, embedding))
+            listOf("", "_reverse").forEach { suffix ->
+                shapes["encoder.weight_ih_l0$suffix"] = listOf(hidden * 3, embedding)
+                shapes["encoder.weight_hh_l0$suffix"] = listOf(hidden * 3, hidden)
+                shapes["encoder.bias_ih_l0$suffix"] = listOf(hidden * 3)
+                shapes["encoder.bias_hh_l0$suffix"] = listOf(hidden * 3)
+            }
+            listOf("tags" to 4, "intent" to 2).forEach { (name, rows) -> shapes["$name.weight"] = listOf(rows, hidden * 2); shapes["$name.bias"] = listOf(rows) }
+            out.writeInt(shapes.size)
+            shapes.forEach { (name, shape) -> text(name); out.writeInt(shape.size); shape.forEach(out::writeInt); repeat(shape.reduce(Int::times)) { out.writeFloat(0f) } }
+        }
+        assertNull(ScratchCommandModel.load(stream.toByteArray().inputStream()).suggest("coffee 45 cash"))
+    }
+
+    @Test fun excessiveModelDimensionsAreRejectedBeforeAllocatingWeights() {
+        val bytes = ByteArrayOutputStream()
+        DataOutputStream(bytes).use { out -> listOf(0x54434D44, 1, 4096, 128, 512).forEach(out::writeInt) }
+        assertThrows(IllegalArgumentException::class.java) { ScratchCommandModel.load(bytes.toByteArray().inputStream()) }
+    }
     private fun model(): ScratchCommandModel = File("src/localAi/assets/tally-command.bin").inputStream().use(ScratchCommandModel::load)
 
     @Test fun exactAmountsAreCopiedInsteadOfGenerated() {

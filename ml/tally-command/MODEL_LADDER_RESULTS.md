@@ -1,5 +1,7 @@
 # Model ladder results — 24 October 2026
 
+This report records the initial rejected experiment. The later [improved 1M integration](IMPROVED_1M.md) uses a separately trained candidate and preserves the compatibility model.
+
 ## Decision
 
 **No candidate is promoted.** The 100K candidate leads this experiment on the expanded synthetic set, but accepts two incorrect drafts on the legacy 2,000-case set and has slightly lower correct coverage than the incumbent. The 500K model loses substantial coverage. The 1M model loses coverage and accepts more incorrect drafts. Increasing parameter count did not make this app's assistant reliably better.

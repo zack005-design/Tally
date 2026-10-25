@@ -48,7 +48,7 @@ def vectorize(tokens, vocabulary):
 
 
 @torch.inference_mode()
-def infer(model, vocabulary, text, threshold=0.95):
+def infer(model, vocabulary, text, threshold=0.95, enhanced=True):
     tokens = tokenize(text)
     if not tokens or len(tokens) > 48 or len(text) > 240:
         return {'draft': None, 'candidate': None, 'confidence': 0.0, 'reason': 'length'}
@@ -62,7 +62,7 @@ def infer(model, vocabulary, text, threshold=0.95):
     tags = labels.tolist()
     if not unknown_description_allowed(tokens, tags, vocabulary):
         return {'draft': None, 'candidate': None, 'confidence': 0.0, 'reason': 'unknown_word_outside_anchored_description'}
-    candidate = decode_spans(text, tokens, tags)
+    candidate = decode_spans(text, tokens, tags, enhanced=enhanced)
     relevant = certainty[labels != 0]
     confidence = min(intent_logits.softmax(-1)[0, 1].item(), relevant.min().item() if len(relevant) else 0.0)
     return {'draft': candidate if confidence >= threshold else None, 'candidate': candidate,

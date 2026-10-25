@@ -35,6 +35,23 @@ class CommandInputReviewTest {
         }
     }
 
+    @Test fun hinglishNegationPlansAndConflictingAliasesRequireClarification() {
+        listOf("maine chai pe 25 cash se nahi diye", "kal lunch 100 gpay",
+            "dinner 500 wallett se dunga", "coffee 45 wallett gpy").forEach {
+            val result = parser.parse(it, emptyList())
+            assertNull(it, result.amount)
+            assertTrue(it, result.warnings.isNotEmpty())
+        }
+    }
+
+    @Test fun unavailableNewCapabilityLeavesExplicitClarification() {
+        val result = parser.parse("maine chai pe 25 wallett se kharch kiye", emptyList())
+        assertNull(result.amount)
+        assertNull(result.fromAccount)
+        assertTrue("amount" in result.missing)
+        assertTrue(result.warnings.any { it.contains("confident", true) })
+    }
+
     @Test fun validDatesAndDecimalAmountsArePreserved() {
         val text = "Spent 99.50 on coffee using cash on 2026-10-20"
         val parsed = parser.parse(text, emptyList())

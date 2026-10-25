@@ -9,5 +9,7 @@ class DistributionVariantTest {
         val assets = InstrumentationRegistry.getInstrumentation().targetContext.assets.list("")!!.toSet()
         assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-command.bin" in assets)
         assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-command.json" in assets)
+        assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-command-extended.bin" in assets)
+        assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-command-extended.json" in assets)
     }
 }

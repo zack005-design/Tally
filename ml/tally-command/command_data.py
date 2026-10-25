@@ -13,6 +13,7 @@ UNSUPPORTED = re.compile(r'\b(?:transfer|transferred|refund|refunded|income|sala
 ACCOUNTS = {'cash': 'WALLET', 'wallet': 'WALLET', 'gpay': 'GPAY', 'google pay': 'GPAY', 'g pay': 'GPAY'}
 ACCOUNTS.update({'g-pay': 'GPAY', 'googlepay': 'GPAY'})
 BASE_ACCOUNTS = tuple(ACCOUNTS)
+LEGACY_ACCOUNTS = dict(ACCOUNTS)
 # A small explicit allowlist, never fuzzy correction of arbitrary account names.
 ACCOUNTS.update({'gpy': 'GPAY', 'gpaay': 'GPAY', 'gooogle pay': 'GPAY', 'wallett': 'WALLET', 'walllet': 'WALLET'})
 DESCRIPTIONS = ('lunch', 'coffee', 'tea', 'dinner', 'groceries', 'breakfast', 'bus ticket',
@@ -101,6 +102,7 @@ DESCRIPTIONS += ('stationery', 'dentist', 'biscuits', 'printer ink', 'badminton'
                  'toothpaste', 'soap', 'sunscreen', 'consultation', 'delivery fee',
                  'almonds', 'apples', 'rice', 'flour', 'yogurt', 'battery', 'socks')
 UNSUPPORTED = re.compile(UNSUPPORTED.pattern + r'|\bi\s+(?:will|would|might|may|could|should)\b', re.I)
+LEGACY_UNSUPPORTED = UNSUPPORTED
 UNSUPPORTED = re.compile(UNSUPPORTED.pattern + r'|\b(?:nahi|nahin|mat|kal|karunga|karungi|karenge|dunga|dungi)\b', re.I)
 
 HINGLISH_TRAIN = (
@@ -188,8 +190,10 @@ def unknown_description_allowed(tokens, tags, vocabulary):
     return first == 0 and last + 2 < len(tags) and tags[last + 1] == 2 and all(tag == 3 for tag in tags[last + 2:])
 
 
-def decode_spans(text, tokens, tags):
-    if len(tokens) != len(tags) or not tokens or len(tokens) > 48 or len(text) > 240 or UNSUPPORTED.search(text):
+def decode_spans(text, tokens, tags, enhanced=True):
+    unsupported = UNSUPPORTED if enhanced else LEGACY_UNSUPPORTED
+    names = ACCOUNTS if enhanced else LEGACY_ACCOUNTS
+    if len(tokens) != len(tags) or not tokens or len(tokens) > 48 or len(text) > 240 or unsupported.search(text):
         return None
     numbers = [i for i, token in enumerate(tokens) if NUMBER.fullmatch(token.text)]
     amounts = [i for i, tag in enumerate(tags) if tag == 2]
@@ -204,16 +208,16 @@ def decode_spans(text, tokens, tags):
         return None
     if descriptions != list(range(descriptions[0], descriptions[-1] + 1)) or accounts != list(range(accounts[0], accounts[-1] + 1)):
         return None
-    if not description_boundary_allowed(tokens, descriptions):
+    if enhanced and not description_boundary_allowed(tokens, descriptions):
         return None
     account_text = ' '.join(tokens[i].text.lower() for i in accounts)
-    account = ACCOUNTS.get(account_text)
+    account = names.get(account_text)
     # Every explicit account mention must agree; two accounts need clarification.
-    mentions = {ACCOUNTS[token.text.lower()] for token in tokens if token.text.lower() in ACCOUNTS}
+    mentions = {names[token.text.lower()] for token in tokens if token.text.lower() in names}
     for left, right in zip(tokens, tokens[1:]):
         pair = left.text.lower() + ' ' + right.text.lower()
-        if pair in ACCOUNTS:
-            mentions.add(ACCOUNTS[pair])
+        if pair in names:
+            mentions.add(names[pair])
     if account is None or (mentions and mentions != {account}):
         return None
     description = text[tokens[descriptions[0]].start:tokens[descriptions[-1]].end].strip()
