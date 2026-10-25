@@ -23,13 +23,14 @@ import java.time.format.DateTimeFormatter
 
 @Composable fun RemindersScreen(model:AppViewModel) {
     val context=LocalContext.current
+    val locale=androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     val app by model.state.collectAsStateWithLifecycle()
     val preferences=remember(context) {Preferences(context.applicationContext)}
     val backupCoordinator=remember(context) {BackupReminderCoordinator(context.applicationContext,preferences,Clock.systemUTC())}
     val backupStatus by preferences.backupStatus.collectAsStateWithLifecycle(initialValue=BackupStatus())
     var settings by remember {mutableStateOf<ReminderSettings?>(null)}
-    var hour by rememberSaveable {mutableStateOf(20)}
-    var minute by rememberSaveable {mutableStateOf(0)}
+    var hour by rememberSaveable {mutableIntStateOf(20)}
+    var minute by rememberSaveable {mutableIntStateOf(0)}
     var picking by rememberSaveable {mutableStateOf(false)}
     var denied by remember {mutableStateOf(false)}
     var permissionForBackup by rememberSaveable {mutableStateOf(false)}
@@ -60,7 +61,7 @@ import java.time.format.DateTimeFormatter
         item {GroupedCard {
             ReferenceToggleRow("Weekly backup reminder",backupStatus.reminderEnabled,{enable(it,true)},enabled=!app.busy)
             GroupedDivider(16.dp)
-            ReferenceDetailRow("Day",R.drawable.ic_calendar,java.time.DayOfWeek.of(backupStatus.weeklyDay?:7).getDisplayName(java.time.format.TextStyle.FULL,java.util.Locale.getDefault())) {if(!app.busy) backupDayPicker=true}
+            ReferenceDetailRow("Day",R.drawable.ic_calendar,java.time.DayOfWeek.of(backupStatus.weeklyDay?:7).getDisplayName(java.time.format.TextStyle.FULL,locale)) {if(!app.busy) backupDayPicker=true}
             GroupedDivider(16.dp)
             ReferenceDetailRow("Time",R.drawable.ic_clock_outline,LocalTime.of(backupStatus.hour,backupStatus.minute).format(DateTimeFormatter.ofPattern("h:mm a"))) {if(!app.busy) backupTimePicker=true}
         }}
@@ -75,7 +76,7 @@ import java.time.format.DateTimeFormatter
         item {Text("Entries are never saved automatically. Notifications contain no amounts or merchant names.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)}
     }
     if(backupDayPicker) EditorialBottomSheet("Backup reminder day",{backupDayPicker=false}) {
-        java.time.DayOfWeek.entries.forEach {day->TextButton({saveBackup(backupStatus.reminderEnabled,day.value);backupDayPicker=false},Modifier.fillMaxWidth(),enabled=!app.busy) {Text(day.getDisplayName(java.time.format.TextStyle.FULL,java.util.Locale.getDefault()))}}
+        java.time.DayOfWeek.entries.forEach {day->TextButton({saveBackup(backupStatus.reminderEnabled,day.value);backupDayPicker=false},Modifier.fillMaxWidth(),enabled=!app.busy) {Text(day.getDisplayName(java.time.format.TextStyle.FULL,locale))}}
     }
     if(backupTimePicker) EditorialTimePicker(LocalTime.of(backupStatus.hour,backupStatus.minute),{backupTimePicker=false}) {saveBackup(backupStatus.reminderEnabled,backupHour=it.hour,backupMinute=it.minute);backupTimePicker=false}
     if(picking) EditorialTimePicker(LocalTime.of(hour,minute),{picking=false}) {hour=it.hour;minute=it.minute;picking=false}

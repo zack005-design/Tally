@@ -5,13 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.smartexpense.domain.*
 import com.smartexpense.ui.*
@@ -27,7 +27,7 @@ class EditorialExtensionUiTest {
     private val accounts=listOf(Account("bank","Bank","Bank",2458050,false))
     private lateinit var focus:FocusManager
     private fun render(large:Boolean=false,content:@Composable ()->Unit) {
-        compose.setContent {focus=LocalFocusManager.current;val d=LocalDensity.current;val width=LocalConfiguration.current.screenWidthDp*d.density
+        compose.setContent {focus=LocalFocusManager.current;val d=LocalDensity.current;val width=LocalWindowInfo.current.containerSize.width
             CompositionLocalProvider(LocalDensity provides if(large) Density(width/320f,2f) else d) {EditorialPreviewTheme(content)}
         }
     }

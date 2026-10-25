@@ -40,7 +40,7 @@ import com.smartexpense.domain.*
 }
 
 @Composable fun WelcomeScreen(busy:Boolean,onFinish:(Boolean)->Unit) {
-    var step by rememberSaveable {mutableStateOf(0)}
+    var step by rememberSaveable {mutableIntStateOf(0)}
     val title=listOf("Make room for every day","Know what you have","Share meals, settle clearly")
     val body=listOf("Record spending and daily notes. Your month-end review keeps available money, spending and cash left in view.","Enter your Wallet and GPay balances yourself. Monthly GPay resets are optional and follow dates you choose.","Enter what everyone paid and their shares. Record repayments when they happen; friends' debts are separate from cash.")
     Page("Welcome to Tally","Your money, kept on your device") {

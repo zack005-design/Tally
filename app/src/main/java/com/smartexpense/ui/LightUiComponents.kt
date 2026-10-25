@@ -132,7 +132,7 @@ internal fun referenceMoney(paise: Long): String = editorialMoney(paise).let { i
         val thumbOffset by androidx.compose.animation.core.animateDpAsState(if(checked) 20.dp else 0.dp,label="Switch position")
         val track by animateColorAsState(if(checked) Tokens.accent else Tokens.border, tween(180), label="Switch color")
         Box(Modifier.size(51.dp,31.dp).background(if(enabled) track else track.copy(alpha=.45f),CircleShape).padding(2.dp),contentAlignment=Alignment.CenterStart) {
-            Surface(Modifier.offset(x=thumbOffset).size(27.dp),shape=CircleShape,color=Color.White,shadowElevation=1.dp) {}
+            Surface(Modifier.offset {androidx.compose.ui.unit.IntOffset(thumbOffset.roundToPx(),0)}.size(27.dp),shape=CircleShape,color=Color.White,shadowElevation=1.dp) {}
         }
     }
 }

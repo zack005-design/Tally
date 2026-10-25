@@ -3,13 +3,12 @@ package com.smartexpense
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import android.graphics.Bitmap
@@ -27,7 +26,7 @@ class UiLayoutAuditTest {
 
     private fun render(scale: Float = 2f, width: Int = 320, content: @Composable () -> Unit) {
         compose.setContent {
-            val pixels = LocalContext.current.resources.displayMetrics.widthPixels
+            val pixels = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
             CompositionLocalProvider(LocalDensity provides Density(pixels / width.toFloat(), scale)) {
                 TrackerTheme { Box(Modifier.fillMaxSize()) { content() } }
             }

@@ -54,6 +54,7 @@ import java.time.format.DateTimeFormatter
 }
 
 @Composable fun EditorialMonthPicker(value:YearMonth,onDismiss:()->Unit,onConfirm:(YearMonth)->Unit) {
+    val locale=androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     var year by rememberSaveable {mutableStateOf(value.year.toString())}
     var month by rememberSaveable {mutableIntStateOf(value.monthValue)}
     val valid=year.toIntOrNull()?.takeIf {it in 1900..2100}
@@ -63,7 +64,7 @@ import java.time.format.DateTimeFormatter
         (1..12).chunked(if(androidx.compose.ui.platform.LocalDensity.current.fontScale>1.3f) 2 else 3).forEach {months->
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {months.forEach {m->
                 Surface(onClick={month=m},modifier=Modifier.weight(1f).heightIn(min=48.dp).semantics {selected=month==m},shape=Tokens.field,color=if(month==m) Tokens.accent else Tokens.surface,contentColor=if(month==m) MaterialTheme.colorScheme.onPrimary else Tokens.text) {
-                    Box(Modifier.padding(12.dp),contentAlignment=Alignment.Center) {Text(Month.of(m).getDisplayName(java.time.format.TextStyle.SHORT,java.util.Locale.getDefault()),style=MaterialTheme.typography.bodyMedium)}
+                    Box(Modifier.padding(12.dp),contentAlignment=Alignment.Center) {Text(Month.of(m).getDisplayName(java.time.format.TextStyle.SHORT,locale),style=MaterialTheme.typography.bodyMedium)}
                 }
             }}
         }

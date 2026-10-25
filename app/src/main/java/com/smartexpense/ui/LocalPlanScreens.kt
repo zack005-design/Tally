@@ -26,7 +26,7 @@ import java.time.*
     val group=s.groups.find {it.id==groupId}
     val existing=s.groupDefaults.find {it.groupId==groupId}
     var method by rememberSaveable(groupId) {mutableStateOf(existing?.method?:"Equal")}
-    var values by rememberSaveable(groupId) {mutableStateOf(HashMap(existing?.values.orEmpty()))}
+    var values by rememberSaveable(groupId) {mutableStateOf<Map<String,String>>(HashMap(existing?.values.orEmpty()))}
     var choosingGroup by rememberSaveable {mutableStateOf(false)}
     val savePeople=group?.let {(listOf("self")+it.members).distinct()}.orEmpty()
     val saveDefault=GroupDefault(groupId,method,if(method in listOf("Percentage","Weighted")) values.filterKeys {it in savePeople} else emptyMap())
@@ -57,7 +57,7 @@ import java.time.*
             item {DefaultMethodControl(method) {method=it}}
             item {Text("The selected method will be pre-selected when adding a new expense in this group.",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)}
             if(method in listOf("Percentage","Weighted")) item {GroupedCard {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                people.forEach {id->Field("${name(id)} ${if(method=="Percentage") "percent" else "weight"}",values[id].orEmpty(),{values=HashMap(values+(id to it))},true)}
+                people.forEach {id->Field("${name(id)} ${if(method=="Percentage") "percent" else "weight"}",values[id].orEmpty(),{values=values+(id to it)},true)}
             }}}
             if(default.requiresBillDetails) item {ReferenceInfo(if(method=="Fixed") "Enter exact amounts for each person when you add a bill. No amounts are pre-filled." else "Add and assign items when you add a bill. Items and amounts belong to that bill.")}
             else item {GroupedCard {Column(Modifier.padding(horizontal=14.dp,vertical=12.dp)) {
@@ -169,7 +169,7 @@ import java.time.*
     }
     s.goals.find {it.id==details}?.let {goal->
         EditorialBottomSheet(goal.name,{details=null}) {
-            var historyLimit by rememberSaveable(goal.id) {mutableStateOf(10)}
+            var historyLimit by rememberSaveable(goal.id) {mutableIntStateOf(10)}
             SectionHeading(goal.name)
             AmountRow("Planned allocations",goal.allocated);AmountRow("Target",goal.target)
             ReferenceProgress((goal.allocated.toDouble()/goal.target).toFloat(),Modifier.fillMaxWidth())

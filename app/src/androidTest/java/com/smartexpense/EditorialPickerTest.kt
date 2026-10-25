@@ -3,7 +3,7 @@ package com.smartexpense
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.smartexpense.ui.*
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -16,7 +16,8 @@ class EditorialPickerTest {
         compose.setContent {TrackerTheme {Column {DateTimeField(value) {value=it}}}}
         compose.onNodeWithText("29 February 2024").performClick()
         compose.onNodeWithText("Use date →").assertExists()
-        compose.onNodeWithText("Cancel").performClick()
+        // The sheet header and footer both offer cancellation; exercise the header action.
+        compose.onAllNodesWithText("Cancel").onFirst().performClick()
         assertEquals("2024-02-29T15:37",value)
     }
     @Test fun changingDateRetainsTimeAndHandlesLeapMonth() {

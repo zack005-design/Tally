@@ -11,6 +11,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class QuickExpenseWidgetTest {
+    @Test fun shortcutRowsExposeOneLabelAndCompoundIconWithAccessibleTouchTargets() {
+        val context=ApplicationProvider.getApplicationContext<Context>()
+        val root=android.view.LayoutInflater.from(context).inflate(R.layout.quick_expense_widget,null)
+        val rows=listOf(R.id.widget_add_expense,R.id.widget_favourite_1,R.id.widget_favourite_2,R.id.widget_favourite_3)
+        rows.forEach {id->
+            val row=root.findViewById<android.view.View>(id)
+            assertTrue("Each shortcut should be a single text control",row is android.widget.TextView)
+            val label=row as android.widget.TextView
+            assertNotNull("Shortcut icon must follow the text direction",label.compoundDrawablesRelative[0])
+            assertTrue("Keep the 48dp touch target",label.minimumHeight>=48*context.resources.displayMetrics.density)
+        }
+        assertEquals(context.getString(R.string.quick_expense_label),root.findViewById<android.widget.TextView>(R.id.widget_add_expense).text)
+    }
+
     @Test fun launcherIntentIsExplicitAndContainsNoFinancialData() {
         val context=ApplicationProvider.getApplicationContext<Context>()
         val intent=QuickExpenseWidget.launchIntent(context)

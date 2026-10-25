@@ -1,7 +1,7 @@
 package com.smartexpense
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.smartexpense.domain.*
 import com.smartexpense.ui.*
 import org.junit.Assert.*
@@ -22,8 +22,7 @@ class ExactGroupDefaultsUiTest {
         compose.onAllNodesWithText("₹300").assertCountEquals(3)
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Shares"))
         compose.onNodeWithText("Shares").performClick()
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Save default"))
-        compose.onNodeWithText("Save default").assertIsNotEnabled()
+        compose.onNodeWithText("Save default").assertIsDisplayed().assertIsNotEnabled()
         listOf("You weight" to "1", "Rahul weight" to "1", "Ananya weight" to "2").forEach { (label, value) ->
             compose.onNode(hasScrollAction()).performScrollToNode(hasText(label))
             compose.onNodeWithText(label).performTextInput(value)
@@ -32,8 +31,7 @@ class ExactGroupDefaultsUiTest {
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Preview (₹900 expense)"))
         compose.onAllNodesWithText("₹225").assertCountEquals(2)
         compose.onNodeWithText("₹450").assertExists()
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Save default"))
-        compose.onNodeWithText("Save default").performClick()
+        compose.onNodeWithText("Save default").assertIsDisplayed().performClick()
         compose.runOnIdle {
             assertEquals("flat", saved!!.groupId)
             assertEquals("Weighted", saved!!.method)

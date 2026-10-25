@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -12,7 +11,7 @@ import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
@@ -80,9 +79,9 @@ class ReferenceScreenshotsTest {
             focusManager = LocalFocusManager.current
             keyboard = LocalSoftwareKeyboardController.current
             val density = LocalDensity.current
-            val configuration = LocalConfiguration.current
+            val windowWidth = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
             val width = if (large) 320f else 393f
-            CompositionLocalProvider(LocalDensity provides Density(density.density * configuration.screenWidthDp / width, if (large) 2f else 1f)) {
+            CompositionLocalProvider(LocalDensity provides Density(windowWidth / width, if (large) 2f else 1f)) {
                 CompositionLocalProvider(LocalEditorialBack provides {}) {EditorialPreviewTheme(content)}
             }
         }

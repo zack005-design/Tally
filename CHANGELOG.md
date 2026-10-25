@@ -2,6 +2,14 @@
 
 User-facing changes in the published development releases. Downloadable APKs are prereleases, not production store builds.
 
+## Unreleased
+
+- Improve window-aware sheet sizing, Compose state handling, and large-text layout checks.
+- Simplify expense widget shortcuts while preserving category icons, readable labels, and touch targets.
+- Use AndroidX receipt metadata handling and support themed launcher icons across adaptive-icon devices.
+- Update Android libraries and target Android 17; migrate the build to AGP 9's supported Kotlin and DSL configuration.
+- Refresh Compose test APIs and Android test-runner compatibility, with Android 17 included in CI.
+
 ## [0.2.3](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024)
 
 - Combined the completed finance, import, backup, and UI updates with expanded offline calculator tools.

@@ -1,12 +1,11 @@
 package com.smartexpense
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -32,7 +31,7 @@ class SharedRefundUiTest(private val width:Int,private val fontScale:Float) {
         var saved:SharedRefundDraft?=null
         val restoration=StateRestorationTester(compose)
         restoration.setContent {
-            CompositionLocalProvider(LocalDensity provides Density(LocalContext.current.resources.displayMetrics.widthPixels/412f,fontScale)) {
+            CompositionLocalProvider(LocalDensity provides Density(androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width/412f,fontScale)) {
                 TrackerTheme {Box(Modifier.width(width.dp).fillMaxHeight()) {SharedRefundEditor(SharedRefundContext(original,mapOf("self" to 45000L,"friend" to 45000L)),snapshot,false,{saved=it},{})}}
             }
         }
@@ -54,7 +53,7 @@ class SharedRefundUiTest(private val width:Int,private val fontScale:Float) {
         val detail=RecordDetail(record,listOf(Movement("cash",30000)),mapOf("self" to 15000L,"friend" to 15000L),mapOf("self" to 30000L,"friend" to 0L),emptyList(),emptyMap())
         val snapshot=Snapshot(people=listOf(Person("self","You"),Person("friend","Friend")))
         compose.setContent {
-            CompositionLocalProvider(LocalDensity provides Density(LocalContext.current.resources.displayMetrics.widthPixels/412f,fontScale)) {
+            CompositionLocalProvider(LocalDensity provides Density(androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width/412f,fontScale)) {
                 TrackerTheme {Box(Modifier.width(width.dp).fillMaxHeight()) {TransactionDetailView(record,detail,snapshot,onActions={})}}
             }
         }

@@ -18,7 +18,7 @@ import androidx.activity.compose.BackHandler
     var search by rememberSaveable {mutableStateOf("")}
     var group by rememberSaveable {mutableStateOf<String?>(null)}
     var offsetPerson by rememberSaveable {mutableStateOf<String?>(null)}
-    var offsetAmount by rememberSaveable {mutableStateOf(0L)}
+    var offsetAmount by rememberSaveable {mutableLongStateOf(0L)}
     var offsetGroup by rememberSaveable {mutableStateOf<String?>(null)}
     var selectedFriend by rememberSaveable {mutableStateOf<String?>(null)}
     val debts=s.debts.filter {group==null || it.groupId==group}

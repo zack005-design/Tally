@@ -1,6 +1,7 @@
 package com.smartexpense.data
 
 import android.graphics.Bitmap
+import androidx.core.graphics.get
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 
@@ -11,7 +12,7 @@ internal object ReceiptImageEnhancement {
         var lightest=0
         for(y in 0 until source.height step maxOf(1,source.height/64)) {
             for(x in 0 until source.width step maxOf(1,source.width/64)) {
-                val value=luminance(source.getPixel(x,y))
+                val value=luminance(source[x,y])
                 darkest=minOf(darkest,value);lightest=maxOf(lightest,value)
             }
         }

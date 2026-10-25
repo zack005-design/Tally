@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 
 /** Bundled model loaded once, with parsing and file IO kept off the UI thread. */
 @Singleton
-class LocalCommandParser @Inject constructor(@ApplicationContext private val context: Context) {
+class LocalCommandParser @Inject constructor(@param:ApplicationContext private val context: Context) {
     private val parser by lazy {
         val model = if (!BuildConfig.LOCAL_AI_ENABLED) null else try {
             context.assets.open("tally-command.bin").use(ScratchCommandModel::load)

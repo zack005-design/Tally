@@ -42,7 +42,7 @@ class DeviceLockController(private val activity:ComponentActivity) {
             if(Build.VERSION.SDK_INT>=28 && !credentialOnly) biometric() else openCredential()
         } catch(e:Exception) {finish(false,"Authentication is unavailable. Try your device credential.")}
     }
-    @android.annotation.TargetApi(28)
+    @androidx.annotation.RequiresApi(28)
     private fun biometric() {
         val authToken=requireNotNull(token)
         val builder=BiometricPrompt.Builder(activity).setTitle("Unlock Tally").setSubtitle("Authenticate to view your local ledger")
@@ -63,6 +63,8 @@ class DeviceLockController(private val activity:ComponentActivity) {
         if(intent==null) {finish(false,"No device credential is configured.");return}
         credentialActivity=true;credential.launch(intent)
     }
+    // KTX edit(commit=true) discards commit's Boolean; lock changes must detect failed writes.
+    @android.annotation.SuppressLint("UseKtx")
     private fun finish(success:Boolean,message:String?,expected:Long?=token) {
         val current=token?:return
         if(expected!=current) return

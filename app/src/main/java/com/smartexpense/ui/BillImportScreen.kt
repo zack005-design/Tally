@@ -181,8 +181,8 @@ internal class ReceiptReviewModel(initialBill:ScannedBill?):ViewModel() {
 }
 
 @Composable fun BillPreview(scanner:BillScanner,bill:ScannedBill,showHeading:Boolean=true) {
-    var page by remember {mutableStateOf(0)}
-    var pages by remember {mutableStateOf(1)}
+    var page by remember {mutableIntStateOf(0)}
+    var pages by remember {mutableIntStateOf(1)}
     var bitmap by remember {mutableStateOf<android.graphics.Bitmap?>(null)}
     var error by remember {mutableStateOf<String?>(null)}
     LaunchedEffect(bill,page) {error=null;bitmap=null;try {pages=scanner.pageCount(bill.bytes,bill.mime);bitmap=scanner.preview(bill.bytes,bill.mime,page)} catch(e:CancellationException) {throw e} catch(e:Exception) {error="This page is unavailable"}}

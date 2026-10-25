@@ -87,23 +87,16 @@ class QuickExpenseWidget:AppWidgetProvider() {
             val flags=PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             val open=PendingIntent.getActivity(context,406,launchIntent(context),flags)
             val rows=intArrayOf(R.id.widget_favourite_1,R.id.widget_favourite_2,R.id.widget_favourite_3)
-            val names=intArrayOf(R.id.widget_favourite_name_1,R.id.widget_favourite_name_2,R.id.widget_favourite_name_3)
-            val icons=intArrayOf(R.id.widget_favourite_icon_1,R.id.widget_favourite_icon_2,R.id.widget_favourite_icon_3)
             ids.forEach {id->
                 val views=RemoteViews(context.packageName,R.layout.quick_expense_widget)
-                // Framework ImageView method is @RemotableViewMethod; AppCompat tint is not
-                // available inside a launcher's RemoteViews hierarchy.
-                (icons+intArrayOf(R.id.widget_header_add_icon,R.id.widget_add_expense_icon)).forEach {icon->
-                    views.setInt(icon,"setColorFilter",0xFF0066FF.toInt())
-                }
                 views.setOnClickPendingIntent(R.id.quick_expense_open,open)
                 views.setOnClickPendingIntent(R.id.widget_add_expense,open)
                 rows.indices.forEach {index->
                     val shortcut=shortcuts.getOrNull(index)
                     views.setViewVisibility(rows[index],if(shortcut==null) View.GONE else View.VISIBLE)
                     if(shortcut!=null) {
-                        views.setTextViewText(names[index],shortcut.name)
-                        views.setImageViewResource(icons[index],shortcutIcon(shortcut.categoryName,shortcut.categoryIcon))
+                        views.setTextViewText(rows[index],shortcut.name)
+                        views.setTextViewCompoundDrawablesRelative(rows[index],shortcutIcon(shortcut.categoryName,shortcut.categoryIcon),0,0,0)
                         views.setOnClickPendingIntent(rows[index],PendingIntent.getActivity(context,407,favouriteIntent(context,shortcut.id),flags))
                         views.setContentDescription(rows[index],"Open favourite draft: "+shortcut.name)
                     }

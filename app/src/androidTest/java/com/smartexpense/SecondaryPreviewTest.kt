@@ -9,10 +9,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
@@ -57,9 +56,9 @@ class SecondaryPreviewTest {
     private fun render(large:Boolean=false,content:@Composable ()->Unit) {
         compose.setContent {
             val density=LocalDensity.current
-            val configuration=LocalConfiguration.current
+            val windowWidth=androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
             // Increasing logical density constrains modal windows as well as the page to 320dp.
-            val previewDensity=if(large) density.density*configuration.screenWidthDp/320f else density.density
+            val previewDensity=if(large) windowWidth/320f else density.density
             CompositionLocalProvider(LocalDensity provides Density(previewDensity,if(large) 2f else density.fontScale)) {
                 EditorialPreviewTheme(content)
             }

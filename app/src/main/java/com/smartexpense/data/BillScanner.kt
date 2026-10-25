@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import androidx.core.graphics.createBitmap
+import androidx.exifinterface.media.ExifInterface
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import com.google.mlkit.vision.common.InputImage
@@ -23,7 +25,7 @@ import kotlin.coroutines.suspendCoroutine
 data class ScannedBill(val bytes:ByteArray,val mime:String,val text:String,val recognitionWarnings:List<String> = emptyList())
 
 /** Bundled Latin OCR. Sources are copied locally, bounded and never uploaded. */
-class BillScanner @Inject constructor(@ApplicationContext private val context:Context) {
+class BillScanner @Inject constructor(@param:ApplicationContext private val context:Context) {
     companion object {const val MAX_BYTES=6*1024*1024;const val MAX_PAGES=5}
     suspend fun read(uri:Uri):ScannedBill=withContext(Dispatchers.IO) {
         val bytes=context.contentResolver.openInputStream(uri)?.use {input->
@@ -128,7 +130,7 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
     private fun decode(bytes:ByteArray,forRecognition:Boolean=false):Bitmap {
         val bounds=BitmapFactory.Options().apply {inJustDecodeBounds=true};BitmapFactory.decodeByteArray(bytes,0,bytes.size,bounds)
         require(bounds.outWidth>0 && bounds.outHeight>0) {"Choose a readable bill image or PDF"}
-        val orientation=runCatching {android.media.ExifInterface(java.io.ByteArrayInputStream(bytes)).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION,1)}.getOrDefault(1)
+        val orientation=runCatching {ExifInterface(java.io.ByteArrayInputStream(bytes)).getAttributeInt(ExifInterface.TAG_ORIENTATION,1)}.getOrDefault(1)
         val width=if(orientation in 5..8) bounds.outHeight else bounds.outWidth
         val height=if(orientation in 5..8) bounds.outWidth else bounds.outHeight
         var sample=1
@@ -156,7 +158,7 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
                         val embedded=if(Build.VERSION.SDK_INT>=35) page.textContents.joinToString("\n") {it.text} else ""
                         if(embedded.isNotBlank()) texts+=embedded
                         else {
-                            val scale=2000.0/maxOf(page.width,page.height);val bitmap=Bitmap.createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
+                            val scale=2000.0/maxOf(page.width,page.height);val bitmap=createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
                             try {bitmap.eraseColor(Color.WHITE);page.render(bitmap,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);texts+=bitmapText(bitmap,warnings)} finally {bitmap.recycle()}
                         }
                     }
@@ -171,7 +173,7 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
             val file=File.createTempFile("bill-view-",".pdf",context.cacheDir)
             try {file.writeBytes(bytes);ParcelFileDescriptor.open(file,ParcelFileDescriptor.MODE_READ_ONLY).use {descriptor->PdfRenderer(descriptor).use {renderer->
                 require(pageIndex in 0 until renderer.pageCount && renderer.pageCount<=MAX_PAGES)
-                renderer.openPage(pageIndex).use {page->val scale=1600.0/maxOf(page.width,page.height);Bitmap.createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888).also {it.eraseColor(Color.WHITE);page.render(it,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)}}
+                renderer.openPage(pageIndex).use {page->val scale=1600.0/maxOf(page.width,page.height);createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888).also {it.eraseColor(Color.WHITE);page.render(it,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)}}
             }}} finally {file.delete()}
         }
     }

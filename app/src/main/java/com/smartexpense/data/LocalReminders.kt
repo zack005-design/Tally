@@ -22,7 +22,7 @@ interface ReminderGateway {
     fun show():Boolean
 }
 
-@Singleton class AndroidReminderGateway @Inject constructor(@ApplicationContext private val context:Context):ReminderGateway {
+@Singleton class AndroidReminderGateway @Inject constructor(@param:ApplicationContext private val context:Context):ReminderGateway {
     private val alarms=context.getSystemService(AlarmManager::class.java)
     private val notifications=context.getSystemService(NotificationManager::class.java)
     private fun channel() {notifications.createNotificationChannel(NotificationChannel("recurring-review","Recurring entry reminders",NotificationManager.IMPORTANCE_DEFAULT))}

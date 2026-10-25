@@ -10,7 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.runtime.*
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.smartexpense.ui.*
 import com.smartexpense.data.*
 import kotlinx.coroutines.runBlocking

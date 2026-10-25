@@ -1,14 +1,13 @@
 package com.smartexpense
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
 import com.smartexpense.domain.*
 import com.smartexpense.ui.*
@@ -36,7 +35,7 @@ class SecondaryLayoutAuditTest {
             goals = listOf(SavingsGoal("goal", "Travel fund", 500000))
         )
         compose.setContent {
-            val pixels = LocalContext.current.resources.displayMetrics.widthPixels
+            val pixels = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
             CompositionLocalProvider(LocalDensity provides Density(pixels / width.toFloat(), scale)) {
                 focus = LocalFocusManager.current
                 keyboard = LocalSoftwareKeyboardController.current

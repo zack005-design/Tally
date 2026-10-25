@@ -297,7 +297,7 @@ fun personLabel(person:com.smartexpense.domain.Person,people:List<com.smartexpen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun EditorialSheet(title:String,onDismiss:()->Unit,action:@Composable ()->Unit,content:@Composable ColumnScope.()->Unit) {
     val density=androidx.compose.ui.platform.LocalDensity.current
-    val height=androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp*0.88f
+    val height=with(density) {androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp()}*0.88f
     val state=rememberModalBottomSheetState(skipPartiallyExpanded=true)
     ModalBottomSheet(onDismissRequest=onDismiss,sheetState=state,containerColor=Tokens.paper,contentColor=Tokens.text,shape=Tokens.card) {
         CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides density) {

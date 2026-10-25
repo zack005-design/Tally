@@ -2,7 +2,7 @@ package com.smartexpense
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.test.platform.app.InstrumentationRegistry
 import com.smartexpense.domain.*
@@ -94,7 +94,7 @@ class GuidedEntryTest {
     @Test fun narrowScreenWithLargeTextKeepsReviewAndSaveReachable() {
         compose.setContent {
             val density=androidx.compose.ui.platform.LocalDensity.current
-            val width=androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp*density.density
+            val width=androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
             CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(width/320f,2f)) {
                 TrackerTheme {EntryScreen(EntryUiState(amount="330",description="Dinner",accountId="a",shared=true,participants=listOf("self","f"),paid=mapOf("self" to "300","f" to "30")),listOf(Account("a","Cash","Cash",100000,false)),listOf(Person("f","Friend")),emptyList(),emptyList(),{},{},{})}
             }

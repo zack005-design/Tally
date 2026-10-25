@@ -3,7 +3,7 @@ package com.smartexpense
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
 import com.smartexpense.domain.*
 import com.smartexpense.ui.*
@@ -118,7 +118,7 @@ class PersonalWalletUiTest {
     }
     @Test fun calendarLargeTextFitsNarrowScreen() {
         compose.setContent {
-            val pixels=androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels
+            val pixels=androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
             CompositionLocalProvider(LocalDensity provides Density(pixels/320f,2f)) {EditorialPreviewTheme {SpendingCalendarScreen(fixture,{},day)}}
         }
         reveal(hasContentDescription("11 October 2026, spending ₹300.00, 1 entries"))

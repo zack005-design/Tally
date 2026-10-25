@@ -163,13 +163,15 @@ The plugins run separately in Codex. Tally does not send records automatically. 
 
 ## Release information
 
-Tally is in active development. The published 0.2.3 APKs are debug-signed test builds, with **173 JVM tests passed per edition**, zero lint errors, and recorded API36 emulator checks. Existing lint warnings remain; physical-phone and minimum-API verification are pending.
+Tally is in active development. The published 0.2.3 APKs are debug-signed test builds, with **173 JVM tests passed per edition**, zero lint errors, and recorded API36 emulator checks. Those published builds include lint warnings; physical-phone and minimum-API verification are pending.
 
 INR is the core currency, and foreign bills use manually entered exchange rates. Keep a full encrypted backup before updating or switching editions. [Verification and limits](docs/releases/0.2.3.md) · [Installation safety](docs/installation-safety.md) · [Changelog](CHANGELOG.md).
 
 ## Project
 
 Built with Kotlin and Jetpack Compose, with Room for local records and a repository-based data layer. Finance calculations stay separate from UI and Android services; user actions explicitly confirm changes to the ledger.
+
+Current source targets Android 17 (API 37) and uses AGP 9's built-in Kotlin support. Source updates are listed under [Unreleased](CHANGELOG.md#unreleased); they are newer than the downloadable 0.2.3 builds.
 
 [Source guide](docs/project.md) · [User documentation](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Report a bug](https://github.com/zack005-design/Tally/issues/new/choose)
 

@@ -98,7 +98,7 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
     fun prepareExport(password:String) {clearExport();pendingExportPassword=password.toCharArray()}
     fun exportPassword():CharArray=requireNotNull(pendingExportPassword) {"Export was interrupted. Choose Export again to confirm encryption settings."}.copyOf()
     fun clearExport() {pendingExportPassword?.fill('\u0000');pendingExportPassword=null}
-    override fun onCleared() {clearExport();clearRestore();backupMutable.value=BackupUiState();super.onCleared()}
+    override fun onCleared() {clearExport();clearRestore();backupMutable.value=BackupUiState()}
     init {
         viewModelScope.launch {
             try { repository.initialize();

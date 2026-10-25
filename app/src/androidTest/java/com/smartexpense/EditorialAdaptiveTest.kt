@@ -8,7 +8,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.smartexpense.domain.*
 import com.smartexpense.ui.*
 import org.junit.Rule
@@ -34,7 +34,7 @@ class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
             val density=LocalDensity.current
             // Fit the entire requested logical width, including wide phones and tablets,
             // into the emulator's physical display instead of silently testing 412dp again.
-            CompositionLocalProvider(LocalDensity provides Density(androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels/maxOf(width,412).toFloat(),scale)) {
+            CompositionLocalProvider(LocalDensity provides Density(androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width/maxOf(width,412).toFloat(),scale)) {
                 TrackerTheme {Box(Modifier.width(width.dp).fillMaxHeight()) {
                     Scaffold(bottomBar={LedgerNavigation(if(stage.intValue==0) "home" else "add",{})}) {padding->Box(Modifier.fillMaxSize().padding(padding)) {
                         key(stage.intValue) {when(stage.intValue) {

@@ -1,7 +1,7 @@
 package com.smartexpense
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.smartexpense.domain.*
 import com.smartexpense.ui.*
 import org.junit.Assert.assertEquals
