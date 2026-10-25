@@ -29,6 +29,82 @@ class BillScannerTest {
         try {file.outputStream().use {b.compress(Bitmap.CompressFormat.PNG,100,it)};val read=scan(file);assertEquals(15000L,BillRecognition.parse(read.text).total);assertTrue(read.text.contains("Tally"))}
         finally {file.delete();b.recycle()}
     }
+    @Test fun faintCameraJpegKeepsPrintedAmounts()=runBlocking {
+        val image=Bitmap.createBitmap(1200,1200,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-faint-camera.jpg")
+        try {
+            image.eraseColor(Color.rgb(220,220,220))
+            val canvas=Canvas(image)
+            val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color=Color.rgb(216,216,216);textSize=60f
+                maskFilter=BlurMaskFilter(1f,BlurMaskFilter.Blur.NORMAL)
+            }
+            listOf("Corner Cafe","Tea 50.00","Cake 100.00","Grand Total 150.00").forEachIndexed {i,line->canvas.drawText(line,80f,150f+i*200,paint)}
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,100,it)}
+            val original=file.readBytes()
+            val read=scan(file)
+            val bill=BillRecognition.parse(read.text)
+            assertEquals(read.text,listOf(5000L,10000L),bill.items.map {it.amount})
+            assertEquals(read.text,listOf("Tea","Cake"),bill.items.map {it.name})
+            assertEquals(15000L,bill.total)
+            assertArrayEquals(original,read.bytes)
+            assertTrue(read.recognitionWarnings.isNotEmpty())
+        } finally {file.delete();image.recycle()}
+    }
+    @Test fun faintPrintOnShadedPaperKeepsPrintedAmounts()=runBlocking {
+        val image=Bitmap.createBitmap(1200,1200,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-shaded-camera.jpg")
+        try {
+            val canvas=Canvas(image)
+            canvas.drawPaint(Paint().apply {shader=LinearGradient(0f,0f,0f,1200f,Color.rgb(180,180,180),Color.rgb(240,240,240),Shader.TileMode.CLAMP)})
+            val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize=60f
+                shader=LinearGradient(0f,0f,0f,1200f,Color.rgb(176,176,176),Color.rgb(236,236,236),Shader.TileMode.CLAMP)
+                maskFilter=BlurMaskFilter(1f,BlurMaskFilter.Blur.NORMAL)
+            }
+            listOf("Corner Cafe","Tea 50.00","Cake 100.00","Grand Total 150.00").forEachIndexed {i,line->canvas.drawText(line,80f,150f+i*200,paint)}
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,100,it)}
+            val read=scan(file)
+            val bill=BillRecognition.parse(read.text)
+            assertEquals(read.text,listOf(5000L,10000L),bill.items.map {it.amount})
+            assertEquals(read.text,listOf("Tea","Cake"),bill.items.map {it.name})
+            assertEquals(15000L,bill.total)
+        } finally {file.delete();image.recycle()}
+    }
+    @Test fun unreadablePhotoDoesNotInventItemsAndRequiresReview()=runBlocking {
+        val image=Bitmap.createBitmap(800,800,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-blank-camera.jpg")
+        try {
+            image.eraseColor(Color.WHITE)
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,100,it)}
+            val read=scan(file)
+            val bill=BillRecognition.parse(read.text)
+            assertTrue(bill.items.isEmpty())
+            assertNull(bill.total)
+            assertTrue(read.recognitionWarnings.any {it.contains("could not be read reliably")})
+        } finally {file.delete();image.recycle()}
+    }
+    @Test fun tiltedCameraColumnsKeepPricesWithTheirItems()=runBlocking {
+        val image=Bitmap.createBitmap(1600,1500,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-tilted-camera.jpg")
+        try {
+            image.eraseColor(Color.WHITE)
+            val canvas=Canvas(image)
+            canvas.rotate(8f,800f,750f)
+            val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=48f}
+            canvas.drawText("Corner Cafe",100f,180f,paint)
+            listOf("Tea","Cake","Lemon Juice","Grand Total").forEachIndexed {i,name->
+                canvas.drawText(name,100f,400f+i*200,paint)
+                canvas.drawText(listOf("50.00","100.00","75.00","225.00")[i],1200f,400f+i*200,paint)
+            }
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,100,it)}
+            val read=scan(file)
+            val bill=BillRecognition.parse(read.text)
+            assertEquals(read.text,listOf("Tea","Cake","Lemon Juice"),bill.items.map {it.name})
+            assertEquals(listOf(5000L,10000L,7500L),bill.items.map {it.amount})
+            assertEquals(22500L,bill.total)
+        } finally {file.delete();image.recycle()}
+    }
     @Test fun separatedPriceColumnKeepsEachPriceWithItsItem()=runBlocking {
         val image=Bitmap.createBitmap(1600,1600,Bitmap.Config.ARGB_8888)
         val file=file("ocr-columns.png")

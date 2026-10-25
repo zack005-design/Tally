@@ -17,6 +17,25 @@ import org.junit.Rule
 import org.junit.Test
 
 class PhotoReceiptEditingTest {
+    @Test fun scanQualityWarningIsVisibleAndTravelsWithTheDraft()=runBlocking {
+        val context=ApplicationProvider.getApplicationContext<Context>()
+        val db=Room.inMemoryDatabaseBuilder(context,TrackerDatabase::class.java).build()
+        try {
+            val repo=FinanceRepository(db);repo.initialize()
+            val bitmap=Bitmap.createBitmap(20,20,Bitmap.Config.ARGB_8888)
+            val output=java.io.ByteArrayOutputStream();bitmap.compress(Bitmap.CompressFormat.PNG,100,output);bitmap.recycle()
+            val warning="Camera text is uncertain. Check the amounts."
+            val bill=ScannedBill(output.toByteArray(),"image/png","Store\nLunch 100.00\nTotal 100.00",listOf(warning))
+            var prepared:BillSuggestion?=null
+            compose.setContent {TrackerTheme {CompositionLocalProvider(LocalEditorialBack provides {}) {BillImportScreen(BillScanner(context),repo,Snapshot(),{_,suggestion,_->prepared=suggestion},{},initialBill=bill)}}}
+            compose.waitUntil(30000) {compose.onAllNodes(hasText("Continue to split") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+            compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText(warning))
+            compose.onNodeWithText(warning).assertIsDisplayed()
+            compose.onNodeWithText("Continue to split").performClick()
+            assertTrue(prepared!!.warnings.contains(warning))
+            assertTrue(repo.snapshot().records.isEmpty())
+        } finally {db.close()}
+    }
     @Test fun duplicateCheckSurvivesReviewRecreationWithoutRestarting() {
         val result=kotlinx.coroutines.CompletableDeferred<String?>()
         val review=ReceiptReviewModel(ScannedBill(byteArrayOf(1),"image/png","Lunch 100"))

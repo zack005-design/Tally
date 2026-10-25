@@ -23,4 +23,6 @@ Recognition helps with entry; you remain responsible for confirming the bill det
 
 Tables headed “Amt” are supported alongside “Amount”. Year-first dates such as `2026-02-06` are recognised, and a separate “Paid Amount” is kept out of the purchase list. Check item spelling against the photo; recognition can still misread individual letters.
 
+Camera photos with faint print or uneven lighting can receive an automatic contrast-recovery pass. Tally compares it with the original OCR result and shows a warning when recovered text needs checking. The original photo stays unchanged, and the warning follows the draft into the split form. Severe blur, glare or missing print can still require a closer, sharper photo or manual correction; the app does not guess unseen purchases or amounts.
+
 [View receipt review](../screenshots/all-screens/receipt-review.png) · [Shared bills →](shared-bills.md)

@@ -74,7 +74,9 @@ internal class ReceiptReviewModel(initialBill:ScannedBill?):ViewModel() {
     var error by review.error
     var duplicate by review.duplicate
     var cameraPath by review.cameraPath
-    fun suggestion():BillSuggestion=BillRecognition.parse(text).let {parsed->correctedItems?.let {parsed.copy(items=it)}?:parsed}
+    fun suggestion():BillSuggestion=BillRecognition.parse(text).let {parsed->
+        parsed.copy(items=correctedItems?:parsed.items,warnings=(parsed.warnings+bill?.recognitionWarnings.orEmpty()).distinct())
+    }
     LaunchedEffect(review) {review.checkInitial {repository.savedReceiptId(it)}}
     fun import(uri:Uri,cameraFile:File?=null) {
         scanning=true;error=null;duplicate=null;bill=null;correctedItems=null
@@ -126,6 +128,7 @@ internal class ReceiptReviewModel(initialBill:ScannedBill?):ViewModel() {
         bill?.let {read->
             item {BillPreview(scanner,read,showHeading=false)}
             item {ReferenceInfo("Check scanned values. Please verify the items and amounts.",warning=true)}
+            read.recognitionWarnings.forEach {warning->item {ReferenceInfo(warning,warning=true)}}
             val recognized=suggestion()
             item {Text("Items",style=MaterialTheme.typography.bodyMedium,color=Tokens.muted)}
             item {GroupedCard {

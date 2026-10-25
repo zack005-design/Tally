@@ -7,9 +7,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.common.MlKitException
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.smartexpense.domain.BillRecognition
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import java.io.File
@@ -18,7 +20,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-data class ScannedBill(val bytes:ByteArray,val mime:String,val text:String)
+data class ScannedBill(val bytes:ByteArray,val mime:String,val text:String,val recognitionWarnings:List<String> = emptyList())
 
 /** Bundled Latin OCR. Sources are copied locally, bounded and never uploaded. */
 class BillScanner @Inject constructor(@ApplicationContext private val context:Context) {
@@ -33,10 +35,11 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
         val pdf=bytes.take(5).toByteArray().toString(Charsets.US_ASCII)=="%PDF-"
         val mime=if(pdf) "application/pdf" else BitmapFactory.Options().apply {inJustDecodeBounds=true;BitmapFactory.decodeByteArray(bytes,0,bytes.size,this)}.outMimeType.orEmpty()
         require(mime in listOf("application/pdf","image/jpeg","image/png","image/webp")) {"Choose a JPEG, PNG, WebP or PDF bill"}
-        val text=if(pdf) pdfText(bytes) else imageText(bytes)
-        ScannedBill(bytes,mime,text.take(10000))
+        val warnings=mutableListOf<String>()
+        val text=if(pdf) pdfText(bytes,warnings) else imageText(bytes,warnings)
+        ScannedBill(bytes,mime,text.take(10000),warnings.distinct())
     }
-    private data class ReceiptLine(val text:String,val bounds:Rect?)
+    private data class ReceiptLine(val text:String,val bounds:Rect?,val confidence:Float)
     private suspend fun recognize(bitmap:Bitmap):Text {
         val recognizer=TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         try {
@@ -60,11 +63,49 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
         }
         return rows.joinToString("\n") {row->row.sortedBy {it.first.left}.joinToString(" ") {it.second}}
     }
-    private suspend fun bitmapText(bitmap:Bitmap):String {
+    private fun confidence(lines:List<ReceiptLine>):Double {
+        val characters=lines.sumOf {it.text.length}.coerceAtLeast(1)
+        return lines.sumOf {it.confidence.toDouble()*it.text.length}/characters
+    }
+    private fun candidateScore(lines:List<ReceiptLine>):Double {
+        val bill=BillRecognition.parse(receiptText(lines))
+        // Taxes/discounts can legitimately separate item sums from totals. Do not reward a
+        // different OCR amount merely because it makes the arithmetic more convenient.
+        return confidence(lines)*0.8+(if(bill.total!=null) 0.1 else 0.0)+(if(bill.items.isNotEmpty()) 0.1 else 0.0)
+    }
+    private suspend fun bitmapText(bitmap:Bitmap,warnings:MutableList<String>):String {
+        val original=bitmapLines(bitmap,enhanced=false)
+        val originalText=receiptText(original)
+        val bill=BillRecognition.parse(originalText)
+        var selected=original
+        if(confidence(original)<0.9 || bill.total==null || bill.items.isEmpty() || ReceiptImageEnhancement.lowContrast(bitmap)) {
+            val recovered=try {bitmapLines(bitmap,enhanced=true)}
+            catch(cancelled:CancellationException) {throw cancelled}
+            catch(failure:MlKitException) {
+                warnings+="Contrast recovery could not finish. Check the original recognition or try a clearer photo."
+                emptyList()
+            }
+            if(candidateScore(recovered)>candidateScore(original)+0.025) {
+                selected=recovered
+                if(receiptText(recovered)!=originalText) warnings+="Photo contrast was enhanced. Check the recovered item names and amounts against the original."
+            }
+        }
+        val text=receiptText(selected)
+        val parsed=BillRecognition.parse(text)
+        if(selected.isEmpty() || confidence(selected)<0.8 || parsed.total==null || parsed.items.isEmpty()) {
+            warnings+="This photo could not be read reliably. Retake it closer and in focus, or correct the items and amounts before continuing."
+        } else {
+            val uncertain=selected.filter {it.confidence<0.75f}.take(3).joinToString("; ") {it.text.take(60)}
+            if(uncertain.isNotBlank()) warnings+="Check unclear text against the photo: $uncertain"
+        }
+        return text
+    }
+    private suspend fun bitmapLines(bitmap:Bitmap,enhanced:Boolean):List<ReceiptLine> {
         val lines=mutableListOf<ReceiptLine>()
         // Overlap protects letters near a cut. Each line belongs to one core region by position,
         // so identical purchases on different rows are preserved rather than deduplicated by text.
-        val coreHeight=1600
+        // Enhanced crops also allocate pixel buffers; keep each under two megapixels.
+        val coreHeight=if(enhanced) minOf(1600,(2_000_000/bitmap.width-256).coerceAtLeast(256)) else 1600
         for(coreTop in 0 until bitmap.height step coreHeight) {
             currentCoroutineContext().ensureActive()
             val coreBottom=minOf(coreTop+coreHeight,bitmap.height)
@@ -72,14 +113,17 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
             val cropBottom=minOf(bitmap.height,coreBottom+128)
             val crop=Bitmap.createBitmap(bitmap,0,cropTop,bitmap.width,cropBottom-cropTop)
             try {
-                for(line in recognize(crop).textBlocks.flatMap {it.lines}) {
-                    if(line.text.isBlank()) continue
-                    val bounds=line.boundingBox?.let {Rect(it).apply {offset(0,cropTop)}}
-                    if(bounds==null || bounds.centerY() in coreTop until coreBottom) lines+=ReceiptLine(line.text,bounds)
-                }
+                val input=if(enhanced) ReceiptImageEnhancement.enhance(crop) else crop
+                try {
+                    for(line in recognize(input).textBlocks.flatMap {it.lines}) {
+                        if(line.text.isBlank()) continue
+                        val bounds=line.boundingBox?.let {Rect(it).apply {offset(0,cropTop)}}
+                        if(bounds==null || bounds.centerY() in coreTop until coreBottom) lines+=ReceiptLine(line.text,bounds,line.confidence)
+                    }
+                } finally {if(input!==crop) input.recycle()}
             } finally {if(crop!==bitmap) crop.recycle()}
         }
-        return receiptText(lines)
+        return lines
     }
     private fun decode(bytes:ByteArray,forRecognition:Boolean=false):Bitmap {
         val bounds=BitmapFactory.Options().apply {inJustDecodeBounds=true};BitmapFactory.decodeByteArray(bytes,0,bytes.size,bounds)
@@ -98,8 +142,8 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
         if(orientation !in 2..8) return bitmap
         return Bitmap.createBitmap(bitmap,0,0,bitmap.width,bitmap.height,matrix,true).also {if(it!==bitmap) bitmap.recycle()}
     }
-    private suspend fun imageText(bytes:ByteArray):String {val bitmap=decode(bytes,forRecognition=true);try {return bitmapText(bitmap)} finally {bitmap.recycle()}}
-    private suspend fun pdfText(bytes:ByteArray):String {
+    private suspend fun imageText(bytes:ByteArray,warnings:MutableList<String>):String {val bitmap=decode(bytes,forRecognition=true);try {return bitmapText(bitmap,warnings)} finally {bitmap.recycle()}}
+    private suspend fun pdfText(bytes:ByteArray,warnings:MutableList<String>):String {
         val file=File.createTempFile("bill-",".pdf",context.cacheDir)
         try {
             file.writeBytes(bytes)
@@ -113,7 +157,7 @@ class BillScanner @Inject constructor(@ApplicationContext private val context:Co
                         if(embedded.isNotBlank()) texts+=embedded
                         else {
                             val scale=2000.0/maxOf(page.width,page.height);val bitmap=Bitmap.createBitmap((page.width*scale).toInt().coerceAtLeast(1),(page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
-                            try {bitmap.eraseColor(Color.WHITE);page.render(bitmap,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);texts+=bitmapText(bitmap)} finally {bitmap.recycle()}
+                            try {bitmap.eraseColor(Color.WHITE);page.render(bitmap,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);texts+=bitmapText(bitmap,warnings)} finally {bitmap.recycle()}
                         }
                     }
                 }
