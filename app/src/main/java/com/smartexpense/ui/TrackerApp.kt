@@ -143,8 +143,10 @@ import com.smartexpense.domain.*
                 composable("backup") {BackupScreen(model)}
                 composable("favourites") {FavouritesScreen(ui.snapshot,ui.busy,{value->model.favouriteEntry(value);nav.navigate("add")},{value,done->model.action("Favourite saved") {model.repository.saveFavourite(value);done()}},{id->model.action("Favourite removed") {model.repository.deletePlan("favourite:$id")}})}
                 composable("repayment/{id}?group={group}",arguments=listOf(navArgument("group") {defaultValue=""})) {entry->DisposableEffect(entry) {onDispose {model.clearRepaymentDraft()}};RepaymentScreen(ui.snapshot,ui.snapshot.debts.find {it.id==entry.arguments?.getString("id")},model,repaymentDraft,entry.arguments?.getString("group")?.ifBlank {null}) {model.clearRepaymentDraft();nav.popBackStack()}}
+                composable("shared-refund/{id}") {entry->SharedRefundRoute(entry.arguments?.getString("id").orEmpty(),ui.snapshot,model) {nav.popBackStack();Unit}}
                 composable("detail/{id}") {entry->val id=entry.arguments?.getString("id").orEmpty();DetailScreen(id,ui.snapshot,model,{nav.navigate("add")}) {record ->
-                    model.newEntry(Kind.REFUND);model.change(model.entry.value.copy(description="Refund: ${record.description}",categoryId=record.categoryId,refundOf=id));nav.navigate("add")
+                    if(record.personIds.size>1) nav.navigate("shared-refund/$id")
+                    else {model.newEntry(Kind.REFUND);model.change(model.entry.value.copy(description="Refund: ${record.description}",categoryId=record.categoryId,refundOf=id));nav.navigate("add")}
                 }}
             }}
         }

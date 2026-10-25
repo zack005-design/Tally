@@ -138,7 +138,7 @@ import java.time.format.DateTimeFormatter
         category?.icon=="transport" || category?.name?.contains("travel",true)==true->R.drawable.ic_transit
         else->R.drawable.ic_activity
     }
-    val amount=if(record.kind==Kind.EXPENSE) record.personalAmount else record.amount
+    val amount=if(record.kind in listOf(Kind.EXPENSE,Kind.REFUND)) record.personalAmount else record.amount
     val amountText=(when(record.kind) {Kind.EXPENSE->"−";Kind.INCOME,Kind.REFUND->"+";else->""})+referenceMoney(amount)
     val large=LocalDensity.current.fontScale>1.3f || amountText.length>14
     val time=Instant.ofEpochMilli(record.date).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("h:mm a"))

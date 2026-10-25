@@ -276,10 +276,18 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         if(categoryId==null) dao.insertCategory(value) else dao.updateCategory(value)
     }
     suspend fun saveBudget(month:String,categoryId:String?,amount:Long) = storage { java.time.YearMonth.parse(month); require(amount>0); dao.saveBudget(BudgetEntity("$month:${categoryId?:"all"}",month,categoryId,amount)) }
+    suspend fun sharedRefundContext(originalId:String):SharedRefundContext=storage {db.withTransaction {SharedRefundStore(dao).context(originalId)}}
+    suspend fun saveSharedRefund(draft:SharedRefundDraft):String=storage {db.withTransaction {
+        refreshMonthlyGpay()
+        val key=SharedRefundStore(dao).save(draft)
+        validateBalances()
+        key
+    }}
     suspend fun save(draft:EntryDraft,replaces:String?=null):String = storage { db.withTransaction {
         refreshMonthlyGpay()
         // A stable draft id is the idempotency key; retries never duplicate account entries.
         dao.transaction(draft.id)?.let {existing->
+            require(existing.kind!=Kind.REFUND.name || dao.sharesFor(existing.id).isEmpty()) {"Use the shared-refund workflow for this record"}
             require(!existing.reversed && existing.kind==draft.kind.name && existing.amount==draft.amount && existing.description==draft.description.trim() && existing.categoryId==draft.categoryId && existing.groupId==draft.groupId && existing.date==draft.date && existing.notes==draft.notes && existing.refundOf==draft.refundOf) {"This draft ID was already used for different transaction details"}
             if(draft.kind==Kind.EXPENSE) {require(dao.sharesFor(draft.id).associate {it.personId to it.amount}==Finance.split(draft.amount,draft.participants,draft.splitRule) && dao.contributionsFor(draft.id).associate {it.personId to it.amount}==draft.contributions) {"This draft was already saved with different shares"}}
             val entries=dao.entriesFor(draft.id)
@@ -328,6 +336,7 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     } }
     suspend fun loadDraft(txId:String):EntryDraft = storage { db.withTransaction {
         val tx=requireNotNull(dao.transaction(txId)); require(!tx.reversed && tx.kind !in listOf(Kind.REPAYMENT.name,Kind.ADJUSTMENT.name,Kind.OFFSET.name)) { "This record cannot be edited through expense entry" }
+        require(tx.kind!=Kind.REFUND.name || dao.sharesFor(txId).isEmpty()) {"Reverse this shared refund and record a new one to correct it"}
         val entries=dao.entriesFor(txId); val shares=dao.sharesFor(txId); val contributions=dao.contributionsFor(txId)
         val payments=if(tx.kind==Kind.EXPENSE.name) entries.filter {it.amount<0}.associate {it.accountId to Math.negateExact(it.amount)} else emptyMap()
         EntryDraft(kind=Kind.valueOf(tx.kind),amount=tx.amount,description=tx.description,accountId=entries.firstOrNull { it.amount<0 }?.accountId?:entries.firstOrNull()?.accountId?:dao.accounts().firstOrNull()?.id.orEmpty(),destinationAccountId=if(tx.kind==Kind.TRANSFER.name) entries.firstOrNull { it.amount>0 }?.accountId else null,categoryId=tx.categoryId,groupId=tx.groupId,date=tx.date,notes=tx.notes,participants=shares.map { it.personId }.ifEmpty { listOf("self") },contributions=contributions.associate { it.personId to it.amount }.ifEmpty { mapOf("self" to tx.amount) },splitRule=if(shares.isEmpty()) SplitRule.Equal else SplitRule.Fixed(shares.associate { it.personId to it.amount }),refundOf=tx.refundOf,selfPayments=payments.takeIf {it.size>1}.orEmpty())

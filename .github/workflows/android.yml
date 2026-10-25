@@ -78,7 +78,7 @@ jobs:
         with:
           api-level: ${{ matrix.api }}
           arch: x86_64
-          script: ./gradlew -I tools/data-safety-build.init.gradle :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smartexpense.InstallationDataSafetyTest,com.smartexpense.BackupTest,com.smartexpense.LocalReminderAndExportTest,com.smartexpense.ReminderEfficiencyTest,com.smartexpense.LocalCommandModelTest,com.smartexpense.DistributionVariantTest,com.smartexpense.EditorialAdaptiveTest --no-daemon --console=plain --max-workers=2
+          script: ./gradlew -I tools/data-safety-build.init.gradle :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smartexpense.InstallationDataSafetyTest,com.smartexpense.BackupTest,com.smartexpense.LocalReminderAndExportTest,com.smartexpense.ReminderEfficiencyTest,com.smartexpense.SharedRefundRepositoryTest,com.smartexpense.SharedRefundUiTest,com.smartexpense.LocalCommandModelTest,com.smartexpense.DistributionVariantTest,com.smartexpense.EditorialAdaptiveTest --no-daemon --console=plain --max-workers=2
       - name: Save device test reports
         if: always()
         uses: actions/upload-artifact@v4

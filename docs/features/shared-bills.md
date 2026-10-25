@@ -32,4 +32,16 @@ For a step-by-step accounting example, read [Your payment and your share](paymen
 
 Tally records the bill and repayments; it does not send money between participants.
 
+## Refund a shared bill
+
+In app builds with **Shared refund**, open the original bill and choose **Record refund**. Enter the total returned by the merchant, review each person's refunded share, and record who actually received the cash. Suggested shares follow each person's remaining refundable share; edit them when only specific items were refunded. Both the refunded shares and cash received must add up to the refund total.
+
+Choose a destination account for any cash you received, then use **Review refund** before **Save refund**. Only your refunded share reduces your spending. Only cash actually received by you increases your account. A refund received by a friend does not add cash to your account.
+
+For a ₹900 bill split equally three ways, a ₹300 refund received entirely by you reduces your spending by ₹100 and increases your account by ₹300. Each friend is entitled to ₹100 of the refund. The original bill and any repayments remain in history; the refund records the balances owed back to participants. Review the net settlement suggestions, or explicitly offset opposite balances using the settlement tools, rather than recording cash that never moved.
+
+Partial and repeated refunds cannot exceed a person's original share. To correct a shared refund, reverse it and record a new distribution. Reverse any repayments against that refund first. Active linked refunds must be reversed before correcting or reversing the original bill.
+
+Full backups containing shared refunds use format 8 and need a build that supports shared refunds when restoring. Earlier personal-refund backups remain supported. The 0.2.3 download predates this feature.
+
 [View bill review](../screenshots/readme/shared-bill.png) · [Everyday money →](everyday-money.md)

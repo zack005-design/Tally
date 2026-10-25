@@ -15,7 +15,7 @@ import javax.inject.Singleton
     suspend fun export(password:CharArray):ByteArray=withContext(Dispatchers.IO) {
         require(BackupEnvelope.isValidExportPassword(password)) {"Use a backup password of at least ${BackupEnvelope.MIN_PASSWORD_LENGTH} characters; it cannot contain only spaces."}
         val json=db.withTransaction {JSONObject().apply {
-            put("version",7);put("currency","INR")
+            put("version",if(dao.transactions().any {it.kind==Kind.REFUND.name && dao.sharesFor(it.id).isNotEmpty()}) 8 else 7);put("currency","INR")
             put("receipts",table(dao.receipts()) {row(it.transactionId,it.mime,it.text,it.hash)})
             put("receiptChunks",table(dao.receiptChunks()) {row(it.transactionId,it.position,android.util.Base64.encodeToString(it.bytes,android.util.Base64.NO_WRAP))})
             put("localPlans",table(dao.plans()) {row(it.key,it.kind,it.json)})
@@ -66,7 +66,7 @@ import javax.inject.Singleton
     }
     private fun parse(data:ByteArray,password:CharArray):BackupBundle {
         val json=JSONObject(BackupEnvelope.decode(data,password).toString(Charsets.UTF_8))
-        require(json.getInt("version") in 1..7 && json.getString("currency")=="INR") {"Unsupported backup version or currency"}
+        require(json.getInt("version") in 1..8 && json.getString("currency")=="INR") {"Unsupported backup version or currency"}
         fun <T> rows(name:String,decode:(JSONArray)->T):List<T> {val array=json.getJSONArray(name);require(array.length()<=100000) {"Too many records"};return (0 until array.length()).map {decode(array.getJSONArray(it))}}
         return BackupBundle(
             rows("accounts") {AccountEntity(it.s(0),it.s(1),it.s(2),it.b(3))},rows("people") {PersonEntity(it.s(0),it.s(1),it.s(2))},rows("groups") {GroupEntity(it.s(0),it.s(1))},rows("members") {GroupMemberEntity(it.s(0),it.s(1))},rows("categories") {CategoryEntity(it.s(0),it.s(1),it.n(2),it.s(3),it.b(4))},
@@ -75,7 +75,12 @@ import javax.inject.Singleton
             if(json.getInt("version")>=3) rows("diary") {DiaryEntity(it.s(0),it.s(1))} else emptyList(),
             if(json.getInt("version")>=3) rows("localSettings") {LocalSettingsEntity(it.n(0).toInt(),it.s(1),it.s(2),it.b(3),it.s(4))} else emptyList(),if(json.getInt("version")>=4) rows("localPlans") {PlanEntity(it.s(0),it.s(1),it.s(2))} else emptyList(),
             if(json.getInt("version")>=5) rows("receipts") {ReceiptEntity(it.s(0),it.s(1),it.s(2),it.s(3))} else emptyList(),
-            if(json.getInt("version")>=5) rows("receiptChunks") {val encoded=it.get(2);require(encoded is String && encoded.length<=700000);val position=it.n(1);require(position in 0..11);ReceiptChunkEntity(it.s(0),position.toInt(),android.util.Base64.decode(encoded,android.util.Base64.NO_WRAP))} else emptyList())
+            if(json.getInt("version")>=5) rows("receiptChunks") {val encoded=it.get(2);require(encoded is String && encoded.length<=700000);val position=it.n(1);require(position in 0..11);ReceiptChunkEntity(it.s(0),position.toInt(),android.util.Base64.decode(encoded,android.util.Base64.NO_WRAP))} else emptyList()).also {bundle->
+            if(json.getInt("version")<8) {
+                val refundIds=bundle.transactions.filter {it.kind==Kind.REFUND.name}.map {it.id}.toSet()
+                require(bundle.shares.none {it.transactionId in refundIds}) {"Shared refunds require backup format 8"}
+            }
+        }
     }
     // Free text has the same limit as export: the bounded backup envelope. Field-specific
     // limits (diary, receipt OCR, profile and plans) are checked by BackupBundle.validate.
@@ -137,17 +142,37 @@ private data class BackupBundle(val accounts:List<AccountEntity>,val people:List
                 Kind.INCOME -> require(movements.size==1 && movements.single().amount==t.amount && t.personalAmount==t.amount)
                 Kind.REFUND -> {
                     val original=requireNotNull(tx[t.refundOf]) {"Refund has no original expense"}
-                    require(original.kind==Kind.EXPENSE.name && t.categoryId==original.categoryId && shares.filter {it.transactionId==original.id}.map {it.personId}==listOf("self")) {"Refund must refer to a personal expense in the same category"}
+                    require(original.kind==Kind.EXPENSE.name && t.categoryId==original.categoryId) {"Refund must refer to an expense in the same category"}
                     require(t.reversed || !original.reversed) {"Active refund refers to a reversed expense"}
-                    require(movements.size==1 && movements.single().amount==t.amount && t.personalAmount==t.amount)
+                    val originalShares=shares.filter {it.transactionId==original.id}.associate {it.personId to it.amount}
+                    if(allocated.isEmpty()) {
+                        require(originalShares.keys==setOf("self") && movements.size==1 && movements.single().amount==t.amount && t.personalAmount==t.amount)
+                    } else {
+                        require(originalShares.size>1 && t.groupId==original.groupId && t.date>=original.date)
+                        val refundShares=allocated.associate {it.personId to it.amount}
+                        val recipients=paid.associate {it.personId to it.amount}
+                        val net=SharedRefund.positions(t.amount,originalShares,refundShares,recipients)
+                        require(t.personalAmount==(refundShares["self"]?:0L))
+                        val cash=recipients["self"]?:0L
+                        require(movements.size==(if(cash>0) 1 else 0) && movements.all {it.amount>0} && Finance.total(movements.map {it.amount})==cash) {"Refund cash does not match its recipients"}
+                        val debts=obligations.filter {it.transactionId==t.id}
+                        require(debts.all {it.fromPerson in net && it.toPerson in net && net.getValue(it.fromPerson)<0 && net.getValue(it.toPerson)>0}) {"Refund has invalid debt paths"}
+                        val actual=net.keys.associateWith {person->Math.subtractExact(Finance.total(debts.filter {it.toPerson==person}.map {it.amount}),Finance.total(debts.filter {it.fromPerson==person}.map {it.amount}))}
+                        require(net==actual) {"Refund obligations do not reconcile"}
+                    }
                 }
                 Kind.REPAYMENT -> require(t.personalAmount==0L)
                 Kind.OFFSET -> require(t.personalAmount==0L && movements.isEmpty())
                 Kind.ADJUSTMENT -> require(movements.size==1 && movements.single().amount==t.amount && t.personalAmount==0L)
             }
-            if(kind!=Kind.EXPENSE) require(allocated.isEmpty() && paid.isEmpty() && obligations.none {it.transactionId==t.id}) {"Non-expense has fabricated expense data"}
+            if(kind!=Kind.EXPENSE && !(kind==Kind.REFUND && allocated.isNotEmpty())) require(allocated.isEmpty() && paid.isEmpty() && obligations.none {it.transactionId==t.id}) {"Non-expense has fabricated expense data"}
         }
-        transactions.filter {it.kind==Kind.EXPENSE.name}.forEach {original->require(Finance.total(transactions.filter {it.kind==Kind.REFUND.name && it.refundOf==original.id && !it.reversed}.map {it.amount})<=original.personalAmount) {"Refunds exceed original expense"}}
+        transactions.filter {it.kind==Kind.EXPENSE.name}.forEach {original->
+            val originalShares=shares.filter {it.transactionId==original.id}.associate {it.personId to it.amount}
+            val refunds=transactions.filter {it.kind==Kind.REFUND.name && it.refundOf==original.id && !it.reversed}
+            if(originalShares.size>1) SharedRefund.remaining(originalShares,refunds.map {refund->shares.filter {it.transactionId==refund.id}.associate {it.personId to it.amount}})
+            else require(Finance.total(refunds.map {it.amount})<=original.personalAmount) {"Refunds exceed original expense"}
+        }
         require(obligations.all {it.transactionId in tx && it.fromPerson in personIds && it.toPerson in personIds && it.fromPerson!=it.toPerson && it.amount>0})
         val obligationMap=obligations.associateBy {it.id};val settlementMap=settlements.associateBy {it.id}
         require(allocations.all {it.settlementId in settlementMap && it.obligationId in obligationMap && it.amount>0})

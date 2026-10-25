@@ -35,11 +35,13 @@ import com.smartexpense.R
     val record=detail?.record?:s.records.find {it.id==id}
     if(record==null) Page("Transaction detail") {item {EmptyLedger(if(error==null) "Loading transaction" else "Record unavailable",error?:"Getting the saved details…")}}
     else {
+        val sharedRefund=record.kind==Kind.REFUND && (detail?.shares?.size?:0)>1
+        val refundRecord=record.copy(personIds=detail?.shares?.keys?.toList()?:record.personIds)
         val canShare=!record.reversed && record.kind==Kind.EXPENSE && (detail?.shares?.size?:0)>1
         TransactionDetailView(record,detail,s,receipt!=null,{showReceipt=true},onShare=if(canShare) ({sharing=true}) else null,
-            onEdit=if(!record.reversed && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,onReady=onEdit)}) else null,
-            onDuplicate=if(!record.reversed && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,duplicate=true,onReady=onEdit)}) else null,
-            onRefund=if(!record.reversed && record.kind==Kind.EXPENSE && detail?.shares?.keys==setOf("self")) ({onRefund(record)}) else null) {actions=true}
+            onEdit=if(!record.reversed && !sharedRefund && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,onReady=onEdit)}) else null,
+            onDuplicate=if(!record.reversed && !sharedRefund && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,duplicate=true,onReady=onEdit)}) else null,
+            onRefund=if(!record.reversed && record.kind==Kind.EXPENSE && detail!=null) ({onRefund(refundRecord)}) else null) {actions=true}
         if(sharing && canShare) EditorialBottomSheet("Share bill summary",{sharing=false;shareError=null}) {
             val summary=billSummary(requireNotNull(detail),s.people,s.debts)
             Text(summary)
@@ -60,11 +62,11 @@ import com.smartexpense.R
         if(removeReceipt) EditorialConfirmSheet("Remove this bill attachment?","The saved transaction and balances stay in your ledger. Keep a local backup if you want to retain the original bill.","Remove",{removeReceipt=false}) {removeReceipt=false;showReceipt=false;model.action("Bill attachment removed") {model.repository.removeReceipt(id)}}
         if(actions) EditorialActionSheet("Transaction actions",buildList {
             if(!record.reversed) {
-                if(record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) {
+                if(!sharedRefund && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) {
                     add(EditorialAction("Edit with revision") {model.edit(id,onReady=onEdit)})
                     add(EditorialAction("Duplicate as new draft") {model.edit(id,duplicate=true,onReady=onEdit)})
                 }
-                if(record.kind==Kind.EXPENSE && detail?.shares?.keys==setOf("self")) add(EditorialAction("Record refund") {onRefund(record)})
+                if(record.kind==Kind.EXPENSE && detail!=null) add(EditorialAction("Record refund") {onRefund(refundRecord)})
                 if(!record.id.startsWith("gpay-reset")) add(EditorialAction("Reverse transaction") {confirm=true})
             }
         },{actions=false})
@@ -100,13 +102,14 @@ import com.smartexpense.R
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(6.dp)) {Text("Private notes",style=MaterialTheme.typography.bodySmall,color=Tokens.muted);Text(record.notes,style=MaterialTheme.typography.bodyMedium)}
         }}}
         if((detail?.shares?.size?:0)>1) item {Panel {
-            SectionHeading("Payments and shares")
+            SectionHeading(if(record.kind==Kind.REFUND) "Refund shares and cash received" else "Payments and shares")
             detail!!.shares.forEach {(id,share)->
                 Text(name(id),style=MaterialTheme.typography.titleMedium)
-                AdaptivePair(first={AmountRow("Paid",detail.contributions[id]?:0)},second={AmountRow("Share",share)})
+                AdaptivePair(first={AmountRow(if(record.kind==Kind.REFUND) "Received" else "Paid",detail.contributions[id]?:0)},second={AmountRow(if(record.kind==Kind.REFUND) "Refunded share" else "Share",share)})
                 HorizontalDivider(color=Tokens.border.copy(alpha=.5f))
             }
             if(record.kind==Kind.EXPENSE) AmountRow("Your spending share",record.personalAmount)
+            if(record.kind==Kind.REFUND && (detail?.shares?.size?:0)>1) {AmountRow("Your refunded share",record.personalAmount);AmountRow("Cash received by you",Finance.total(detail?.entries.orEmpty().map {it.amount}));Text("Correct a shared refund by reversing it and recording a new distribution.")}
         }}
         if(onShare!=null) item {OutlinedButton(onShare,Modifier.fillMaxWidth()) {Text("Share bill summary")}}
         val outstanding=snapshot.debts.filter {it.transactionId==record.id && it.outstanding>0}

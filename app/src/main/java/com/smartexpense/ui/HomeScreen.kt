@@ -195,7 +195,7 @@ import java.time.format.DateTimeFormatter
     }
 }
 @Composable fun TransactionRow(record:Record,snapshot:Snapshot?=null,showPersonalAmount:Boolean=false,containerColor:androidx.compose.ui.graphics.Color=Tokens.background,onClick:()->Unit) {
-    val displayAmount=if(showPersonalAmount && record.kind==Kind.EXPENSE) record.personalAmount else record.amount
+    val displayAmount=if(showPersonalAmount && record.kind in listOf(Kind.EXPENSE,Kind.REFUND)) record.personalAmount else record.amount
     val amountText=(when(record.kind) {Kind.INCOME,Kind.REFUND->"+";Kind.EXPENSE->"−";else->""})+referenceMoney(displayAmount)
     val shareText=if(record.kind==Kind.EXPENSE && record.personalAmount!=record.amount) {
         if(showPersonalAmount) "Your share" else "Your share ${editorialMoney(record.personalAmount)}"
