@@ -11,6 +11,8 @@ The AI edition includes specialised expense-command models trained from random w
 3. Review the description, amount, account, category, and date; correct any mistakes.
 4. Explicitly save when the entry is correct.
 
+Amounts also accept Hindi (`४५.५०`), Arabic (`٤٥٫٥٠`) and full-width (`４５．５０`) decimal digits, including supported grouped amounts. Pasted Unicode spaces are standardized before interpretation. Hidden direction/control characters, superscript/fraction numerals and non-INR currency symbols require manual correction rather than a guessed amount. This input layer works in both editions; it does not add Hindi-script language understanding.
+
 Account hints must match an active account. Interpretation does not create transactions or change balances by itself.
 
 New examples include `Paid 49 for coffee using gpy` and `maine chai ke liye cash se 30 diye`. Account spelling support is an explicit allowlist: `gpy`, `gpaay`, `gooogle pay`, `wallett`, and `walllet`. This does not correct arbitrary spellings. `kal`, negation and planned payments require manual clarification; unfamiliar Hinglish wording may also defer.

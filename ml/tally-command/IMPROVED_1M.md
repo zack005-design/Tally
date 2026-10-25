@@ -19,6 +19,12 @@ Only one expense/INR amount is supported by the learned path. Arbitrary Hindi, s
 
 Extension dimensions: vocabulary 207, embedding 128, hidden 342 per direction. Threshold 0.8 is an uncalibrated score. Portable bundle: 3,998,956 bytes; SHA-256 `dcf3212c92f1c042adc41137d243e019d7f27a2409d6c6b91b36776638b2da1e`. Dataset SHA-256 `2d1af960664411069838fdac824111e1df49bfafddb7893d0d4931c13fcbe10d`.
 
+## Input compatibility update
+
+The app input layer converts Unicode decimal digits (including Hindi, Arabic and full-width forms) to ASCII before rules/model inference. It explicitly maps full-width/Arabic decimal and grouping separators and full-width/small signs, while standardizing whitespace. It does not use broad compatibility normalization: superscripts, fractions and other ambiguous numerals require manual correction. Hidden formatting/control characters and non-INR currency symbols are refused before accepting a transaction amount. The model weights, vocabulary and 999,150-parameter count are unchanged. This is input compatibility, not full Hindi-script language support; frozen model-only scores below do not measure this new layer.
+
+Nine focused JVM regression tests cover digit/space equivalence with rules and both learned models, exact grouped paise, supplementary digits, hidden controls, superscripts, foreign-currency routing, signed amounts and unchanged valid shared contributions. The final isolated AI debug build, 205 JVM tests and Android lint (zero errors; existing warnings remain) passed. This input update has not been tested on a physical device or emulator. Published APK downloads are unchanged.
+
 ## Frozen combined-system evaluation
 
 | Set | Supported | Correctly accepted | Wrong returned drafts | Unsupported falsely accepted |

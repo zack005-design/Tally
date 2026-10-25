@@ -6,7 +6,10 @@ class CommandExpenseTextParser(
     private val fallback: ExpenseTextParser = RuleBasedTextParser(),
     private val extension: ScratchCommandModel? = null
 ) : ExpenseTextParser {
-    override fun parse(text: String, people: List<PersonRef>): ParsedDraft {
+    override fun parse(text: String, people: List<PersonRef>): ParsedDraft =
+        parseNormalized(CommandInputNormalizer.normalize(text), people)
+
+    private fun parseNormalized(text: String, people: List<PersonRef>): ParsedDraft {
         val base = fallback.parse(text, people)
         ExpenseCommandReview.reason(text, base)?.let { reason ->
             return base.copy(amount = null, fromAccount = null, toAccount = null,

@@ -11,24 +11,30 @@ internal object ExpenseCommandReview {
     private val account = Regex("\\b(?:google\\s+pay|gooogle\\s+pay|g[\\s-]+pay|googlepay|gpay|gpy|gpaay|wallet|wallett|walllet|cash)\\b", RegexOption.IGNORE_CASE)
 
     fun reason(text: String, base: ParsedDraft): String? {
+        if (text.codePoints().anyMatch { Character.getType(it) == Character.FORMAT.toInt() || Character.isISOControl(it) })
+            return "Hidden control characters found. Retype the transaction before entering its amount and account."
+        if (text.codePoints().anyMatch { Character.getType(it) == Character.LETTER_NUMBER.toInt() || Character.getType(it) == Character.OTHER_NUMBER.toInt() })
+            return "Ambiguous numeric characters found. Enter the amount using ordinary decimal digits."
         if (nonAction.containsMatchIn(text) || hindiNonAction.containsMatchIn(text)) return "This looks like a question, plan, negated entry or ambiguous date. Enter the intended transaction manually."
-        if ((base.kind != null && base.kind != Kind.EXPENSE) || base.contributions.keys.any { it != "self" } ||
-            base.splitRule != null || "participants" in base.missing || "split method" in base.missing) return null
-        if (foreign.containsMatchIn(text)) return "Review the currency and convert to INR before entering this expense."
-        val sources = account.findAll(text).map {
-            if (it.value.lowercase(java.util.Locale.ROOT) in setOf("cash", "wallet", "wallett", "walllet")) "WALLET" else "GPAY"
-        }.toSet()
-        if (sources.size > 1) return "Multiple payment accounts found. Enter the amount and account manually."
+        if (foreign.containsMatchIn(text) || text.codePoints().anyMatch { Character.getType(it) == Character.CURRENCY_SYMBOL.toInt() && it != '₹'.code }) return "Review the currency and convert to INR before entering this expense."
         val withoutDates = isoDate.replace(text) { match ->
             if (runCatching { java.time.LocalDate.parse(match.value) }.isSuccess) " ".repeat(match.value.length) else match.value
         }
         val matches = numeric.findAll(withoutDates).toList()
+        // Validate each monetary token before shared/non-expense routing; zero contributions remain valid.
+        if (matches.any { match ->
+            val previous = withoutDates.substring(0, match.range.first).trimEnd().lastOrNull()
+            val next = withoutDates.substring(match.range.last + 1).trimStart().firstOrNull()
+            previous in listOf('-', '−', '+', '.', '/') || next in listOf('/', '%') || !valid.matches(match.value)
+        }) return "Invalid amount. Enter an unsigned INR amount with at most two decimal places."
+        if ((base.kind != null && base.kind != Kind.EXPENSE) || base.contributions.keys.any { it != "self" } ||
+            base.splitRule != null || "participants" in base.missing || "split method" in base.missing) return null
+        val sources = account.findAll(text).map {
+            if (it.value.lowercase(java.util.Locale.ROOT) in setOf("cash", "wallet", "wallett", "walllet")) "WALLET" else "GPAY"
+        }.toSet()
+        if (sources.size > 1) return "Multiple payment accounts found. Enter the amount and account manually."
         if (matches.size > 1) return "Multiple amounts found. Choose the transaction amount manually."
         val match = matches.singleOrNull() ?: return null
-        val previous = withoutDates.substring(0, match.range.first).trimEnd().lastOrNull()
-        val next = withoutDates.substring(match.range.last + 1).trimStart().firstOrNull()
-        if (previous in listOf('-', '−', '+', '.', '/') || next in listOf('/', '%') || !valid.matches(match.value))
-            return "Invalid amount. Enter a positive INR amount with at most two decimal places."
         if (runCatching { Money.parse(match.value) }.getOrNull()?.let { it > 0 } != true)
             return "Invalid amount. Enter a positive INR amount within the supported range."
         return null
