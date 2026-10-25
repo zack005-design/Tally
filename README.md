@@ -5,24 +5,20 @@
 <h1 align="center">Tally</h1>
 
 <p align="center">
-  <strong>Your everyday money, clearly accounted for.</strong><br>
-  An offline Android app for personal spending, shared expenses, and on-device expense suggestions.
+  <strong>Personal finance. Shared expenses. On your device.</strong><br>
+  Track balances, understand your share of every bill, and turn everyday expenses into clear records.
 </p>
 
 <p align="center">
   <a href="docs/downloads.md"><img src="docs/assets/download-android.svg" height="48" alt="Open Tally Android downloads"></a>
 </p>
 
-<p align="center"><a href="docs/downloads.md#android-ai-edition">Download AI APK</a> · <a href="docs/downloads.md#android-non-ai-edition">Download non-AI APK</a></p>
-
-**To download:** Open the release page in your phone's browser, expand **Assets**, and tap the APK you want. This repository is private, so sign in with a GitHub account that has access. If an in-app browser opens the page without downloading, choose **Open in browser**. [Installation help](docs/getting-started.md#install-tally).
-
-Both editions include the calculator and receipt scanner. The AI edition bundles our scratch-trained expense-command model; the non-AI edition omits it and uses rule-based parsing. They share an app identity, so installing one replaces the other while preserving app data.
-
 <p align="center">
   <a href="#screens">Explore the app</a>
   &nbsp;·&nbsp;
   <a href="#features">Features</a>
+  &nbsp;·&nbsp;
+  <a href="#on-device-ai">AI</a>
   &nbsp;·&nbsp;
   <a href="docs/README.md">Guides</a>
   &nbsp;·&nbsp;
@@ -30,6 +26,17 @@ Both editions include the calculator and receipt scanner. The AI edition bundles
   &nbsp;·&nbsp;
   <a href="https://github.com/zack005-design/Tally/releases">Releases</a>
 </p>
+
+## Download
+
+**Android 8.0+ · Version 0.2.3 · Development prerelease**
+
+| Edition | Expense entry | Included in both |
+| --- | --- | --- |
+| [AI edition](docs/downloads.md#android-ai-edition) | Local model suggestions with rules fallback | Accounts, shared bills, receipt OCR, calculator, reports, and backups |
+| [Non-AI edition](docs/downloads.md#android-non-ai-edition) | Rule-based parsing without the custom model | The same finance features and receipt OCR |
+
+Download the APK from **Assets** on the [release page](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024). Both editions share an app identity and replace one another. [Installation and update guide](docs/getting-started.md).
 
 ## Screens
 
@@ -51,13 +58,9 @@ Both editions include the calculator and receipt scanner. The AI edition bundles
   </tr>
 </table>
 
-*Real app captures with fictional data from the 0.1.0 visual update; AI and calculator capabilities are described in their guides. Click any screen to open it at full size, or [browse the complete gallery](docs/screenshots/all-screens/README.md).*
+*App captures use fictional data and show the 0.1.0 core finance interface. Open a screen at full size, or [browse the complete gallery](docs/screenshots/all-screens/README.md). Newer AI and calculator workflows are documented in their guides.*
 
 ## Features
-
-**Bring your chat history into Tally.** Tally Companion 0.2.0 prepares recorded spending from a ChatGPT conversation for [reviewed import](docs/features/chat-history-import.md). Use an Android build with **Import from ChatGPT** under History & reports; earlier APKs only support export review.
-
-**Offline assistance, with you in control.** The AI edition includes a small expense-command model trained from scratch. Both editions include a deterministic calculator. Neither tool saves financial records automatically.
 
 <table align="center" width="100%">
   <tr>
@@ -67,7 +70,7 @@ Both editions include the calculator and receipt scanner. The AI edition bundles
     </td>
     <td width="50%" align="left" valign="top">
       <h3><a href="docs/features/calculator.md">Offline calculator</a></h3>
-      <p>Calculate totals, percentages, equal splits, unit conversions, and simple equations. Supply your own exchange rate for currency conversions. Results stay separate from ledger records.</p>
+      <p>Work out totals, percentages, splits, statistics, ratios, tax, tips, and interest. Convert units or use your own exchange rate. Results stay separate from your ledger.</p>
     </td>
   </tr>
   <tr>
@@ -102,6 +105,25 @@ Both editions include the calculator and receipt scanner. The AI edition bundles
   </tr>
 </table>
 
+## On-device AI
+
+The released AI edition uses a specialised expense-command model to prepare drafts from short English input. It runs on the phone, without an API key or cloud inference.
+
+> **Example:** `coffee 80 cash` suggests the description, ₹80 amount, and cash-account hint. You review the resolved account and every field, then choose **Save**.
+
+The model has **53,142 parameters**, with a **roughly 210 KiB** weight bundle trained from random weights on synthetic commands. It selects text and amount spans from your input; exact decimal code converts money to integer paise. Low-confidence or unsupported commands fall back to rules or require manual correction.
+
+| Component | Role | Where it runs |
+| --- | --- | --- |
+| Expense-command model | Suggests single-INR personal-expense drafts in the AI edition | On your device |
+| Receipt OCR | Recognises text from imported receipts in both editions | On your device |
+| Calculator | Uses deterministic rules and decimal arithmetic | On your device |
+| Tally Companion | Reviews exports or prepares a chat-history import file you explicitly share | Separately in Codex |
+
+The command model is not a conversational assistant and does not answer ledger-history questions. It never saves a transaction by itself. Research models in the repository do not automatically replace the model in a published APK.
+
+[AI usage and limits](docs/features/on-device-ai.md) · [Deployed model design](ml/tally-command/COMMAND_MODEL.md) · [Recorded evaluation](ml/tally-command/VERIFICATION_V3.md) · [Model research](ml/tally-command/MODEL_LADDER.md)
+
 ## Your payment and your share
 
 See what you paid, what you personally spent, and what remains to be settled.
@@ -133,24 +155,26 @@ Repayments reduce what is owed without becoming new income. Transfers between yo
 
 ## Tally Companion
 
-Review an exported Transactions CSV with your custom Codex plugins. The [export guide](docs/features/reports-and-backups.md#review-an-export-with-tally-companion) explains how to prepare the file; you explicitly attach it in Codex.
+Tally Companion 0.2.0 connects two explicit workflows: review a Transactions CSV exported from Tally, or prepare spending history from a ChatGPT conversation for import into the app. Imported entries are previewed and require confirmation; unsupported records remain flagged for manual handling.
 
 [Download Tally Companion](docs/downloads.md#tally-companion) &nbsp;·&nbsp; [Download Tally Toolkit](docs/downloads.md#tally-toolkit)
 
-These plugins run separately in Codex. Tally does not send your records automatically.
-
-[Learn how to use Tally Companion →](docs/features/companion.md)
+The plugins run separately in Codex. Tally does not send records automatically. [Export review](docs/features/companion.md) · [Chat-history import](docs/features/chat-history-import.md).
 
 ## Release information
 
-**Android 8.0+ · Version 0.2.3 · Development build**
+Tally is in active development. The published 0.2.3 APKs are debug-signed test builds, with **173 JVM tests passed per edition**, zero lint errors, and recorded API36 emulator checks. Existing lint warnings remain; physical-phone and minimum-API verification are pending.
 
-This release combines reviewed ChatGPT-history import, backup protection, app-lock and motion improvements with the expanded offline calculator. It includes AI and non-AI APKs plus Tally Companion 0.2.0. [Release checks](docs/releases/0.2.3.md) · [Update and data safety](docs/installation-safety.md).
+INR is the core currency, and foreign bills use manually entered exchange rates. Keep a full encrypted backup before updating or switching editions. [Verification and limits](docs/releases/0.2.3.md) · [Installation safety](docs/installation-safety.md) · [Changelog](CHANGELOG.md).
 
-INR is the core currency. Foreign bills can use a manually entered exchange rate. See [download and setup](docs/getting-started.md) for installation and release details, or the [verification report](docs/verification/ios-polish-report.md) for recorded test results and device-testing limits.
+## Project
+
+Built with Kotlin and Jetpack Compose, with Room for local records and a repository-based data layer. Finance calculations stay separate from UI and Android services; user actions explicitly confirm changes to the ledger.
+
+[Source guide](docs/project.md) · [User documentation](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Report a bug](https://github.com/zack005-design/Tally/issues/new/choose)
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases">Latest release</a>
+  <a href="https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024">Current release</a>
   &nbsp;·&nbsp;
   <a href="docs/screenshots/all-screens/README.md">Screen gallery</a>
   &nbsp;·&nbsp;

@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible problem in Tally.
+title: "[Bug]: "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: "0.2.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      options:
+        - AI
+        - Non-AI
+        - Unsure
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Phone model and Android version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Use fictional or redacted examples.
+      placeholder: Describe the steps from opening the app to the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include an error message or redacted screenshot if useful.
+    validations:
+      required: true

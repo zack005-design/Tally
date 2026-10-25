@@ -8,13 +8,13 @@ Tally is an Android expense tracker for manually maintained accounts and shared 
 
 Use the [download guide](downloads.md) to choose the AI or non-AI edition and find the correct asset.
 
-1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024) in your Android browser. Sign in to a GitHub account with access to this private repository.
+1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024) in your Android browser.
 2. Expand **Assets** below the release notes.
 3. Tap **tally-0.2.3-ai-debug.apk** for local expense suggestions, or **tally-0.2.3-non-ai-debug.apk** for rule-based expense parsing.
 4. Open the downloaded APK. If Android asks, allow installation from the app you used to open it.
 5. Complete installation and open Tally.
 
-If a chat or app's built-in browser opens the link but nothing downloads, use its **Open in browser** option and sign in there. A 404 page can mean the browser is signed out or the account lacks repository access.
+If a chat or app's built-in browser opens the link but nothing downloads, use its **Open in browser** option. Downloads are public. If an old link returns 404, choose the asset from the release linked above.
 
 Choose an **.apk** asset to install the app. **Source code (zip)** and **Source code (tar.gz)** are project files, not Android installers. The two app editions replace one another rather than installing side by side; create a backup before switching or updating.
 
