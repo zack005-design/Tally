@@ -23,7 +23,15 @@ Extension dimensions: vocabulary 207, embedding 128, hidden 342 per direction. T
 
 The app input layer converts Unicode decimal digits (including Hindi, Arabic and full-width forms) to ASCII before rules/model inference. It explicitly maps full-width/Arabic decimal and grouping separators and full-width/small signs, while standardizing whitespace. It does not use broad compatibility normalization: superscripts, fractions and other ambiguous numerals require manual correction. Hidden formatting/control characters and non-INR currency symbols are refused before accepting a transaction amount. The model weights, vocabulary and 999,150-parameter count are unchanged. This is input compatibility, not full Hindi-script language support; frozen model-only scores below do not measure this new layer.
 
-Nine focused JVM regression tests cover digit/space equivalence with rules and both learned models, exact grouped paise, supplementary digits, hidden controls, superscripts, foreign-currency routing, signed amounts and unchanged valid shared contributions. The final isolated AI debug build, 205 JVM tests and Android lint (zero errors; existing warnings remain) passed. This input update has not been tested on a physical device or emulator. Published APK downloads are unchanged.
+Nine focused JVM regression tests cover digit/space equivalence with rules and both learned models, exact grouped paise, supplementary digits, hidden controls, superscripts, foreign-currency routing, signed amounts and unchanged valid shared contributions. The final isolated AI debug build, 205 JVM tests and Android lint (zero errors; existing warnings remain) passed. The initial publication did not include a device run; subsequent checks are recorded in the [API 36 audit](../../docs/testing/2026-10-25-api36.md). Published APK downloads are unchanged.
+
+## English logging update
+
+`EnglishCommandInput` adds bounded deterministic preprocessing before rules/model inference: exact INR shorthand (`k`, `thousand`, `lakh`/`lac`), supported INR currency labels, and local-calendar dates. It separates one resolved past date from the expense text so date digits do not prevent learned description extraction. A supplied `Clock` controls relative dates; strict English date parsing checks real calendar dates and leap days. Supported counts are 1–365 numeric days or one–seven worded days; `last Monday` uses the strictly previous occurrence. Unsupported/future/conflicting date expressions require correction rather than guessing today.
+
+Grouped/repeated multiplier expressions, partially matched compound day counts, attached recognised foreign currency codes, unconverted amount suffixes and overflows are refused. English convenience parsing retains explicit review and shared/non-expense routing. The parameter count, portable weights and frozen model-only scores remain unchanged. Whole-app preprocessing improvements are separate from learned-model accuracy.
+
+English-update validation: 18 focused regressions and the full 223-test JVM suite passed, along with AI debug APK assembly and lint (zero errors; existing warnings remain). The source matches the isolated build snapshot. No English-update device run or APK release was performed. Existing app-wide device-suite issues are recorded separately in the [API 36 audit](../../docs/testing/2026-10-25-api36.md).
 
 ## Frozen combined-system evaluation
 
@@ -45,7 +53,7 @@ Per-inference recurrent gate buffers and preallocated output vectors are reused 
 
 Cross-runtime fixtures contain 386 independent Python-computed examples, covering all draft fields, model routing and score tolerance. Existing 220 compatibility fixtures remain unchanged. JVM, build, lint and packaged Android checks are recorded after completion below.
 
-## Verified integration
+## Initial 1M integration verification
 
 - 19 Python tests passed, including normalized split separation, scalar/batched inference agreement, precise checkpoint scoring and binding of both exported model checksums.
 - 192 JVM tests passed, including all 386 extension/composite parity cases and the existing 220 compatibility cases, bounded-loader rejection and explicit clarification behavior.

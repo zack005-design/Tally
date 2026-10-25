@@ -4,18 +4,24 @@ package com.smartexpense.domain
 class CommandExpenseTextParser(
     private val model: ScratchCommandModel?,
     private val fallback: ExpenseTextParser = RuleBasedTextParser(),
-    private val extension: ScratchCommandModel? = null
+    private val extension: ScratchCommandModel? = null,
+    private val clock: java.time.Clock = java.time.Clock.systemDefaultZone()
 ) : ExpenseTextParser {
     override fun parse(text: String, people: List<PersonRef>): ParsedDraft =
         parseNormalized(CommandInputNormalizer.normalize(text), people)
 
-    private fun parseNormalized(text: String, people: List<PersonRef>): ParsedDraft {
-        val base = fallback.parse(text, people)
-        ExpenseCommandReview.reason(text, base)?.let { reason ->
-            return base.copy(amount = null, fromAccount = null, toAccount = null,
-                contributions = emptyMap(), splitRule = null,
-                missing = base.missing + setOf("amount", "account"), warnings = base.warnings + reason)
-        }
+    private fun parseNormalized(input: String, people: List<PersonRef>): ParsedDraft {
+        val prepared = EnglishCommandInput.prepare(input, clock)
+        val text = prepared.text
+        val parsed = fallback.parse(text, people)
+        val base = parsed.copy(date = prepared.date ?: parsed.date)
+        fun incomplete(reason: String, invalidDate: Boolean = false) = base.copy(
+            amount = null, fromAccount = null, toAccount = null, contributions = emptyMap(), splitRule = null,
+            date = if (invalidDate) null else base.date,
+            missing = base.missing + setOf("amount", "account") + if (invalidDate) setOf("date") else emptySet(),
+            warnings = base.warnings + reason)
+        prepared.error?.let { return incomplete(it, prepared.invalidDate) }
+        ExpenseCommandReview.reason(text, base)?.let { return incomplete(it) }
         if ((base.kind != null && base.kind != Kind.EXPENSE) ||
             base.contributions.keys.any { it != "self" } || base.splitRule != null ||
             "participants" in base.missing || "split method" in base.missing) return base
