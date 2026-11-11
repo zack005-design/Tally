@@ -18,9 +18,14 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import com.smartexpense.R
+import com.smartexpense.data.ReceiptPdf
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 @Composable fun DetailScreen(id:String,s:Snapshot,model:AppViewModel,onEdit:()->Unit,onRefund:(Record)->Unit) {
     val context=LocalContext.current
+    val scope=rememberCoroutineScope()
+    var sending by remember(id) {mutableStateOf(false)}
     var sharing by rememberSaveable(id) {mutableStateOf(false)}
     var shareError by remember(id) {mutableStateOf<String?>(null)}
     var detail by remember(id) {mutableStateOf<RecordDetail?>(null)}
@@ -30,6 +35,21 @@ import com.smartexpense.R
     var receipt by remember(id) {mutableStateOf<com.smartexpense.data.ScannedBill?>(null)}
     var showReceipt by rememberSaveable(id) {mutableStateOf(false)}
     var removeReceipt by rememberSaveable(id) {mutableStateOf(false)}
+    fun sharePdf(original:Boolean=false) {
+        val savedDetail=detail
+        val savedReceipt=receipt
+        sending=true;shareError=null
+        scope.launch {
+            try {
+                val send=if(original) ReceiptPdf.shareOriginal(context,requireNotNull(savedReceipt),model.billScanner)
+                    else ReceiptPdf.share(context,requireNotNull(savedDetail),s.people,s.debts)
+                context.startActivity(Intent.createChooser(send,"Share receipt PDF"));sharing=false
+            } catch(cancelled:CancellationException) {throw cancelled}
+            catch(_:android.content.ActivityNotFoundException) {shareError="No sharing app is available on this device."}
+            catch(_:Exception) {shareError="Could not prepare the receipt PDF. Please try again."}
+            finally {sending=false}
+        }
+    }
     LaunchedEffect(id) {model.repository.receiptChanges(id).collect {receipt=it}}
     LaunchedEffect(id) {try {model.repository.details(id).collect {detail=it}} catch(e:kotlinx.coroutines.CancellationException) {throw e} catch(e:Exception) {error=e.message}}
     val record=detail?.record?:s.records.find {it.id==id}
@@ -37,25 +57,29 @@ import com.smartexpense.R
     else {
         val sharedRefund=record.kind==Kind.REFUND && (detail?.shares?.size?:0)>1
         val refundRecord=record.copy(personIds=detail?.shares?.keys?.toList()?:record.personIds)
-        val canShare=!record.reversed && record.kind==Kind.EXPENSE && (detail?.shares?.size?:0)>1
+        val canShare=!record.reversed && record.kind==Kind.EXPENSE && detail!=null
         TransactionDetailView(record,detail,s,receipt!=null,{showReceipt=true},onShare=if(canShare) ({sharing=true}) else null,
             onEdit=if(!record.reversed && !sharedRefund && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,onReady=onEdit)}) else null,
             onDuplicate=if(!record.reversed && !sharedRefund && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,duplicate=true,onReady=onEdit)}) else null,
             onRefund=if(!record.reversed && record.kind==Kind.EXPENSE && detail!=null) ({onRefund(refundRecord)}) else null) {actions=true}
-        if(sharing && canShare) EditorialBottomSheet("Share bill summary",{sharing=false;shareError=null}) {
-            val summary=billSummary(requireNotNull(detail),s.people,s.debts)
+        if(sharing && canShare) EditorialBottomSheet("Share receipt PDF",{sharing=false;shareError=null}) {
+            val summary=if(requireNotNull(detail).shares.size>1) billSummary(requireNotNull(detail),s.people,s.debts) else "${record.description}\nBill total: ${Money.format(record.amount)}"
             Text(summary)
             Text("Includes this bill's payments, shares and remaining debts. Private notes and account balances are excluded.",color=Tokens.muted)
             shareError?.let {Text(it,color=Tokens.negative)}
-            EditorialPrimaryButton("Share summary") {
-                try {
-                    val send=Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT,summary)
-                    context.startActivity(Intent.createChooser(send,"Share bill summary"));sharing=false
-                } catch(_:android.content.ActivityNotFoundException) {shareError="No sharing app is available on this device."}
+            EditorialPrimaryButton(if(sending) "Preparing PDF…" else "Share PDF",!sending) {
+                sharePdf()
+            }
+            if(receipt!=null) {
+                Text("The original receipt PDF includes everything visible on the saved bill.",color=Tokens.muted)
+                OutlinedButton({sharePdf(original=true)},Modifier.fillMaxWidth(),enabled=!sending) {Text("Share original receipt PDF")}
             }
         }
         if(showReceipt && receipt!=null) EditorialBottomSheet("Saved printed bill",{showReceipt=false}) {
             BillPreview(model.billScanner,receipt!!)
+            Text("Share the saved original bill as a PDF, including everything visible on it.",color=Tokens.muted)
+            shareError?.let {Text(it,color=Tokens.negative)}
+            EditorialPrimaryButton(if(sending) "Preparing PDF…" else "Share original receipt PDF",!sending) {sharePdf(original=true)}
             Text(receipt!!.text,color=Tokens.muted)
             TextButton({removeReceipt=true}) {Text("Remove attachment · keep transaction")}
         }
@@ -111,7 +135,7 @@ import com.smartexpense.R
             if(record.kind==Kind.EXPENSE) AmountRow("Your spending share",record.personalAmount)
             if(record.kind==Kind.REFUND && (detail?.shares?.size?:0)>1) {AmountRow("Your refunded share",record.personalAmount);AmountRow("Cash received by you",Finance.total(detail?.entries.orEmpty().map {it.amount}));Text("Correct a shared refund by reversing it and recording a new distribution.")}
         }}
-        if(onShare!=null) item {OutlinedButton(onShare,Modifier.fillMaxWidth()) {Text("Share bill summary")}}
+        if(onShare!=null) item {OutlinedButton(onShare,Modifier.fillMaxWidth()) {Text("Share receipt PDF")}}
         val outstanding=snapshot.debts.filter {it.transactionId==record.id && it.outstanding>0}
         if(!record.reversed && outstanding.isNotEmpty()) outstanding.forEach {debt->item(key=debt.id) {SettlementCard("${if(debt.from=="self") "You owe" else "${name(debt.from)} owes"} ${name(debt.to)}",debt.outstanding,"Remaining on this bill")}}
         if(!record.reversed && (onEdit!=null || onDuplicate!=null || onRefund!=null)) item {

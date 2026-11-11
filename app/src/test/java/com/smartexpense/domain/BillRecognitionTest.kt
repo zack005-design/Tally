@@ -4,6 +4,28 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BillRecognitionTest {
+    @Test fun largeAndGroupedDecimalCommaPricesKeepTheirPaise() {
+        for(amount in listOf("1234,56","1,234,56")) {
+            val bill=BillRecognition.parse("Cafe\nTea $amount\nGrand Total $amount")
+            assertEquals(amount,listOf(BillItem("Tea",123456)),bill.items)
+            assertEquals(amount,123456L,bill.total)
+        }
+    }
+    @Test fun intermediateSubtotalDoesNotDiscardLaterReceiptPages() {
+        val bill=BillRecognition.parse("Store\nTea 50.00\nSubtotal 50.00\nCake 100.00\nSubtotal 150.00\nGrand Total 150.00\nReward points 125")
+        assertEquals(listOf(BillItem("Tea",5000),BillItem("Cake",10000)),bill.items)
+        assertEquals(15000L,bill.total)
+    }
+    @Test fun decimalCommaFromOcrDoesNotMultiplyPriceByOneHundred() {
+        val bill=BillRecognition.parse("Cafe\nTea 20,00\nCake 1,000.00\nGrand Total 1,020.00")
+        assertEquals(listOf(BillItem("Tea",2000),BillItem("Cake",100000)),bill.items)
+        assertEquals(102000L,bill.total)
+    }
+    @Test fun receiptFooterNumbersAreNotInventedPurchases() {
+        val bill=BillRecognition.parse("Corner Cafe\nTea 50.00\nGrand Total 50.00\nReward points 125\nVisit again in 2026\nCustomer support 1800123456")
+        assertEquals(listOf(BillItem("Tea",5000)),bill.items)
+        assertEquals(5000L,bill.total)
+    }
     @Test fun abbreviatedAmountHeaderAndSpacedRateKeepOnlyItemNames() {
         val bill=BillRecognition.parse("Test Cafe\nItem Qty Rate Amt\nTea 2 25. 00 50.00\nBread 1 30.00 30.00\nTotal 80.00")
         assertEquals(listOf(BillItem("Tea",5000),BillItem("Bread",3000)),bill.items)

@@ -25,4 +25,16 @@ Tables headed “Amt” are supported alongside “Amount”. Year-first dates s
 
 Camera photos with faint print or uneven lighting can receive an automatic contrast-recovery pass. Tally compares it with the original OCR result and shows a warning when recovered text needs checking. The original photo stays unchanged, and the warning follows the draft into the split form. Severe blur, glare or missing print can still require a closer, sharper photo or manual correction; the app does not guess unseen purchases or amounts.
 
+Tilted photo columns are aligned using the printed text angle so a price does not drift onto a neighbouring item. Purchase extraction stops at the final printed total; footer numbers such as loyalty points are not purchases, and intermediate subtotals do not discard later pages. Decimal commas in recognised prices retain their paise instead of inflating the amount. Always compare the result with the original, especially when the photo is blurred or has perspective distortion.
+
+## Share a receipt PDF
+
+These sharing options are available in current source builds; the existing 0.2.3 download predates this update.
+
+See the [receipt verification and broader app audit](../testing/2026-11-11-receipts.md) for tested behavior and remaining limits.
+
+Open a saved expense and choose **Share receipt PDF** for a formatted expense record showing the total, payments, shares and remaining bill debts. Long receipts continue onto additional pages. Private notes and account balances are excluded. This expense record is not a merchant tax invoice.
+
+When a bill attachment is saved, choose **Share original receipt PDF** to share the actual printed bill: a photo becomes a PDF with its orientation preserved, and an existing PDF keeps its original pages. Long photos span pages without cutting off the bottom. This includes everything visible on the original receipt; OCR text is not substituted for the image.
+
 [View receipt review](../screenshots/all-screens/receipt-review.png) · [Shared bills →](shared-bills.md)

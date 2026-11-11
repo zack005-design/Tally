@@ -38,6 +38,8 @@
 
 Download the APK from **Assets** on the [release page](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024). Both editions share an app identity and replace one another. [Installation and update guide](docs/getting-started.md).
 
+Receipt PDF sharing and the latest scan corrections are available in current source builds. The existing 0.2.3 download assets have not been replaced by this source update.
+
 ## Screens
 
 <table align="center" width="100%">
@@ -116,7 +118,7 @@ The model has **53,142 parameters**, with a **roughly 210 KiB** weight bundle tr
 | Component | Role | Where it runs |
 | --- | --- | --- |
 | Expense-command model | Suggests single-INR personal-expense drafts in the AI edition | On your device |
-| Receipt OCR | Recognises text from imported receipts in both editions | On your device |
+| Receipt OCR and PDF sharing | Recognises imported receipts in both editions; shares expense records or the saved original receipt as PDF | On your device |
 | Calculator | Uses deterministic rules and decimal arithmetic | On your device |
 | Tally Companion | Reviews exports or prepares a chat-history import file you explicitly share | Separately in Codex |
 

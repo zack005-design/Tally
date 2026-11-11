@@ -41,7 +41,7 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
         val text=if(pdf) pdfText(bytes,warnings) else imageText(bytes,warnings)
         ScannedBill(bytes,mime,text.take(10000),warnings.distinct())
     }
-    private data class ReceiptLine(val text:String,val bounds:Rect?,val confidence:Float)
+    private data class ReceiptLine(val text:String,val bounds:Rect?,val confidence:Float,val slope:Double?,val textHeight:Double)
     private suspend fun recognize(bitmap:Bitmap):Text {
         val recognizer=TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         try {
@@ -54,16 +54,20 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
     /** ML Kit groups columns into separate blocks. Rebuild printed rows before parsing prices. */
     private fun receiptText(lines:List<ReceiptLine>):String {
         if(lines.any {it.bounds==null}) return lines.joinToString("\n") {it.text}
-        val rows=mutableListOf<MutableList<Pair<Rect,String>>>()
-        for(line in lines.sortedWith(compareBy<ReceiptLine> {it.bounds!!.centerY()}.thenBy {it.bounds!!.left})) {
-            val bounds=line.bounds!!
+        // Compare positions in the paper's coordinate system. On a tilted photo,
+        // the right-hand price can sit below the next item's name in image coordinates.
+        val slopes=lines.mapNotNull {it.slope}.sorted()
+        val slope=slopes.getOrNull(slopes.size/2)?:0.0
+        fun rowY(line:ReceiptLine)=line.bounds!!.exactCenterY()-slope*line.bounds.exactCenterX()
+        val rows=mutableListOf<MutableList<ReceiptLine>>()
+        for(line in lines.sortedWith(compareBy<ReceiptLine> {rowY(it)}.thenBy {it.bounds!!.left})) {
             val row=rows.lastOrNull()
-            val anchor=row?.first()?.first
-            if(row!=null && anchor!=null && kotlin.math.abs(bounds.centerY()-anchor.centerY())<=minOf(bounds.height(),anchor.height())*0.6f) {
-                row.add(bounds to line.text)
-            } else rows.add(mutableListOf(bounds to line.text))
+            val anchor=row?.first()
+            if(row!=null && anchor!=null && kotlin.math.abs(rowY(line)-rowY(anchor))<=minOf(line.textHeight,anchor.textHeight)*0.6) {
+                row.add(line)
+            } else rows.add(mutableListOf(line))
         }
-        return rows.joinToString("\n") {row->row.sortedBy {it.first.left}.joinToString(" ") {it.second}}
+        return rows.joinToString("\n") {row->row.sortedBy {it.bounds!!.left}.joinToString(" ") {it.text}}
     }
     private fun confidence(lines:List<ReceiptLine>):Double {
         val characters=lines.sumOf {it.text.length}.coerceAtLeast(1)
@@ -120,7 +124,11 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
                     for(line in recognize(input).textBlocks.flatMap {it.lines}) {
                         if(line.text.isBlank()) continue
                         val bounds=line.boundingBox?.let {Rect(it).apply {offset(0,cropTop)}}
-                        if(bounds==null || bounds.centerY() in coreTop until coreBottom) lines+=ReceiptLine(line.text,bounds,line.confidence)
+                        val corners=line.cornerPoints
+                        val dx=if(corners!=null && corners.size==4) corners[1].x-corners[0].x else 0
+                        val slope=if(dx>0) ((corners!![1].y-corners[0].y).toDouble()/dx).takeIf {kotlin.math.abs(it)<=0.36} else null
+                        val textHeight=if(corners!=null && corners.size==4) kotlin.math.hypot((corners[3].x-corners[0].x).toDouble(),(corners[3].y-corners[0].y).toDouble()) else bounds?.height()?.toDouble()?:1.0
+                        if(bounds==null || bounds.centerY() in coreTop until coreBottom) lines+=ReceiptLine(line.text,bounds,line.confidence,slope,textHeight)
                     }
                 } finally {if(input!==crop) input.recycle()}
             } finally {if(crop!==bitmap) crop.recycle()}
@@ -177,6 +185,7 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
             }}} finally {file.delete()}
         }
     }
+    internal suspend fun receiptImage(bytes:ByteArray):Bitmap=withContext(Dispatchers.IO) {decode(bytes,forRecognition=true)}
     suspend fun pageCount(bytes:ByteArray,mime:String):Int=withContext(Dispatchers.IO) {
         if(mime!="application/pdf") 1 else {
             val file=File.createTempFile("bill-pages-",".pdf",context.cacheDir)

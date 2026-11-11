@@ -16,6 +16,30 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class BillScannerTest {
+    @Test fun tiltedCloselySpacedRowsDoNotBorrowAnotherItemsPrice()=runBlocking {
+        val image=Bitmap.createBitmap(1800,1800,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-dense-tilted.jpg")
+        val names=listOf("Tea","Cake","Coffee","Juice","Bread","Rice","Soup","Salad")
+        try {
+            image.eraseColor(Color.WHITE)
+            val canvas=Canvas(image)
+            canvas.rotate(8f,900f,900f)
+            val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=40f}
+            canvas.drawText("Corner Cafe",150f,200f,paint)
+            names.forEachIndexed {i,name->
+                canvas.drawText(name,150f,400f+i*95,paint)
+                canvas.drawText("${(i+1)*10}.00",1400f,400f+i*95,paint)
+            }
+            canvas.drawText("Grand Total",150f,1400f,paint)
+            canvas.drawText("360.00",1400f,1400f,paint)
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,100,it)}
+            val read=scan(file)
+            val bill=BillRecognition.parse(read.text)
+            assertEquals(read.text,names,bill.items.map {it.name})
+            assertEquals(read.text,listOf(1000L,2000L,3000L,4000L,5000L,6000L,7000L,8000L),bill.items.map {it.amount})
+            assertEquals(read.text,36000L,bill.total)
+        } finally {file.delete();image.recycle()}
+    }
     private fun bitmap():Bitmap=Bitmap.createBitmap(1200,1000,Bitmap.Config.ARGB_8888).apply {
         eraseColor(Color.WHITE);val canvas=Canvas(this);val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=64f}
         listOf("Tally Store","Tea 50.00","Cake 100.00","Total INR 150.00").forEachIndexed {index,line->canvas.drawText(line,80f,120f+index*150,paint)}

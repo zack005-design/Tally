@@ -32,6 +32,8 @@ For a step-by-step accounting example, read [Your payment and your share](paymen
 
 Tally records the bill and repayments; it does not send money between participants.
 
+Use **Share receipt PDF** on a saved bill to send a formatted PDF of its total, each person's payment and share, and the remaining amounts on that bill. Private notes and account balances stay out of the generated PDF. If you saved the printed bill, **Share original receipt PDF** shares the actual attachment as a PDF, including everything printed on it.
+
 ## Refund a shared bill
 
 In app builds with **Shared refund**, open the original bill and choose **Record refund**. Enter the total returned by the merchant, review each person's refunded share, and record who actually received the cash. Suggested shares follow each person's remaining refundable share; edit them when only specific items were refunded. Both the refunded shares and cash received must add up to the refund total.

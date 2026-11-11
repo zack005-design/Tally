@@ -7,7 +7,7 @@ import java.time.format.ResolverStyle
 data class BillItem(val name:String,val amount:Long)
 data class BillSuggestion(val merchant:String,val total:Long?,val date:String?,val items:List<BillItem>,val warnings:List<String>)
 object BillRecognition {
-    private val money=Regex("(?<![\\p{L}\\p{N}.,+\\-−])(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?([0-9]{1,3}(?:,[0-9]{2,3})+(?:\\.[0-9]{1,2})?|[0-9]+(?:\\.[0-9]{1,2})?)\\s*$",RegexOption.IGNORE_CASE)
+    private val money=Regex("(?<![\\p{L}\\p{N}.,+\\-−])(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?([0-9]{1,3}(?:,[0-9]{2,3})+(?:\\.[0-9]{1,2})?|[0-9]+(?:\\.[0-9]{1,2}|,[0-9]{2})?)\\s*$",RegexOption.IGNORE_CASE)
     private val signedPrefix=Regex("(?:[+\\-−]\\s*(?:₹|INR|Rs\\.?)?|(?:₹|INR|Rs\\.?)\\s*[+\\-−])\\s*$",RegexOption.IGNORE_CASE)
     private fun amountMatch(line:String):MatchResult? {
         val match=money.find(line)?:return null
@@ -21,7 +21,15 @@ object BillRecognition {
     private val subtotalLabel=Regex("^sub\\s*total\\b",RegexOption.IGNORE_CASE)
     private val tableHeader=Regex("\\b(?:qty|quantity)\\b.*\\b(?:rate|price)\\b.*\\b(?:amount|amt|total)\\b",RegexOption.IGNORE_CASE)
     private val quantityAndRate=Regex("\\s+\\d+(?:\\.\\d+)?\\s+(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?\\d[\\d,]*(?:\\.\\s*\\d{1,2})?\\s*$",RegexOption.IGNORE_CASE)
-    private fun value(line:String):Long?=amountMatch(line)?.groupValues?.get(1)?.replace(",","")?.let {runCatching {Money.parse(it)}.getOrNull()}
+    // A final comma followed by two digits is a decimal separator, not a valid
+    // INR thousands group. OCR can substitute it for the printed decimal point.
+    private fun normalizedAmount(value:String):String {
+        val comma=value.lastIndexOf(',')
+        return if('.' !in value && comma>=0 && value.length-comma-1==2)
+            value.substring(0,comma).replace(",","")+"."+value.substring(comma+1)
+        else value.replace(",","")
+    }
+    private fun value(line:String):Long?=amountMatch(line)?.groupValues?.get(1)?.let {runCatching {Money.parse(normalizedAmount(it))}.getOrNull()}
     /** Recover adjacent label/amount pairs, but never guess the ordering of a whole column. */
     private fun receiptLines(text:String):List<String> {
         val source=text.take(10000).lines().map(String::trim).filter(String::isNotBlank)
@@ -32,7 +40,7 @@ object BillRecognition {
                 val next=source.getOrNull(index+1)
                 val amount=next?.let(::amountMatch)
                 if(line.any(Char::isLetter) && amountMatch(line)==null && amount!=null &&
-                    amount.range.first==0 && (next.contains('.') || Regex("₹|INR|Rs",RegexOption.IGNORE_CASE).containsMatchIn(next))) {
+                    amount.range.first==0 && (next.contains('.') || Regex(",[0-9]{2}$").containsMatchIn(next) || Regex("₹|INR|Rs",RegexOption.IGNORE_CASE).containsMatchIn(next))) {
                     add("$line $next");index+=2
                 } else {add(line);index++}
             }
@@ -51,11 +59,16 @@ object BillRecognition {
                 else LocalDate.parse(match.value.replace('.','/').replace('-','/'),DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT)).toString()
             }.getOrNull()
         }.distinct().toList()
-        val items=lines.filterNot {totalLabel.containsMatchIn(it) || excluded.containsMatchIn(it) || metadata.containsMatchIn(it)}.mapNotNull {line->
+        // Intermediate page/section subtotals can precede more purchases. Only the
+        // final payable summary separates purchases from loyalty/contact footers.
+        val summaryLabel=if(payableLines.isNotEmpty()) payableLabel else totalLabel
+        val summaryStart=lines.indexOfLast {summaryLabel.containsMatchIn(it) && !metadata.containsMatchIn(it) && value(it)?.let {amount->amount>0}==true}
+        val purchaseLines=if(summaryStart>=0) lines.take(summaryStart) else lines
+        val items=purchaseLines.filterNot {totalLabel.containsMatchIn(it) || excluded.containsMatchIn(it) || metadata.containsMatchIn(it)}.mapNotNull {line->
             val match=amountMatch(line)?:return@mapNotNull null
             val prefix=line.substring(0,match.range.first).trim().trimEnd(':')
             val name=(if(hasTableColumns) prefix.replace(quantityAndRate,"") else prefix).replace(Regex("^\\d+\\s*[*x×]\\s+",RegexOption.IGNORE_CASE),"").trim()
-            val value=runCatching {Money.parse(match.groupValues[1].replace(",",""))}.getOrNull()
+            val value=runCatching {Money.parse(normalizedAmount(match.groupValues[1]))}.getOrNull()
             if(name.any(Char::isLetter) && value!=null && value>0) BillItem(name.take(100),value) else null
         }
         val subtotal=lines.filter {subtotalLabel.containsMatchIn(it)}.mapNotNull(::value).distinct().singleOrNull()
