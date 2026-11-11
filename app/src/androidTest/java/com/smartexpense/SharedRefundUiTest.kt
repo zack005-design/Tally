@@ -36,6 +36,9 @@ class SharedRefundUiTest(private val width:Int,private val fontScale:Float) {
             }
         }
         compose.onNodeWithText("Refund total (₹)").performTextInput("300")
+        compose.onNodeWithText("Review refund").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Cash recipient").performScrollTo().performClick()
+        compose.onNodeWithText("You",useUnmergedTree=true).performClick()
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithText("Review refund").performScrollTo().assertIsDisplayed().performClick()
         assertNull(saved)
@@ -62,5 +65,23 @@ class SharedRefundUiTest(private val width:Int,private val fontScale:Float) {
         compose.onAllNodesWithText("Received").assertCountEquals(2)
         compose.onAllNodesWithText("Paid").assertCountEquals(0)
         compose.onNodeWithText("Refund shares and cash received").assertExists()
+    }
+
+    @Test fun matchingSharesRequiresAnotherConfirmationAfterTotalChanges() {
+        val original=Record("bill",Kind.EXPENSE,"Dinner",90000,45000,null,null,0,"",false,personIds=listOf("self","friend"))
+        val snapshot=Snapshot(accounts=listOf(Account("cash","Cash","Cash",100000,false)),people=listOf(Person("self","You"),Person("friend","Friend")))
+        var saved:SharedRefundDraft?=null
+        compose.setContent {TrackerTheme {Box(Modifier.width(width.dp).fillMaxHeight()) {
+            SharedRefundEditor(SharedRefundContext(original,mapOf("self" to 45000L,"friend" to 45000L)),snapshot,false,{saved=it},{})
+        }}}
+        compose.onNodeWithText("Refund total (₹)").performTextInput("300")
+        compose.onNodeWithText("Match refunded shares").performScrollTo().performClick()
+        compose.onNodeWithText("Refund total (₹)").performScrollTo().performTextReplacement("400")
+        compose.onNodeWithText("Review refund").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Match refunded shares").performScrollTo().performClick()
+        compose.onNodeWithText("Review refund").performScrollTo().performClick()
+        assertNull(saved)
+        compose.onNodeWithText("Save refund").performScrollTo().performClick()
+        compose.runOnIdle {assertEquals(mapOf("self" to 20000L,"friend" to 20000L),saved!!.received)}
     }
 }

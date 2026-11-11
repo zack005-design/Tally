@@ -40,6 +40,8 @@ In app builds with **Shared refund**, open the original bill and choose **Record
 
 Choose a destination account for any cash you received, then use **Review refund** before **Save refund**. Only your refunded share reduces your spending. Only cash actually received by you increases your account. A refund received by a friend does not add cash to your account.
 
+Current source builds require you to choose the **Cash recipient** or enter each person's received amount. Tally does not assume the refund went to you. If the merchant paid everyone according to their refunded shares, choose **Match refunded shares**, then review the amounts. Changing the total after splitting cash across people requires checking and updating that distribution again.
+
 For a ₹900 bill split equally three ways, a ₹300 refund received entirely by you reduces your spending by ₹100 and increases your account by ₹300. Each friend is entitled to ₹100 of the refund. The original bill and any repayments remain in history; the refund records the balances owed back to participants. Review the net settlement suggestions, or explicitly offset opposite balances using the settlement tools, rather than recording cash that never moved.
 
 Partial and repeated refunds cannot exceed a person's original share. To correct a shared refund, reverse it and record a new distribution. Reverse any repayments against that refund first. Active linked refunds must be reversed before correcting or reversing the original bill.

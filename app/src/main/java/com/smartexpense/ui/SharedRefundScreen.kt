@@ -34,12 +34,15 @@ import kotlinx.coroutines.CancellationException
     var account by rememberSaveable(original.id) {mutableStateOf(snapshot.accounts.firstOrNull {!it.archived}?.id.orEmpty())}
     var shares by rememberSaveable(original.id) {mutableStateOf<Map<String,String>>(emptyMap())}
     var received by rememberSaveable(original.id) {mutableStateOf<Map<String,String>>(emptyMap())}
+    var recipient by rememberSaveable(original.id) {mutableStateOf<String?>(null)}
     var note by rememberSaveable(original.id) {mutableStateOf("")}
     var reviewing by rememberSaveable(original.id) {mutableStateOf(false)}
     fun name(id:String)=if(id=="self") "You" else snapshot.people.find {it.id==id}?.name?:"Participant"
-    val people=context.remaining.keys.sorted()
+    val people=original.personIds.filter {it in context.remaining}+
+        context.remaining.keys.filterNot {it in original.personIds}.sortedWith(compareBy<String> {name(it).lowercase()}.thenBy {it})
     val preview=runCatching {
         val value=Money.parse(amount)
+        require(recipient!=null) {"Choose who received the cash or enter each person's received amount"}
         val distribution=people.associateWith {Money.parse(shares[it].orEmpty())}
         val recipients=people.associateWith {Money.parse(received[it].orEmpty())}
         SharedRefund.positions(value,context.remaining,distribution,recipients)
@@ -57,14 +60,25 @@ import kotlinx.coroutines.CancellationException
                 amount=text
                 val split=runCatching {SharedRefund.proportional(Money.parse(text),context.remaining)}.getOrNull()
                 shares=split?.mapValues {Money.input(it.value)}.orEmpty()
-                val recipient=if("self" in people) "self" else people.first()
-                received=people.associateWith {if(it==recipient) text else "0"}
+                if(recipient in people) received=people.associateWith {if(it==recipient) text else "0"}
             },true)
             Text("Refunded shares",style=MaterialTheme.typography.titleMedium)
             Text("Suggested from remaining original shares. Edit for an item-specific refund.")
             people.forEach {person->Field("${name(person)} · refunded share (₹)",shares[person].orEmpty(),{shares=shares+(person to it)},true)}
             Text("Who received the cash?",style=MaterialTheme.typography.titleMedium)
-            people.forEach {person->Field("${name(person)} · cash received (₹)",received[person].orEmpty(),{received=received+(person to it)},true)}
+            Choice("Cash recipient",recipient,people.map {it to name(it)}+listOf("multiple" to "Split across people")) {id->
+                recipient=id
+                if(id!="multiple") received=people.associateWith {if(it==id) amount else "0"}
+            }
+            val shareAmounts=runCatching {
+                val value=Money.parse(amount)
+                people.associateWith {Money.parse(shares[it].orEmpty())}.also {distribution->
+                    require(value>0 && distribution.values.all {it>=0} && Finance.total(distribution.values)==value)
+                }
+            }.getOrNull()
+            OutlinedButton({recipient="multiple";received=shareAmounts!!.mapValues {Money.input(it.value)}},enabled=shareAmounts!=null && !busy) {Text("Match refunded shares")}
+            Text("Choose the actual recipient. Refunded shares do not tell us who received the money.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
+            people.forEach {person->Field("${name(person)} · cash received (₹)",received[person].orEmpty(),{recipient="multiple";received=received+(person to it)},true)}
             Choice("Your destination account",account,snapshot.accounts.filterNot {it.archived}.map {it.id to it.name}) {account=it}
             Field("Note (optional)",note,{note=it})
             if(amount.isNotBlank() && preview.isFailure) Text(preview.exceptionOrNull()?.message?:"Check the distribution",color=Tokens.negative)
