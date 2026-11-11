@@ -23,7 +23,28 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     private fun id()=UUID.randomUUID().toString()
     private suspend fun <T> storage(block:suspend ()->T):T = try { block() } catch(e:CancellationException) { throw e } catch(e:SQLiteException) { throw LocalDataFailure(e) }
     val changes:Flow<Unit> = combine(listOf(dao.transactionChanges(),dao.accountChanges(),dao.personChanges(),dao.categoryChanges(),dao.budgetChanges(),dao.groupChanges(),dao.walletSourceChanges(),dao.scheduleChanges(),dao.diaryChanges(),dao.settingsChanges(),dao.planChanges())) { Unit }
-    val snapshots:Flow<Snapshot> = changes.map {snapshot()}
+    val snapshots:Flow<Snapshot> = observeSnapshots()
+
+    /** Financial values always load together in one transaction. Independent metadata
+     * can change without fetching and hydrating the entire transaction history. */
+    fun observeSnapshots(historyLimit:Int=Int.MAX_VALUE,selectedMonth:String=java.time.YearMonth.now().toString()):Flow<Snapshot> {
+        val financial=db.invalidationTracker.createFlow(
+            "accounts","people","groups","members","categories","transactions","entries","shares",
+            "contributions","obligations","settlements","allocations","budgets","revisions",
+            "walletSources","gpaySchedule","resetTargets"
+        ).map {snapshot(historyLimit,selectedMonth)}
+        return combine(financial,dao.observeDiary(),dao.observeLocalSettings(),dao.observePlans()) {base,diary,settings,plans->
+            base.copy(
+                diary=diary.associate {it.date to it.text},
+                localSettings=settings?.let {LocalSettings(it.name,it.avatar,it.welcomeDone,it.lastReviewMonth)}?:LocalSettings(),
+                groupDefaults=plans.filter {it.kind=="group"}.map(PlanCodec::group),
+                templates=plans.filter {it.kind=="template"}.map(PlanCodec::template),
+                goals=plans.filter {it.kind=="goal"}.map(PlanCodec::goal),
+                categoryRules=plans.filter {it.kind=="category"}.map(PlanCodec::category),
+                favourites=plans.filter {it.kind=="favourite"}.map(PlanCodec::favourite)
+            )
+        }.distinctUntilChanged()
+    }
 
     private class HistoryPreviewRollback(val preview:HistoryLedgerPreview):RuntimeException()
 

@@ -2,13 +2,15 @@ package com.smartexpense.ui
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.smartexpense.domain.*
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @Composable fun EverydayInsights(s:Snapshot,today:LocalDate=LocalDate.now(),onDetails:(()->Unit)?=null) {
-    val comparison=runCatching {spendingComparison(s.records,today)}
+    val comparison=remember(s.records,today) {runCatching {spendingComparison(s.records,today)}}
+    val report=remember(s.records,today) {runCatching {Reports.period(s.records,today.withDayOfMonth(1),today)}}
     StudioCard {
         SectionHeading("Spending check-in")
         comparison.fold(onSuccess={value->
@@ -28,7 +30,6 @@ import java.time.format.DateTimeFormatter
             }
         },onFailure={Text("The recorded totals are too large to compare safely.",color=Tokens.negative)})
         s.budgets.filter {it.month==YearMonth.from(today).toString()}.forEach {budget->
-            val report=runCatching {Reports.period(s.records,today.withDayOfMonth(1),today)}
             val allowance=runCatching {val period=report.getOrThrow();budgetAllowance(budget.amount,if(budget.categoryId==null) period.spending else period.categories[budget.categoryId]?:0,today)}
             allowance.getOrNull()?.let {value->
                 val label=if(budget.categoryId==null) "Overall" else s.categories.find {it.id==budget.categoryId}?.name?:"Category"

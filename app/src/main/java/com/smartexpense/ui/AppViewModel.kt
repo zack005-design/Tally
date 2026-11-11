@@ -14,6 +14,7 @@ import javax.inject.Inject
 data class AppUiState(val snapshot:Snapshot=Snapshot(),val loading:Boolean=true,val busy:Boolean=false,val message:String?=null)
 data class BackupUiState(val password:String="",val visible:Boolean=false,val restoreSummary:String?=null)
 @HiltViewModel
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class AppViewModel @Inject constructor(val repository:FinanceRepository,val backup:BackupService,val billScanner:BillScanner,private val saved:SavedStateHandle,private val commandParser:LocalCommandParser?=null):ViewModel() {
     private val mutable=MutableStateFlow(AppUiState())
     val state=mutable.asStateFlow()
@@ -103,10 +104,12 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         viewModelScope.launch {
             try { repository.initialize();
                 try {repository.refreshMonthlyGpay()} catch(e:CancellationException) {throw e} catch(e:Exception) {mutable.update {it.copy(message=e.message?:"Could not apply monthly reset")}}
-                combine(repository.changes,route,month) {_,screen,selected->
+                combine(route,month) {screen,selected->
                 val limit=when {screen=="diary" || screen.startsWith("diary/")->Int.MAX_VALUE;screen in listOf("home","activity","calendar","add","accounts","people","groups","split","recurring","balance-check","insights")->Int.MAX_VALUE;else->5}
-                repository.snapshot(limit,selected)
-            }.collect { snapshot -> mutable.update { it.copy(snapshot=snapshot,loading=false) };checkReview(snapshot) } }
+                // Route entry refreshes time-dependent reports and runs monthly-review loading.
+                Triple(screen,limit,selected)
+            }.distinctUntilChanged().flatMapLatest {(_,limit,selected)->repository.observeSnapshots(limit,selected)}
+                .collect { snapshot -> mutable.update { it.copy(snapshot=snapshot,loading=false) };checkReview(snapshot) } }
             catch(e:CancellationException) { throw e } catch(e:Exception) { mutable.update { it.copy(loading=false,message=e.message?:"Could not load data") } }
         }
     }

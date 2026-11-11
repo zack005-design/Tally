@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TrackerDao {
+    @Query("SELECT * FROM diary") fun observeDiary():Flow<List<DiaryEntity>>
+    @Query("SELECT * FROM localSettings WHERE id=1") fun observeLocalSettings():Flow<LocalSettingsEntity?>
+    @Query("SELECT * FROM localPlans") fun observePlans():Flow<List<PlanEntity>>
     @Query("SELECT * FROM receipts") suspend fun receipts():List<ReceiptEntity>
     @Query("SELECT * FROM receipts WHERE transactionId=:id") suspend fun receipt(id:String):ReceiptEntity?
     @Query("SELECT * FROM receipts WHERE transactionId=:id") fun receiptChanges(id:String):Flow<ReceiptEntity?>
