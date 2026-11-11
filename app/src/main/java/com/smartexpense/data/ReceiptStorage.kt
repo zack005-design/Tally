@@ -3,9 +3,11 @@ package com.smartexpense.data
 object ReceiptStorage {
     const val CHUNK_BYTES=512*1024
     const val TOTAL_BYTES=16*1024*1024
+    const val MAX_TEXT_CHARS=10000
     fun hash(bytes:ByteArray)=java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {"%02x".format(it)}
     fun validate(bill:ScannedBill) {
-        require(bill.bytes.isNotEmpty() && bill.bytes.size<=BillScanner.MAX_BYTES && bill.text.length<=10000)
+        require(bill.bytes.isNotEmpty() && bill.bytes.size<=BillScanner.MAX_BYTES)
+        require(bill.text.length<=MAX_TEXT_CHARS) {"Receipt text exceeds 10,000 characters. Import a smaller section or enter the expense manually."}
         val bytes=bill.bytes
         val valid=when(bill.mime) {
             "application/pdf"->bytes.take(5).toByteArray().toString(Charsets.US_ASCII)=="%PDF-"

@@ -38,7 +38,7 @@
 
 Download the APK from **Assets** on the [release page](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024). Both editions share an app identity and replace one another. [Installation and update guide](docs/getting-started.md).
 
-Receipt PDF sharing and the latest scan corrections are available in current source builds. The existing 0.2.3 download assets have not been replaced by this source update.
+Receipt PDF sharing, enlarged receipt previews, safer receipt replacement, clearer refund recipients, and the latest scan corrections are available in current source builds. The existing 0.2.3 download assets have not been replaced by this source update.
 
 ## Screens
 

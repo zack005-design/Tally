@@ -39,7 +39,8 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
         require(mime in listOf("application/pdf","image/jpeg","image/png","image/webp")) {"Choose a JPEG, PNG, WebP or PDF bill"}
         val warnings=mutableListOf<String>()
         val text=if(pdf) pdfText(bytes,warnings) else imageText(bytes,warnings)
-        ScannedBill(bytes,mime,text.take(10000),warnings.distinct())
+        require(text.length<=ReceiptStorage.MAX_TEXT_CHARS) {"Receipt text exceeds 10,000 characters. Import a smaller section or enter the expense manually."}
+        ScannedBill(bytes,mime,text,warnings.distinct())
     }
     private data class ReceiptLine(val text:String,val bounds:Rect?,val confidence:Float,val slope:Double?,val textHeight:Double)
     private suspend fun recognize(bitmap:Bitmap):Text {
