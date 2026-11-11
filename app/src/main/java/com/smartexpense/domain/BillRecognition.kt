@@ -20,6 +20,7 @@ object BillRecognition {
     private val adjustmentLabel=Regex("^(?:tax|gst|cgst|sgst|igst|vat|cess|tip|service\\s+(?:charge|fee)s?|delivery\\s+(?:charge|fee)s?|packing|packaging|handling\\s+(?:charge|fee)s?|convenience\\s+(?:charge|fee)s?|discount|round)\\b|^\\d+(?:\\.\\d+)?\\s*%\\s*(?:gst|cgst|sgst|igst|vat|tax)\\b",RegexOption.IGNORE_CASE)
     private val subtotalLabel=Regex("^sub\\s*total\\b",RegexOption.IGNORE_CASE)
     private val tableHeader=Regex("\\b(?:qty|quantity)\\b.*\\b(?:rate|price)\\b.*\\b(?:amount|amt|total)\\b",RegexOption.IGNORE_CASE)
+    private val merchantMetadata=Regex("^(?:tax\\s+invoice|retail\\s+invoice|receipt|invoice|bill\\s*(?:no|number)|gstin|gst\\s*(?:reg|no)|date|time|phone|mobile|tel|email|address|www\\.|https?://|thank\\s+you|item\\b|description\\b)\\b|@",RegexOption.IGNORE_CASE)
     private val quantityAndRate=Regex("\\s+\\d+(?:\\.\\d+)?\\s+(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?\\d[\\d,]*(?:\\.\\s*\\d{1,2})?\\s*$",RegexOption.IGNORE_CASE)
     // A final comma followed by two digits is a decimal separator, not a valid
     // INR thousands group. OCR can substitute it for the printed decimal point.
@@ -76,7 +77,16 @@ object BillRecognition {
         // Labels also cover unreadable or signed adjustments; dates/payment IDs are not charges.
         val hasAdjustments=lines.any {adjustmentLabel.containsMatchIn(it)}
         val expectedItems=subtotal?:totals.singleOrNull()?.takeUnless {hasAdjustments}
-        return BillSuggestion(lines.firstOrNull {it.length>2 && !money.containsMatchIn(it) && !Regex("^[0-9/.-]+$").matches(it)}?.take(100).orEmpty(),
+        // A merchant belongs to the header, never to a purchase or the receipt footer.
+        val header=lines.takeWhile {line->
+            !totalLabel.containsMatchIn(line) && !(amountMatch(line)!=null && !excluded.containsMatchIn(line) && !metadata.containsMatchIn(line) && !merchantMetadata.containsMatchIn(line))
+        }
+        val merchant=header.firstOrNull {line->
+            line.length>2 && line.any(Char::isLetter) && !merchantMetadata.containsMatchIn(line) &&
+                !excluded.containsMatchIn(line) && !metadata.containsMatchIn(line) &&
+                !tableHeader.containsMatchIn(line) && !money.containsMatchIn(line)
+        }?.take(100).orEmpty()
+        return BillSuggestion(merchant,
             if(!foreign && totals.size==1) totals.single() else null,dates.singleOrNull(),items,
             buildList {if(foreign) add("Foreign currency detected. Enter a manual exchange rate before recording INR.");if(totals.size!=1) add("Total is missing or ambiguous. Enter it from the original bill.");if(dates.size!=1) add("Check the bill date.");if(items.isEmpty() || (expectedItems!=null && itemSum!=expectedItems)) add("Some items may be missing or misread. Check item amounts against the printed subtotal, taxes and discounts.");add("Recognition can make mistakes. Check all amounts and items before saving.")})
     }

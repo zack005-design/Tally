@@ -4,6 +4,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BillRecognitionTest {
+    @Test fun merchantSkipsRegistrationAndContactHeaders() {
+        val bill=BillRecognition.parse("GSTIN 29ABCDE1234F1Z5\nTax Invoice\nPhone: 9876543210\nwww.example.test\nCorner Cafe\nTea 50.00\nGrand Total 50.00")
+        assertEquals("Corner Cafe",bill.merchant)
+    }
+    @Test fun missingMerchantDoesNotUseItemOrSummaryAsShopName() {
+        assertEquals("",BillRecognition.parse("GSTIN 29ABCDE1234F1Z5\nDate: 12/10/2026\nTea 50.00\nGrand Total 50.00\nThank you").merchant)
+    }
+    @Test fun merchantMayContainDigitsAndTaxInItsName() {
+        assertEquals("7 Eleven",BillRecognition.parse("7 Eleven\nTea 50.00\nTotal 50.00").merchant)
+        assertEquals("Taxila Cafe",BillRecognition.parse("Taxila Cafe\nTea 50.00\nTotal 50.00").merchant)
+    }
+    @Test fun mobileContactHeaderDoesNotEndTheMerchantSearch() {
+        assertEquals("Corner Cafe",BillRecognition.parse("Mobile 9876543210\nCorner Cafe\nTea 50.00\nTotal 50.00").merchant)
+    }
     @Test fun largeAndGroupedDecimalCommaPricesKeepTheirPaise() {
         for(amount in listOf("1234,56","1,234,56")) {
             val bill=BillRecognition.parse("Cafe\nTea $amount\nGrand Total $amount")
