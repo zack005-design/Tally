@@ -4,6 +4,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Show the Friends owe you card in the same rounded format as other home amounts. The full device test suite now passes on Android 16, including real device-PIN unlock and relock.
 - Share receipt PDF now produces a complete itemised receipt (merchant, date and time, category, paid-from account, items, taxes, total, payments and shares) with the original scan attached.
 - Name the friend in repayment descriptions, move Reminders under Notifications in Settings, and avoid a crash when a refund's original expense disappears while editing.
 - Add optional budget alerts: a local notification when monthly spending reaches 80% or 100% of a budget. Off by default; no new permissions or network access.

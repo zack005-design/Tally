@@ -21,6 +21,11 @@ class MealBillUiTest {
     private val accounts=listOf(Account("wallet","Wallet","Cash",100000,false))
     private val people=listOf(Person("self","You"),Person("f","Rahul"))
     private val initial=EntryUiState(amount="330",description="Dinner",accountId="wallet",shared=true,participants=listOf("self","f"),paid=mapOf("self" to "300","f" to "30"),method="Itemized",items="120=f\n150=f\n60=f",billItemNames=listOf("Paneer biryani","Veg noodles","Lime soda"))
+    /** Closes the keyboard first so the resized screen cannot swallow the tap. */
+    private fun apply(label:String) {
+        androidx.test.espresso.Espresso.closeSoftKeyboard();compose.waitForIdle()
+        compose.onNodeWithText(label).performScrollTo().performClick();compose.waitForIdle()
+    }
     private fun scrollTo(text:String)=compose.onNode(hasScrollAction()).performScrollToNode(hasText(text))
     private fun capture(name:String) {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
@@ -33,7 +38,7 @@ class MealBillUiTest {
         compose.setContent {var state by remember {mutableStateOf(initial)};TrackerTheme {EntryScreen(state,accounts,people,emptyList(),emptyList(),{state=it;current=it},{},{saved=state.draft()},hasBill=true)}}
         compose.onNodeWithText("What did you eat?").assertExists()
         compose.onNodeWithText("What did you eat?").performTextInput("I ate paneer biryani")
-        compose.onNodeWithText("Apply my items").performScrollTo().performClick()
+        apply("Apply my items")
         capture("food-selection")
         assertEquals(listOf("self"),namedMealItems(current.billItemNames,current.items)[0].people)
         assertEquals(listOf("f"),namedMealItems(current.billItemNames,current.items)[1].people)
@@ -53,7 +58,7 @@ class MealBillUiTest {
         var current=initial
         compose.setContent {var state by remember {mutableStateOf(initial)};TrackerTheme {EntryScreen(state,accounts,people,emptyList(),emptyList(),{state=it;current=it},{},{},hasBill=true)}}
         compose.onNodeWithText("What did you eat?").performTextInput("biryani and pizza")
-        compose.onNodeWithText("Apply my items").performScrollTo().performClick()
+        apply("Apply my items")
         assertEquals(initial.items,current.items)
         compose.onNodeWithText("Could not find",substring=true).assertExists()
     }
@@ -62,10 +67,10 @@ class MealBillUiTest {
         var current=initial
         compose.setContent {var state by remember {mutableStateOf(initial)};TrackerTheme {EntryScreen(state,accounts,people,emptyList(),emptyList(),{state=it;current=it},{},{},hasBill=true)}}
         compose.onNodeWithText("What did you eat?").performTextInput("biryani and lime soda")
-        compose.onNodeWithText("Apply my items").performScrollTo().performClick()
+        apply("Apply my items")
         compose.onNodeWithText("Rahul's items",useUnmergedTree=true).performScrollTo().performClick()
         compose.onNodeWithText("What did Rahul eat?").performScrollTo().performTextInput("lime soda")
-        compose.onNodeWithText("Apply Rahul's items").performScrollTo().performClick()
+        apply("Apply Rahul's items")
         val rows=namedMealItems(current.billItemNames,current.items)
         assertEquals(listOf("self"),rows[0].people)
         assertEquals(listOf("f"),rows[1].people)
@@ -90,7 +95,7 @@ class MealBillUiTest {
         var current=initial.copy(items="120=f\n150=f\n60=self+f")
         compose.setContent {var state by remember {mutableStateOf(current)};TrackerTheme {EntryScreen(state,accounts,people,emptyList(),emptyList(),{state=it;current=it},{},{},hasBill=true)}}
         compose.onNodeWithText("What did you eat?").performTextInput("biryani")
-        compose.onNodeWithText("Apply my items").performScrollTo().performClick()
+        apply("Apply my items")
         assertEquals(listOf("self","f"),namedMealItems(current.billItemNames,current.items)[2].people)
     }
 
@@ -98,7 +103,7 @@ class MealBillUiTest {
         compose.setContent {var state by remember {mutableStateOf(initial)};TrackerTheme {EntryScreen(state,accounts,people,emptyList(),emptyList(),{state=it},{},{},hasBill=true)}}
         compose.onNodeWithText("Continue to payments").performClick()
         compose.onNodeWithText("You paid (₹)").performTextReplacement("300.")
-        compose.onNodeWithContentDescription("Back").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Back").assertIsDisplayed().performClick()
         compose.onNodeWithText("Continue to payments").assertIsEnabled().performClick()
         compose.onNodeWithText("Review bill").assertIsNotEnabled()
         compose.onNodeWithText("You paid (₹)").performTextReplacement("300")

@@ -122,7 +122,7 @@ class SecondaryPreviewTest {
         compose.runOnIdle {model=createModel()}
         render {CategoriesScreen(fixture,model)}
         compose.onNodeWithText("Food").performClick()
-        compose.onNodeWithText("Category color").assertIsDisplayed()
+        compose.onNodeWithText("Color").performScrollTo().assertIsDisplayed()
         capture("category-editor")
     }
     @Test fun repaymentReview() {
@@ -143,7 +143,7 @@ class SecondaryPreviewTest {
         compose.onNodeWithText("Cancel").assertIsDisplayed()
         compose.onNodeWithText("Account name",useUnmergedTree=true).assertHeightIsAtLeast(24.dp)
         capture("account-editor-320dp-2x")
-        compose.onNodeWithText("Save").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Save").assertIsDisplayed()
         capture("account-editor-save-320dp-2x")
         compose.onNodeWithText("Cancel").performClick()
         compose.onNodeWithText("Account name").assertDoesNotExist()

@@ -16,6 +16,7 @@ class RedesignUiTest {
         var destination=""
         compose.setContent {TrackerTheme {HomeScreen(Snapshot(),{kind,_->chosen=kind},{},{},{},{destination=it})}}
         compose.onAllNodesWithText("₹0.00").assertCountEquals(0)
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Add expense"))
         compose.onNodeWithText("Add expense").assertIsDisplayed().performClick()
         assertEquals(Kind.EXPENSE,chosen)
         compose.onNodeWithContentDescription("Settings").performClick()
@@ -39,7 +40,8 @@ class RedesignUiTest {
         var parsed=false
         var saved=false
         compose.setContent {TrackerTheme {AdvancedEntryScreen(EntryUiState(),emptyList(),emptyList(),emptyList(),emptyList(),{},{parsed=true},{saved=true})}}
-        compose.onNodeWithText("Describe").performClick()
+        // Describe is the default entry mode; Continue parses the text into a reviewable draft.
+        compose.onNodeWithText("Describe entry").assertExists()
         compose.onNodeWithText("Continue").performClick()
         assertEquals(true,parsed)
         assertEquals(false,saved)

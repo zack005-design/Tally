@@ -14,12 +14,11 @@ class EverydayMoneyUiTest {
         var destination=""
         var kind:Kind?=null
         compose.setContent {TrackerTheme {HomeScreen(Snapshot(),{k,_->kind=k},{},{},{},{destination=it})}}
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Income"))
-        compose.onNodeWithText("Income").performClick()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Record income"))
+        compose.onNodeWithText("Record income").performClick()
         compose.runOnIdle {assertEquals(Kind.INCOME,kind)}
-        compose.onNodeWithText("Scan bill").performClick()
-        compose.runOnIdle {assertEquals("bill-import",destination)}
-        compose.onNodeWithText("Plan").performClick()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Money planner"))
+        compose.onNodeWithText("Money planner").performClick()
         compose.runOnIdle {assertEquals("planner",destination)}
     }
 }

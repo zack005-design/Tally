@@ -26,7 +26,7 @@ class ExactHistoryPlanningUiTest {
         compose.onNodeWithText("Group").performScrollTo().assertExists()
         compose.onNodeWithText("Minimum (₹)").performScrollTo().performTextInput("200")
         compose.onNodeWithText("Minimum (₹)").performImeAction()
-        compose.onNodeWithText("Cancel").performScrollTo().performClick()
+        compose.onNodeWithText("Cancel").assertIsDisplayed().performClick()
         compose.onNodeWithText("Lunch").performScrollTo().assertExists()
         compose.onNodeWithText("Filter").performScrollTo().performClick()
         compose.onNodeWithText("Minimum (₹)").performScrollTo().performTextInput("200")

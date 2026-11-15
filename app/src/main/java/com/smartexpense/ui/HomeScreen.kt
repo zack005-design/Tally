@@ -113,8 +113,8 @@ import java.time.format.DateTimeFormatter
             item {
                 GroupedCard {
                     GroupedRow("Friends owe you", R.drawable.ic_people,
-                        supporting = if (pay > 0) "You also owe ${editorialMoney(pay)}" else "View shared balances",
-                        value = editorialMoney(receive)) { onManage("split") }
+                        supporting = if (pay > 0) "You also owe ${referenceMoney(pay)}" else "View shared balances",
+                        value = referenceMoney(receive)) { onManage("split") }
                     GroupedDivider()
                     GroupedRow("Record repayment", R.drawable.ic_arrow_in, onClick = onRepay)
                 }

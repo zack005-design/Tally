@@ -61,7 +61,9 @@ class AppLockSystemAuthTest {
                 automation.waitForIdle(500,5000)
                 val readyInput=waitNode {it.isEditable && it.isPassword}
                 assertTrue("System credential field did not accept its IME submit action",readyInput.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id))
-                waitNode {it.packageName?.toString()==context.packageName && (it.text?.toString()?.contains("Welcome to Tally")==true || it.text?.toString()?.contains("Today")==true)}
+                // Unlocked: any ledger or first-run screen, never the lock screen.
+                val unlocked=listOf("Welcome to Tally","Start my wallet","TOTAL AVAILABLE","Overview")
+                waitNode {node->node.packageName?.toString()==context.packageName && unlocked.any {node.text?.toString()?.contains(it)==true}}
                 scenario.onActivity {assertTrue(it.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE!=0)}
                 scenario.moveToState(Lifecycle.State.CREATED);scenario.moveToState(Lifecycle.State.RESUMED)
                 waitText("Tally is locked");clickText("Use device PIN / pattern / password")
@@ -70,7 +72,7 @@ class AppLockSystemAuthTest {
                 while(SystemClock.uptimeMillis()<settle && find(automation.rootInActiveWindow) {it.isEditable && it.isPassword}!=null) SystemClock.sleep(50)
                 if(find(automation.rootInActiveWindow) {it.isEditable && it.isPassword}!=null) shell("input keyevent 4")
                 waitText("Tally is locked")
-                assertNull(find(automation.rootInActiveWindow) {it.text?.toString()=="Today"})
+                assertNull(find(automation.rootInActiveWindow) {node->listOf("Start my wallet","TOTAL AVAILABLE").any {node.text?.toString()?.contains(it)==true}})
             }
         } finally {
             val edit=prefs.edit();if(present) edit.putBoolean("enabled",old) else edit.remove("enabled");assertTrue(edit.commit())

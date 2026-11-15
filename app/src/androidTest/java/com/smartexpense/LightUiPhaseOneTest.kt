@@ -78,7 +78,9 @@ class LightUiPhaseOneTest {
                 EditorialPreviewTheme { Box(Modifier.width(320.dp)) { LedgerNavigation("home") { destination = it } } }
             }
         }
-        listOf("Overview" to "home", "Spending" to "insights", "Friends" to "split").forEach { (label, route) ->
+        // The selected tab is already open, so it does not navigate again.
+        compose.onNodeWithText("Overview").assertIsDisplayed().assertIsSelected()
+        listOf("Spending" to "insights", "Friends" to "split").forEach { (label, route) ->
             compose.onNodeWithText(label).assertIsDisplayed().performClick(); assertEquals(route, destination)
         }
         compose.onNodeWithContentDescription("Add expense").assertIsDisplayed().performClick()

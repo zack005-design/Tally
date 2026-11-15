@@ -52,10 +52,12 @@ class FirstBalanceNavigationTest {
         compose.onNodeWithText("₹1,250").assertExists()
         capture("today")
         compose.onNodeWithText("Add money").performScrollTo().performClick()
-        compose.onNodeWithText("To GPay",useUnmergedTree=true).performClick()
-        compose.onNodeWithText("Amount to add (₹)").performTextInput("100")
+        compose.onNodeWithText("Destination").performClick()
+        compose.onAllNodesWithText("GPay").onLast().performClick()
+        compose.onNodeWithContentDescription("Amount to add (₹)").performTextInput("100")
+        androidx.test.espresso.Espresso.closeSoftKeyboard();compose.waitForIdle()
         capture("add-money")
-        compose.onNodeWithText("Add to GPay").performClick()
+        compose.onAllNodesWithText("Add money").onLast().performScrollTo().performClick()
         compose.waitUntil(10000) {runBlocking {repo.snapshot().accounts.single {it.name=="GPay"}.balance==110000L}}
         compose.runOnIdle {
             val reopened=AppViewModel(repo,BackupService(db),BillScanner(context),SavedStateHandle())

@@ -75,7 +75,7 @@ class SecondaryLayoutAuditTest {
         compose.onNodeWithText("Planned amount (₹)").performTextInput("100")
         finishTyping()
         compose.onNode(hasScrollAction() and hasAnyDescendant(hasText("Save planned allocation")))
-            .performTouchInput { swipeUp() }
+            .performScrollToNode(hasText("Save planned allocation"))
         compose.onNodeWithText("Save planned allocation").assertIsDisplayed().assertIsEnabled()
         compose.runOnIdle { stage.intValue = 5 }
         compose.onNodeWithText("Done").performScrollTo().assertIsDisplayed().assertIsEnabled()

@@ -30,7 +30,10 @@ class EditorialInteractionTest {
         var changed=EntryUiState()
         val record=Record("r",Kind.EXPENSE,"Spent 1450 on groceries",145000,145000,null,null,0,"",false)
         compose.setContent {TrackerTheme {AdvancedEntryScreen(EntryUiState(),accounts,people,emptyList(),emptyList(),{changed=it},{},{},records=listOf(record))}}
-        compose.onNodeWithContentDescription("Use Spent 1450 on groceries template").performClick()
+        // Recent suggestions live under Entry options → More entry options.
+        compose.onNodeWithContentDescription("Entry options").performClick()
+        compose.onNodeWithText("More entry options").performClick()
+        compose.onNodeWithContentDescription("Use Spent 1450 on groceries template").performScrollTo().performClick()
         assertEquals("1450.00",changed.amount)
         assertEquals(record.description,changed.description)
         assertEquals("",changed.accountId)
