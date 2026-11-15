@@ -1,186 +1,204 @@
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases"><img src="docs/assets/readme-hero.svg" width="100%" alt="Tally — Clarity for every rupee. Personal spending, shared bills, and a clearer picture of your money."></a>
-</p>
-
-<h1 align="center">Tally</h1>
-
-<p align="center">
-  <strong>Personal finance. Shared expenses. On your device.</strong><br>
-  Track balances, understand your share of every bill, and turn everyday expenses into clear records.
+  <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="docs/assets/readme-hero.svg" width="100%" alt="Tally — Know where every rupee goes. Personal spending, shared bills and receipts, private, offline, and only on your phone."></a>
 </p>
 
 <p align="center">
-  <a href="docs/downloads.md"><img src="docs/assets/download-android.svg" height="48" alt="Open Tally Android downloads"></a>
+  <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="https://img.shields.io/github/v/release/zack005-design/Tally?label=release&color=0A66FF" alt="Latest release"></a>
+  <a href="https://github.com/zack005-design/Tally/actions/workflows/android.yml"><img src="https://github.com/zack005-design/Tally/actions/workflows/android.yml/badge.svg" alt="Android checks"></a>
+  <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white" alt="Android 8.0 or later">
+  <img src="https://img.shields.io/badge/internet-not%20required-0B1424" alt="No internet permission">
+  <img src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin and Jetpack Compose">
 </p>
 
 <p align="center">
-  <a href="#screens">Explore the app</a>
-  &nbsp;·&nbsp;
-  <a href="#features">Features</a>
-  &nbsp;·&nbsp;
-  <a href="#on-device-ai">AI</a>
-  &nbsp;·&nbsp;
+  <b>Tally</b> tracks your accounts, splits bills with friends and turns receipts into records.<br>
+  Everything stays on your phone. No account, no bank login, no cloud.
+</p>
+
+<p align="center">
+  <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="docs/assets/download-android.svg" height="48" alt="Download Tally for Android"></a>
+</p>
+
+<p align="center">
+  <a href="#see-it">See it</a> ·
+  <a href="#what-it-does">Features</a> ·
+  <a href="#receipts-you-can-share">Receipts</a> ·
+  <a href="#private-by-design">Privacy</a> ·
+  <a href="#install">Install</a> ·
   <a href="docs/README.md">Guides</a>
-  &nbsp;·&nbsp;
-  <a href="#privacy">Privacy</a>
-  &nbsp;·&nbsp;
-  <a href="https://github.com/zack005-design/Tally/releases">Releases</a>
 </p>
 
-## Download
+---
 
-**Android 8.0+ · Version 0.2.4 · Development prerelease**
+## See it
 
-| Edition | Expense entry | Included in both |
-| --- | --- | --- |
-| [AI edition](docs/downloads.md#android-ai-edition) | Local model suggestions with rules fallback | Accounts, shared bills, receipt OCR, calculator, reports, and backups |
-| [Non-AI edition](docs/downloads.md#android-non-ai-edition) | Rule-based parsing without the custom model | The same finance features and receipt OCR |
-
-Download the APK from **Assets** on the [release page](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115). Both editions share an app identity and replace one another. [Installation and update guide](docs/getting-started.md).
-
-New in 0.2.4: complete itemised receipt PDFs with the original scan attached, optional budget alerts, zoomable receipt previews, and reliability fixes. [What changed](docs/releases/0.2.4.md).
-
-## Screens
-
-<table align="center" width="100%">
+<table>
   <tr>
-    <th align="center" width="33%"><a href="docs/screenshots/readme/overview.png">Your money at a glance</a></th>
-    <th align="center" width="33%"><a href="docs/screenshots/readme/shared-bill.png">A clear view of every split</a></th>
-    <th align="center" width="33%"><a href="docs/screenshots/readme/calendar.png">Spending, day by day</a></th>
+    <td align="center" width="25%"><a href="docs/screenshots/readme/home.png"><img src="docs/screenshots/readme/home.png" alt="Overview with total available money, Bank and Cash balances, quick actions and latest transactions"></a></td>
+    <td align="center" width="25%"><a href="docs/screenshots/readme/spending.png"><img src="docs/screenshots/readme/spending.png" alt="Spending for the month with a daily chart and category breakdown"></a></td>
+    <td align="center" width="25%"><a href="docs/screenshots/readme/friends.png"><img src="docs/screenshots/readme/friends.png" alt="Friends with the net amount owed to you and each friend's balance"></a></td>
+    <td align="center" width="25%"><a href="docs/screenshots/readme/receipt-pdf.png"><img src="docs/screenshots/readme/receipt-pdf.png" alt="A shared itemised receipt PDF with items, taxes, total and payment"></a></td>
   </tr>
   <tr>
-    <td align="center" valign="top" width="33%"><a href="docs/screenshots/readme/overview.png"><img src="docs/screenshots/readme/overview.png" width="240" alt="Overview showing available funds, Wallet and GPay balances, and recent transactions"></a></td>
-    <td align="center" valign="top" width="33%"><a href="docs/screenshots/readme/shared-bill.png"><img src="docs/screenshots/readme/shared-bill.png" width="240" alt="Shared-bill review showing payments, personal shares, and outstanding settlements"></a></td>
-    <td align="center" valign="top" width="33%"><a href="docs/screenshots/readme/calendar.png"><img src="docs/screenshots/readme/calendar.png" width="240" alt="Weekly calendar showing the selected day's spending and transactions"></a></td>
-  </tr>
-  <tr>
-    <td align="center" valign="top" width="33%"><sub>Balances, recent activity, and quick actions.</sub></td>
-    <td align="center" valign="top" width="33%"><sub>What you paid, your share, and who owes whom.</sub></td>
-    <td align="center" valign="top" width="33%"><sub>Daily totals with the transactions behind them.</sub></td>
+    <td align="center"><b>Overview</b><br><sub>Every balance and today's spending</sub></td>
+    <td align="center"><b>Spending</b><br><sub>Day by day and by category</sub></td>
+    <td align="center"><b>Friends</b><br><sub>Who owes whom, at a glance</sub></td>
+    <td align="center"><b>Receipt PDF</b><br><sub>Itemised, ready to share</sub></td>
   </tr>
 </table>
 
-*App captures use fictional data and show the 0.1.0 core finance interface. Open a screen at full size, or [browse the complete gallery](docs/screenshots/all-screens/README.md). Newer AI and calculator workflows are documented in their guides.*
+<sub>Captured from version 0.2.4 on an Android emulator with fictional data. <a href="docs/screenshots/all-screens/README.md">More screens</a>.</sub>
 
-## Features
+## Why Tally
 
-<table align="center" width="100%">
+<table>
   <tr>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/on-device-ai.md">On-device expense suggestions</a></h3>
-      <p>Turn a short English expense command into an editable draft. The AI edition suggests the description, INR amount, and account locally. Review every field before saving.</p>
+    <td width="33%" valign="top">
+      <h3>🔒 Yours alone</h3>
+      The app has no internet permission. Your records, receipts and backups never leave the phone unless you share them.
     </td>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/calculator.md">Offline calculator</a></h3>
-      <p>Work out totals, percentages, splits, statistics, ratios, tax, tips, and interest. Convert units or use your own exchange rate. Results stay separate from your ledger.</p>
+    <td width="33%" valign="top">
+      <h3>🤝 Fair splits</h3>
+      See what you paid, what you actually spent and what friends owe, without repayments turning into fake income.
     </td>
-  </tr>
-  <tr>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/everyday-money.md">Everyday money</a></h3>
-      <p>Track Wallet, GPay, and other account balances. Record expenses, income, and personal refunds; add funds, transfer money, and reconcile your balances.</p>
-    </td>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/shared-bills.md">Shared bills and repayments</a></h3>
-      <p>Split equally or by amounts, percentages, weights, or items. Handle multiple payers, track what friends owe, and record partial repayments.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/receipts.md">Receipts, without retyping</a></h3>
-      <p>Import a photo or PDF and review text recognized on your device. Confirm the items, amounts, and payment details before saving, then share a complete itemised receipt PDF.</p>
-    </td>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/spending-and-planning.md">Spending and planning</a></h3>
-      <p>Explore transactions by day and category. Set monthly budgets with optional alerts, plan allowances, create recurring drafts, and track savings goals.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/reports-and-backups.md">Reports and backups</a></h3>
-      <p>Export monthly CSV or PDF reports for review. Create a separate, password-encrypted full backup when you need a restorable copy of your data.</p>
-    </td>
-    <td width="50%" align="left" valign="top">
-      <h3><a href="docs/features/quick-entry.md">Quicker daily entry</a></h3>
-      <p>Reuse favourite expenses or repeat a recent purchase. Reach entry through the home-screen widget or launcher shortcut, with explicit confirmation before saving.</p>
+    <td width="33%" valign="top">
+      <h3>⚡ Fast entry</h3>
+      Type <code>coffee 80 cash</code>, scan a bill or tap a favourite. You review everything before it is saved.
     </td>
   </tr>
 </table>
 
-## On-device AI
+## What it does
 
-The released AI edition uses a specialised expense-command model to prepare drafts from short English input. It runs on the phone, without an API key or cloud inference.
-
-> **Example:** `coffee 80 cash` suggests the description, ₹80 amount, and cash-account hint. You review the resolved account and every field, then choose **Save**.
-
-The model has **53,142 parameters**, with a **roughly 210 KiB** weight bundle trained from random weights on synthetic commands. It selects text and amount spans from your input; exact decimal code converts money to integer paise. Low-confidence or unsupported commands fall back to rules or require manual correction.
-
-| Component | Role | Where it runs |
-| --- | --- | --- |
-| Expense-command model | Suggests single-INR personal-expense drafts in the AI edition | On your device |
-| Receipt OCR and PDF sharing | Recognises imported receipts in both editions; shares expense records or the saved original receipt as PDF | On your device |
-| Calculator | Uses deterministic rules and decimal arithmetic | On your device |
-| Tally Companion | Reviews exports or prepares a chat-history import file you explicitly share | Separately in Codex |
-
-The command model is not a conversational assistant and does not answer ledger-history questions. It never saves a transaction by itself. Research models in the repository do not automatically replace the model in a published APK.
-
-[AI usage and limits](docs/features/on-device-ai.md) · [Deployed model design](ml/tally-command/COMMAND_MODEL.md) · [Recorded evaluation](ml/tally-command/VERIFICATION_V3.md) · [Model research](ml/tally-command/MODEL_LADDER.md)
+| | |
+| --- | --- |
+| 💰 **[Everyday money](docs/features/everyday-money.md)**<br>Track Wallet, GPay and other accounts. Record expenses, income and refunds, transfer money and reconcile balances. | 👥 **[Shared bills](docs/features/shared-bills.md)**<br>Split equally or by amounts, percentages, weights or items. Handle several payers and partial repayments. |
+| 🧾 **[Receipts](docs/features/receipts.md)**<br>Scan a photo or PDF, check the recognised items and save. Share a complete itemised receipt PDF. | 📊 **[Spending and planning](docs/features/spending-and-planning.md)**<br>Daily and category views, monthly budgets with optional alerts, allowances, recurring drafts and savings goals. |
+| ✨ **[On-device suggestions](docs/features/on-device-ai.md)**<br>Turn a short command into an editable draft. The AI edition runs a small model locally. | 🧮 **[Calculator](docs/features/calculator.md)**<br>Totals, splits, tax, tips, interest, statistics and unit or currency conversion, kept separate from your ledger. |
+| 📤 **[Reports and backups](docs/features/reports-and-backups.md)**<br>Monthly CSV or PDF reports, and password-encrypted full backups you can restore. | ⚡ **[Quick entry](docs/features/quick-entry.md)**<br>Favourites, repeat a recent purchase, and a home-screen widget, always with a confirmation step. |
 
 ## Your payment and your share
 
-See what you paid, what you personally spent, and what remains to be settled.
+A **₹900 dinner split equally between three people**, when you pay the whole bill:
 
-For a **₹900 dinner split equally among three people**, when you pay the whole amount:
-
-<table align="center" width="100%">
+<table>
   <tr>
-    <td align="center" width="33%" valign="top"><h3><a href="docs/features/payment-and-share.md#what-you-paid">₹900</a></h3>Leaves your account</td>
-    <td align="center" width="33%" valign="top"><h3><a href="docs/features/payment-and-share.md#your-personal-share">₹300</a></h3>Your personal spending</td>
-    <td align="center" width="33%" valign="top"><h3><a href="docs/features/payment-and-share.md#what-remains-to-be-settled">₹600</a></h3>Owed to you by friends</td>
+    <td align="center" width="33%"><h2>₹900</h2>leaves your account</td>
+    <td align="center" width="33%"><h2>₹300</h2>counts as your spending</td>
+    <td align="center" width="33%"><h2>₹600</h2>is owed to you by friends</td>
   </tr>
 </table>
 
-Repayments reduce what is owed without becoming new income. Transfers between your own accounts stay separate from spending.
+Repayments reduce what is owed without becoming income, and transfers between your own accounts never count as spending. [How payments, shares and settlements work →](docs/features/payment-and-share.md)
 
-[Explore payments, shares, and settlements →](docs/features/payment-and-share.md)
+## Receipts you can share
 
-## Privacy
+<img align="right" width="300" src="docs/screenshots/readme/receipt-pdf.png" alt="Itemised receipt PDF">
 
-**Your records stay on your device.** Tally has no Internet permission. Receipt recognition and expense suggestions run locally; calculator results do not change your records.
+Open a saved expense and tap **Share receipt PDF** to get a proper receipt, not a summary:
 
-- **No bank connection.** Wallet and GPay are balances you maintain manually; Tally does not access banks, Google Pay, SMS messages, or payment credentials.
-- **Optional app lock.** Restrict access with supported device credentials or biometric authentication.
-- **Encrypted backups.** Export a password-protected full backup. Automatic Android cloud backup is disabled.
-- **Sharing is your choice.** CSV and PDF reports are for reading and analysis, not database restoration. You choose when and where to export them.
+- merchant, date and time, category and the account you paid from
+- every item with its price, then taxes or discounts and the total
+- who paid, each person's share and what is still owed
+- the original receipt photo or PDF on the pages after
 
-[Read about privacy and app lock →](docs/features/privacy.md)
+Private notes and account balances are never included. Receipt text is recognised on the phone, and you confirm every item before it is saved.
 
-## Tally Companion
+[Scanning and sharing receipts →](docs/features/receipts.md)
 
-Tally Companion 0.2.0 connects two explicit workflows: review a Transactions CSV exported from Tally, or prepare spending history from a ChatGPT conversation for import into the app. Imported entries are previewed and require confirmation; unsupported records remain flagged for manual handling.
+<br clear="right">
 
-[Download Tally Companion](docs/downloads.md#tally-companion) &nbsp;·&nbsp; [Download Tally Toolkit](docs/downloads.md#tally-toolkit)
+## Private by design
 
-The plugins run separately in Codex. Tally does not send records automatically. [Export review](docs/features/companion.md) · [Chat-history import](docs/features/chat-history-import.md).
+- **No internet permission.** Recognition, suggestions and calculations all run on the device.
+- **No bank connection.** Tally never reads your bank, Google Pay, SMS messages or payment details. Balances are ones you keep.
+- **Optional app lock** with your device PIN, pattern, password or biometrics.
+- **Encrypted backups** protected by your password. Automatic Android cloud backup is turned off.
+- **You choose what to share.** Reports and receipts are only exported when you ask.
 
-## Release information
+[Privacy and app lock →](docs/features/privacy.md)
 
-Tally is in active development. The published 0.2.4 APKs are debug-signed test builds, with **238 JVM tests passed per edition**, no lint issues, and the full instrumented suite passing on an API 36 emulator (357 of 358; the remaining case is an intentional skip). Physical-phone and minimum-API verification are pending.
+## Install
 
-INR is the core currency, and foreign bills use manually entered exchange rates. Keep a full encrypted backup before updating or switching editions. [Verification and limits](docs/releases/0.2.4.md) · [Installation safety](docs/installation-safety.md) · [Changelog](CHANGELOG.md).
+**Version 0.2.4 · Android 8.0 or later · development build**
 
-## Project
+| Edition | Expense entry | Download |
+| --- | --- | --- |
+| **AI** | Local model suggestions, with rules as a fallback | [tally-0.2.4-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.4-20261115/tally-0.2.4-ai-debug.apk) |
+| **Non-AI** | Rule-based parsing, without the model | [tally-0.2.4-non-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.4-20261115/tally-0.2.4-non-ai-debug.apk) |
 
-Built with Kotlin and Jetpack Compose, with Room for local records and a repository-based data layer. Finance calculations stay separate from UI and Android services; user actions explicitly confirm changes to the ledger.
+Both editions include every finance feature and receipt scanning. They share one app identity, so either installs over 0.2.3 or over the other edition and keeps your data. Make an encrypted backup before updating.
 
-Current source targets Android 17 (API 37) and uses AGP 9's built-in Kotlin support. Source updates are listed under [Unreleased](CHANGELOG.md#unreleased); they are newer than the downloadable 0.2.4 builds.
+[Step-by-step install guide](docs/getting-started.md) · [All downloads and checksums](docs/downloads.md) · [What's new in 0.2.4](docs/releases/0.2.4.md)
 
-[Source guide](docs/project.md) · [User documentation](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Report a bug](https://github.com/zack005-design/Tally/issues/new/choose)
+<details>
+<summary><b>About the on-device AI</b></summary>
+
+<br>
+
+The AI edition uses a small, purpose-built expense-command model. It turns short English input such as `coffee 80 cash` into a draft with a description, a rupee amount and an account hint. It runs on the phone with no API key or cloud service, and it never saves anything by itself.
+
+The core model has **53,142 parameters** in a roughly **210 KiB** bundle, trained from scratch on synthetic commands, with an integrated extension for wider phrasing. It picks text and amount spans from what you typed, and exact decimal code converts money to paise. Unsupported or low-confidence input falls back to rules or asks you to correct it.
+
+| Component | Role | Where it runs |
+| --- | --- | --- |
+| Expense-command model | Suggests single-rupee personal-expense drafts (AI edition) | On your phone |
+| Receipt recognition and PDFs | Reads imported receipts and shares itemised receipt PDFs (both editions) | On your phone |
+| Calculator | Deterministic rules and decimal arithmetic | On your phone |
+| Tally Companion | Reviews exports or prepares a chat-history import you explicitly share | Separately, in Codex |
+
+It is not a chat assistant and does not answer questions about your history.
+
+[Usage and limits](docs/features/on-device-ai.md) · [Model design](ml/tally-command/COMMAND_MODEL.md) · [Recorded evaluation](ml/tally-command/VERIFICATION_V3.md) · [Model research](ml/tally-command/MODEL_LADDER.md)
+
+</details>
+
+<details>
+<summary><b>Tally Companion plugin</b></summary>
+
+<br>
+
+Tally Companion 0.2.0 runs in Codex, separately from the app. It reviews a Transactions CSV exported from Tally, or prepares spending history from a ChatGPT conversation for import. Imported entries are previewed and need your confirmation; unsupported records stay flagged for manual handling. Tally never sends records anywhere automatically.
+
+[Download Tally Companion](docs/downloads.md#tally-companion) · [Download Tally Toolkit](docs/downloads.md#tally-toolkit) · [Export review](docs/features/companion.md) · [Chat-history import](docs/features/chat-history-import.md)
+
+</details>
+
+<details>
+<summary><b>Release status and testing</b></summary>
+
+<br>
+
+Tally is in active development. The 0.2.4 APKs are debug-signed test builds, not Play Store releases.
+
+- **238 unit tests** pass for each edition, and Android lint reports no issues.
+- The full instrumented suite passes on an Android 16 emulator (357 of 358; the remaining case is an intentional skip).
+- CI runs database and compatibility checks on Android 8, 15, 16 and 17 for every change.
+- Testing on physical phones is still pending.
+
+Rupees are the core currency; foreign bills use an exchange rate you enter. [Verification and limits](docs/releases/0.2.4.md) · [Installation safety](docs/installation-safety.md) · [Changelog](CHANGELOG.md)
+
+</details>
+
+## Build from source
+
+Tally is written in Kotlin with Jetpack Compose, Room for local storage and Hilt for dependency injection. Finance calculations live in a plain Kotlin domain layer, separate from the UI and Android services, and every change to the ledger is confirmed by the user.
+
+```bash
+./gradlew :app:assembleDebug                 # AI edition
+./gradlew :app:assembleDebug -PtallyAi=false # non-AI edition
+./gradlew :app:testDebugUnitTest :app:lintDebug
+```
+
+The source targets Android 17 (API 37) with AGP 9. Changes since the last download are listed under [Unreleased](CHANGELOG.md#unreleased).
+
+[Source guide](docs/project.md) · [User guides](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Report a bug](https://github.com/zack005-design/Tally/issues/new/choose)
+
+---
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115">Current release</a>
-  &nbsp;·&nbsp;
-  <a href="docs/screenshots/all-screens/README.md">Screen gallery</a>
-  &nbsp;·&nbsp;
-  <a href="https://github.com/zack005-design/Tally/issues">Feedback and issues</a>
+  <a href="https://github.com/zack005-design/Tally/releases/latest">Latest release</a> ·
+  <a href="docs/screenshots/all-screens/README.md">Screen gallery</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/zack005-design/Tally/issues">Feedback</a>
 </p>
