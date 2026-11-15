@@ -4,6 +4,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Share receipt PDF now produces a complete itemised receipt (merchant, date and time, category, paid-from account, items, taxes, total, payments and shares) with the original scan attached.
 - Name the friend in repayment descriptions, move Reminders under Notifications in Settings, and avoid a crash when a refund's original expense disappears while editing.
 - Add optional budget alerts: a local notification when monthly spending reaches 80% or 100% of a budget. Off by default; no new permissions or network access.
 - Improve window-aware sheet sizing, Compose state handling, and large-text layout checks.

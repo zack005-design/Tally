@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
         scope.launch {
             try {
                 val send=if(original) ReceiptPdf.shareOriginal(context,requireNotNull(savedReceipt),model.billScanner)
-                    else ReceiptPdf.share(context,requireNotNull(savedDetail),s.people,s.debts)
+                    else ReceiptPdf.share(context,requireNotNull(savedDetail),s.people,s.debts,s.accounts,s.categories,savedReceipt,model.billScanner)
                 context.startActivity(Intent.createChooser(send,"Share receipt PDF"));sharing=false
             } catch(cancelled:CancellationException) {throw cancelled}
             catch(_:android.content.ActivityNotFoundException) {shareError="No sharing app is available on this device."}

@@ -43,7 +43,7 @@ See the [receipt verification and broader app audit](../testing/2026-11-11-recei
 
 The [audit follow-up verification](../testing/2026-11-11-audit-follow-up.md) covers enlarged previews, replacement safety, import text limits, merchant detection, metadata refreshes, and refund recipients.
 
-Open a saved expense and choose **Share receipt PDF** for a formatted expense record showing the total, payments, shares and remaining bill debts. Long receipts continue onto additional pages. Private notes and account balances are excluded. This expense record is not a merchant tax invoice.
+Open a saved expense and choose **Share receipt PDF** for a complete receipt: merchant, date and time, category, the account you paid from, every item with its amount, taxes or discounts, the total, who paid, each share and what is still owed. Items come from the lines you reviewed when importing the bill, or from the attached scan. When a receipt photo or PDF is attached, the original pages follow in the same PDF. Long receipts continue onto additional pages. Private notes and account balances are excluded. This expense record is not a merchant tax invoice.
 
 When a bill attachment is saved, choose **Share original receipt PDF** to share the actual printed bill: a photo becomes a PDF with its orientation preserved, and an existing PDF keeps its original pages. Long photos span pages without cutting off the bottom. This includes everything visible on the original receipt; OCR text is not substituted for the image.
 

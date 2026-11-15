@@ -79,6 +79,44 @@ class ReceiptPdfTest {
     }
 
     @SdkSuppress(minSdkVersion=35)
+    @Test fun sharedReceiptIncludesItemsDetailsAndTheOriginalScan() = runBlocking<Unit> {
+        val bitmap=Bitmap.createBitmap(500,900,Bitmap.Config.ARGB_8888)
+        bitmap.eraseColor(Color.WHITE)
+        android.graphics.Canvas(bitmap).drawRect(0f,800f,500f,900f,android.graphics.Paint().apply {color=Color.BLACK})
+        val output=ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG,100,output);bitmap.recycle()
+        val scan=com.smartexpense.data.ScannedBill(output.toByteArray(),"image/png","Corner Cafe\nPaneer tikka 320.00\nTotal 450.00")
+        val notes="Imported printed bill · reviewed locally\nPaneer tikka: 320.00\nButter naan x2: 90.00"
+        val record=Record("bill",Kind.EXPENSE,"Dinner",45000,45000,"food",null,0,notes,false)
+        val detail=RecordDetail(record,listOf(Movement("hdfc",-45000)),emptyMap(),emptyMap(),emptyList(),emptyMap())
+        val intent=ReceiptPdf.share(context,detail,emptyList(),emptyList(),listOf(Account("hdfc","HDFC Savings","Bank",999999,false)),listOf(Category("food","Food & dining",0,"food",false)),scan,com.smartexpense.data.BillScanner(context))
+        val uri=requireNotNull(intent.clipData).getItemAt(0).uri
+        context.contentResolver.openFileDescriptor(uri,"r")!!.use { descriptor -> PdfRenderer(descriptor).use { pdf ->
+            assertTrue(pdf.pageCount>=2)
+            val text=pdf.openPage(0).use { page ->
+                val preview=Bitmap.createBitmap(page.width*2,page.height*2,Bitmap.Config.ARGB_8888)
+                try {
+                    preview.eraseColor(Color.WHITE)
+                    page.render(preview,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    File(context.getExternalFilesDir(null),"receipt-full-preview.png").outputStream().use {preview.compress(Bitmap.CompressFormat.PNG,100,it)}
+                } finally {preview.recycle()}
+                page.textContents.joinToString("\n") { it.text }
+            }
+            listOf("Corner Cafe","Paneer tikka","Butter naan x2","320.00","90.00","Taxes, charges and other","40.00","450.00","Food & dining","HDFC Savings","TOTAL").forEach { assertTrue("missing $it in $text",text.contains(it)) }
+            assertFalse(text.contains("9999.99"))
+            assertFalse(text.contains("reviewed locally"))
+            pdf.openPage(pdf.pageCount-1).use { page ->
+                val rendered=Bitmap.createBitmap(page.width,page.height,Bitmap.Config.ARGB_8888)
+                try {
+                    rendered.eraseColor(Color.WHITE)
+                    page.render(rendered,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    assertTrue((0 until rendered.height).any { y->Color.red(rendered.getPixel(rendered.width/2,y))<50 })
+                } finally {rendered.recycle()}
+            }
+        } }
+    }
+
+    @SdkSuppress(minSdkVersion=35)
     @Test fun longReceiptPaginatesWithoutDroppingParticipants() = runBlocking<Unit> {
         val people = (1..80).map { Person("p$it", "Participant $it with a long name that must wrap on the receipt") }
         val record = Record("long", Kind.EXPENSE, "Group dinner", 80000, 0, null, null, 0, "", false)
