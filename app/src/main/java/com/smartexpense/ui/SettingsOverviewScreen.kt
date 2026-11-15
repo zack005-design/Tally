@@ -19,7 +19,9 @@ import com.smartexpense.domain.LocalSettings
         item { SectionLabel("SECURITY") }
         item { GroupedCard {
             GroupedRow("App lock", R.drawable.ic_lock_outline, "Protect your data") { onNavigate("app-lock") }
-            GroupedDivider()
+        } }
+        item { SectionLabel("NOTIFICATIONS") }
+        item { GroupedCard {
             GroupedRow("Reminders", R.drawable.ic_calendar, "Set up helpful reminders", tone = ReferenceTone.Peach) { onNavigate("reminders") }
         } }
         item { SectionLabel("DATA") }

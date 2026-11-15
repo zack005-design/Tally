@@ -103,7 +103,7 @@ import com.smartexpense.domain.*
                     Choice("Category",s.categoryId?:"",listOf("" to "Uncategorised")+categories.filterNot {it.archived}.map {it.id to it.name}) {onChange(s.copy(categoryId=it.ifEmpty {null}))}
                 }
                 if(s.kind==Kind.TRANSFER) Choice("Destination account",s.destinationId,accounts.filter {!it.archived && it.id!=s.accountId}.map {it.id to it.name}) {onChange(s.copy(destinationId=it))}
-                if(s.kind==Kind.REFUND) Choice("Original expense",s.refundOf,records.filter {it.kind==Kind.EXPENSE && !it.reversed && it.personIds==listOf("self")}.map {it.id to it.description}) {id->onChange(s.copy(refundOf=id,categoryId=records.first {it.id==id}.categoryId))}
+                if(s.kind==Kind.REFUND) Choice("Original expense",s.refundOf,records.filter {it.kind==Kind.EXPENSE && !it.reversed && it.personIds==listOf("self")}.map {it.id to it.description}) {id->onChange(s.copy(refundOf=id,categoryId=records.find {it.id==id}?.categoryId?:s.categoryId))}
                 if(!splitting) Field("Description",s.description,{onChange(s.copy(description=it))})
                 EditorialDateRow(s.date) {onChange(s.copy(date=it))}
                 Field("Notes (optional)",s.notes,{onChange(s.copy(notes=it))})

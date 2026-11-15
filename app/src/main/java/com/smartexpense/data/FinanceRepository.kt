@@ -411,7 +411,9 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val available=dao.debts().map {Debt(it.id,it.transactionId,it.fromPerson,it.toPerson,it.amount,it.outstanding,it.date,it.groupId)}.filter {it.outstanding>0 && (selectedDebt==null||it.id==selectedDebt) && (groupId==null || it.groupId==groupId)}
         val allocation=DebtRouting.allocate(amount,from,to,available)
         if(from=="self" || to=="self") require(dao.accounts().any { it.id==accountId && !it.archived }) { "Choose an active payment account" }
-        val tx=requestId; dao.insertTransaction(TransactionEntity(tx,Kind.REPAYMENT.name,"Repayment",amount,0,null,groupId,date,note))
+        val names=dao.people().associate {it.id to it.name}
+        val description=when {to=="self"->"Repayment from ${names[from]?:"friend"}";from=="self"->"Repayment to ${names[to]?:"friend"}";else->"${names[from]?:"Friend"} repaid ${names[to]?:"friend"}"}.take(200)
+        val tx=requestId; dao.insertTransaction(TransactionEntity(tx,Kind.REPAYMENT.name,description,amount,0,null,groupId,date,note))
         val settlement=id(); dao.insertSettlement(SettlementEntity(settlement,tx,from,to,amount)); dao.insertAllocations(allocation.map { AllocationEntity(settlement,it.key,it.value) })
         if(from=="self" || to=="self") dao.insertEntries(listOf(AccountEntryEntity(id(),tx,accountId!!,if(to=="self") amount else -amount)))
         validateBalances()
