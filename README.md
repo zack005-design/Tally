@@ -29,16 +29,16 @@
 
 ## Download
 
-**Android 8.0+ · Version 0.2.3 · Development prerelease**
+**Android 8.0+ · Version 0.2.4 · Development prerelease**
 
 | Edition | Expense entry | Included in both |
 | --- | --- | --- |
 | [AI edition](docs/downloads.md#android-ai-edition) | Local model suggestions with rules fallback | Accounts, shared bills, receipt OCR, calculator, reports, and backups |
 | [Non-AI edition](docs/downloads.md#android-non-ai-edition) | Rule-based parsing without the custom model | The same finance features and receipt OCR |
 
-Download the APK from **Assets** on the [release page](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024). Both editions share an app identity and replace one another. [Installation and update guide](docs/getting-started.md).
+Download the APK from **Assets** on the [release page](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115). Both editions share an app identity and replace one another. [Installation and update guide](docs/getting-started.md).
 
-Receipt PDF sharing, enlarged receipt previews, safer receipt replacement, clearer refund recipients, and the latest scan corrections are available in current source builds. The existing 0.2.3 download assets have not been replaced by this source update.
+New in 0.2.4: complete itemised receipt PDFs with the original scan attached, optional budget alerts, zoomable receipt previews, and reliability fixes. [What changed](docs/releases/0.2.4.md).
 
 ## Screens
 
@@ -88,11 +88,11 @@ Receipt PDF sharing, enlarged receipt previews, safer receipt replacement, clear
   <tr>
     <td width="50%" align="left" valign="top">
       <h3><a href="docs/features/receipts.md">Receipts, without retyping</a></h3>
-      <p>Import a photo or PDF and review text recognized on your device. Confirm the items, amounts, and payment details before saving.</p>
+      <p>Import a photo or PDF and review text recognized on your device. Confirm the items, amounts, and payment details before saving, then share a complete itemised receipt PDF.</p>
     </td>
     <td width="50%" align="left" valign="top">
       <h3><a href="docs/features/spending-and-planning.md">Spending and planning</a></h3>
-      <p>Explore transactions by day and category. Set monthly budgets, plan allowances, create recurring drafts, and track savings goals.</p>
+      <p>Explore transactions by day and category. Set monthly budgets with optional alerts, plan allowances, create recurring drafts, and track savings goals.</p>
     </td>
   </tr>
   <tr>
@@ -165,20 +165,20 @@ The plugins run separately in Codex. Tally does not send records automatically. 
 
 ## Release information
 
-Tally is in active development. The published 0.2.3 APKs are debug-signed test builds, with **173 JVM tests passed per edition**, zero lint errors, and recorded API36 emulator checks. Those published builds include lint warnings; physical-phone and minimum-API verification are pending.
+Tally is in active development. The published 0.2.4 APKs are debug-signed test builds, with **238 JVM tests passed per edition**, no lint issues, and the full instrumented suite passing on an API 36 emulator (357 of 358; the remaining case is an intentional skip). Physical-phone and minimum-API verification are pending.
 
-INR is the core currency, and foreign bills use manually entered exchange rates. Keep a full encrypted backup before updating or switching editions. [Verification and limits](docs/releases/0.2.3.md) · [Installation safety](docs/installation-safety.md) · [Changelog](CHANGELOG.md).
+INR is the core currency, and foreign bills use manually entered exchange rates. Keep a full encrypted backup before updating or switching editions. [Verification and limits](docs/releases/0.2.4.md) · [Installation safety](docs/installation-safety.md) · [Changelog](CHANGELOG.md).
 
 ## Project
 
 Built with Kotlin and Jetpack Compose, with Room for local records and a repository-based data layer. Finance calculations stay separate from UI and Android services; user actions explicitly confirm changes to the ledger.
 
-Current source targets Android 17 (API 37) and uses AGP 9's built-in Kotlin support. Source updates are listed under [Unreleased](CHANGELOG.md#unreleased); they are newer than the downloadable 0.2.3 builds.
+Current source targets Android 17 (API 37) and uses AGP 9's built-in Kotlin support. Source updates are listed under [Unreleased](CHANGELOG.md#unreleased); they are newer than the downloadable 0.2.4 builds.
 
 [Source guide](docs/project.md) · [User documentation](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Report a bug](https://github.com/zack005-design/Tally/issues/new/choose)
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024">Current release</a>
+  <a href="https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115">Current release</a>
   &nbsp;·&nbsp;
   <a href="docs/screenshots/all-screens/README.md">Screen gallery</a>
   &nbsp;·&nbsp;

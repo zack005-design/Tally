@@ -4,6 +4,10 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+No changes yet.
+
+## [0.2.4](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115)
+
 - Show the Friends owe you card in the same rounded format as other home amounts. The full device test suite now passes on Android 16, including real device-PIN unlock and relock.
 - Share receipt PDF now produces a complete itemised receipt (merchant, date and time, category, paid-from account, items, taxes, total, payments and shares) with the original scan attached.
 - Name the friend in repayment descriptions, move Reminders under Notifications in Settings, and avoid a crash when a refund's original expense disappears while editing.
@@ -13,6 +17,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Use AndroidX receipt metadata handling and support themed launcher icons across adaptive-icon devices.
 - Update Android libraries and target Android 17; migrate the build to AGP 9's supported Kotlin and DSL configuration.
 - Refresh Compose test APIs and Android test-runner compatibility, with Android 17 included in CI.
+
+[Verification and known limits](docs/releases/0.2.4.md)
 
 ## [0.2.3](https://github.com/zack005-design/Tally/releases/tag/v0.2.3-20261024)
 
