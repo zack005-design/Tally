@@ -54,7 +54,11 @@ android {
     if (tallyAiEnabled) sourceSets.getByName("main").assets.directories.add("src/localAi/assets")
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
-    testOptions { unitTests.isReturnDefaultValues = true }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+        // Animations make Compose UI tests race the screen they are checking.
+        animationsDisabled = true
+    }
 }
 tasks.configureEach {
     if (name == "preReleaseBuild" || name == "validateSigningRelease" || name == "packageRelease" || name == "signReleaseBundle") {

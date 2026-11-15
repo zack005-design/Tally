@@ -156,8 +156,10 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     suspend fun configureWallet(walletOpening:Long,walletId:String?=null,gpayId:String?=null,today:java.time.LocalDate=java.time.LocalDate.now(),gpayOpening:Long=0) = storage {db.withTransaction {
         require(dao.walletSources()==null) {"Wallet and GPay are already set up"}
         require(walletOpening>=0 && gpayOpening>=0) {"Opening balances cannot be negative"}
-        val wallet=walletId?:createAccount("Wallet","Cash",walletOpening)
-        val gpay=gpayId?:createAccount("GPay","Bank",gpayOpening)
+        // Opening balances belong to the setup day so later monthly resets see them.
+        val openedAt=if(today==java.time.LocalDate.now()) System.currentTimeMillis() else today.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val wallet=walletId?:createAccount("Wallet","Cash",walletOpening,openedAt)
+        val gpay=gpayId?:createAccount("GPay","Bank",gpayOpening,openedAt)
         require(wallet!=gpay && listOf(wallet,gpay).all {key->dao.accounts().any {it.id==key && !it.archived}}) {"Choose two different active accounts"}
         dao.saveWalletSources(WalletSourcesEntity(walletId=wallet,gpayId=gpay,lastResetMonth=java.time.YearMonth.from(today).toString()))
         dao.saveLocalSettings((dao.localSettings()?:LocalSettingsEntity()).copy(welcomeDone=true))
@@ -251,11 +253,11 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val zone=java.time.ZoneId.systemDefault();val from=start.atStartOfDay(zone).toInstant().toEpochMilli();val until=end.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli();val totals=dao.reportTotals(from,until)
         PeriodReport(totals.spending,totals.income,dao.reportCategories(from,until).associate {it.categoryId to it.amount},dao.reportDays(from,until).associate {java.time.LocalDate.parse(it.day) to it.amount})
     }
-    suspend fun createAccount(name:String,type:String,opening:Long):String = storage { db.withTransaction {
+    suspend fun createAccount(name:String,type:String,opening:Long,openedAt:Long=System.currentTimeMillis()):String = storage { db.withTransaction {
         require(name.isNotBlank() && type in listOf("Cash","Bank","Wallet","Other")) { "Enter an account name and type" }
         val key=id(); dao.insertAccount(AccountEntity(key,name.trim(),type))
         if(opening!=0L) {
-            val tx=id(); dao.insertTransaction(TransactionEntity(tx,Kind.ADJUSTMENT.name,"Opening balance",opening,0,null,null,System.currentTimeMillis(),""))
+            val tx=id(); dao.insertTransaction(TransactionEntity(tx,Kind.ADJUSTMENT.name,"Opening balance",opening,0,null,null,openedAt,""))
             dao.insertEntries(listOf(AccountEntryEntity(id(),tx,key,opening)))
         }; validateBalances();key
     } }

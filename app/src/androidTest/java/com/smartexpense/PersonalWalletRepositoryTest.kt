@@ -35,8 +35,11 @@ class PersonalWalletRepositoryTest {
             assertEquals(3,repo.snapshot().records.count {it.description.startsWith("GPay monthly reset")})
             repo.save(EntryDraft(amount=70000,description="Backdated October",accountId=sources.gpayId,date=time(LocalDate.of(2026,10,25))))
             assertEquals(500000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
-            assertEquals(100000L,repo.snapshot().records.single {it.id=="gpay-reset:${sources.gpayId}:2026-11"}.amount)
-            assertEquals(70000L,repo.snapshot().records.single {it.description=="GPay reset recalculation"}.amount)
+            // Saving applies any reset already due by the real clock, so the November reset may be
+            // recorded as its original amount plus recalculations. Their total is what matters.
+            val november=repo.snapshot().records.filter {it.id=="gpay-reset:${sources.gpayId}:2026-11" || it.description=="GPay reset recalculation" && it.date==repo.snapshot().records.single {r->r.id=="gpay-reset:${sources.gpayId}:2026-11"}.date}
+            assertEquals(170000L,november.sumOf {it.amount})
+            assertTrue(repo.snapshot().records.any {it.description=="GPay reset recalculation" && it.amount==70000L})
             val backup=BackupService(db);backup.restore(backup.exportFixture(),charArrayOf())
             repo.refreshMonthlyGpay(LocalDate.of(2027,1,3))
             assertEquals(3,repo.snapshot().records.count {it.description.startsWith("GPay monthly reset")})

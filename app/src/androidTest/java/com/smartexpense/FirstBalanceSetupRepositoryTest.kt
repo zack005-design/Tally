@@ -35,9 +35,9 @@ class FirstBalanceSetupRepositoryTest {
     @Test fun historicalTopupKeepsItsDateAndNoteAndRecalculatesGpayReset()=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(),TrackerDatabase::class.java).build()
         try {
-            val repo=FinanceRepository(db);repo.initialize();repo.configureWallet(120000,gpayOpening=500000)
+            val repo=FinanceRepository(db);repo.initialize();repo.configureWallet(120000,today=java.time.LocalDate.of(2026,10,1),gpayOpening=500000)
             val sources=repo.snapshot().walletSources!!
-            repo.saveGpaySchedule(true,500000,1,"2026-11")
+            repo.saveGpaySchedule(true,500000,1,"2026-11",java.time.LocalDate.of(2026,10,1))
             repo.refreshMonthlyGpay(java.time.LocalDate.of(2026,11,2))
             val date=java.time.LocalDate.of(2026,10,19).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
             assertEquals(500000L,repo.previewWalletFunds(sources.gpayId,5000,date))

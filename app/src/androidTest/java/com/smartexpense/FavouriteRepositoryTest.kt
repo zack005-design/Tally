@@ -18,7 +18,7 @@ class FavouriteRepositoryTest {
             try {repo.saveFavourite(FavouriteExpense("seven","Tea",100,account,null));fail("Seventh accepted")} catch(_:IllegalArgumentException) {}
             repo.saveFavourite(FavouriteExpense("f0","Coffee",200,account,null))
             val saved=repo.snapshot().favourites
-            val service=BackupService(db);service.restore(service.export("test".toCharArray()),"test".toCharArray())
+            val service=BackupService(db);service.restore(service.export("test-password".toCharArray()),"test-password".toCharArray())
             assertEquals(saved,repo.snapshot().favourites)
             assertEquals(10000L,repo.snapshot().accounts.single().balance)
             repo.updateAccount(repo.snapshot().accounts.single().copy(archived=true))
