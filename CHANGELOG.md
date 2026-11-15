@@ -4,6 +4,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Add optional budget alerts: a local notification when monthly spending reaches 80% or 100% of a budget. Off by default; no new permissions or network access.
 - Improve window-aware sheet sizing, Compose state handling, and large-text layout checks.
 - Simplify expense widget shortcuts while preserving category icons, readable labels, and touch targets.
 - Use AndroidX receipt metadata handling and support themed launcher icons across adaptive-icon devices.

@@ -12,6 +12,12 @@ private val Context.preferences by preferencesDataStore("tracker-settings")
     private val compact=booleanPreferencesKey("compact-amounts")
     val compactAmounts=context.preferences.data.map { it[compact]?:false }
     suspend fun setCompact(value:Boolean) { context.preferences.edit { it[compact]=value } }
+    private val budgetAlerts=booleanPreferencesKey("budget-alerts")
+    private val budgetLevels=stringSetPreferencesKey("budget-alert-levels")
+    val budgetAlertsEnabled=context.preferences.data.map {it[budgetAlerts]?:false}
+    suspend fun setBudgetAlerts(value:Boolean) {context.preferences.edit {it[budgetAlerts]=value;if(!value) it.remove(budgetLevels)}}
+    val budgetAlertLevels=context.preferences.data.map {values->values[budgetLevels].orEmpty().mapNotNull {entry->entry.substringAfterLast('=').toIntOrNull()?.let {entry.substringBeforeLast('=') to it}}.toMap()}
+    suspend fun setBudgetAlertLevels(levels:Map<String,Int>) {context.preferences.edit {it[budgetLevels]=levels.map {(id,level)->"$id=$level"}.toSet()}}
     private val lastExport=longPreferencesKey("last-successful-backup-export")
     private val backupEnabled=booleanPreferencesKey("weekly-backup-reminder")
     private val backupNext=longPreferencesKey("next-backup-reminder")

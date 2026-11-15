@@ -58,7 +58,7 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
     val entry=form.asStateFlow()
     private val launchMutable=MutableStateFlow(saved.get<String>("externalLaunch"))
     val launchRequest=launchMutable.asStateFlow()
-    fun requestLaunch(destination:String) {require(destination in listOf("backup","quick-add"));saved["externalFavourite"]=null;saved["externalLaunch"]=destination;launchMutable.value=destination}
+    fun requestLaunch(destination:String) {require(destination in listOf("backup","quick-add","budgets"));saved["externalFavourite"]=null;saved["externalLaunch"]=destination;launchMutable.value=destination}
     val requestedFavouriteId:String? get()=saved["externalFavourite"]
     fun requestFavourite(id:String) {
         if(id.isBlank() || id.length>200) {requestLaunch("quick-add");return}

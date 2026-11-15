@@ -17,6 +17,7 @@ For shared bills, your personal share is distinct from the cash you paid on beha
 | Tool | Purpose |
 | --- | --- |
 | Monthly budgets | Set category limits and review recorded spending against them. |
+| Budget alerts | Optionally get a local notification when this month's spending reaches 80% or 100% of a budget. Turn it on in **Reminders**. |
 | Allowance planning | Plan how much money to set aside for everyday spending. |
 | Recurring drafts | Prepare entries for repeated expenses. |
 | Savings goals | Keep savings targets visible alongside your plans. |

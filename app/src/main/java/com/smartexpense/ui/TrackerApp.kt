@@ -56,6 +56,7 @@ import com.smartexpense.domain.*
             exitGuard.navigate {
                 when(request) {
                     "quick-add"->add()
+                    "budgets"->nav.navigate("budgets") {launchSingleTop=true}
                     "favourite"->{
                         if(model.state.value.snapshot.favourites.none {it.id==favouriteId}) nav.navigate("favourites") {launchSingleTop=true}
                         else if(unfinishedEntry()) replacementFavourite=favouriteId

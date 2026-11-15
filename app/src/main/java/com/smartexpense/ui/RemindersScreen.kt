@@ -36,17 +36,20 @@ import java.time.format.DateTimeFormatter
     var permissionForBackup by rememberSaveable {mutableStateOf(false)}
     var backupDayPicker by rememberSaveable {mutableStateOf(false)}
     var backupTimePicker by rememberSaveable {mutableStateOf(false)}
+    val budgetAlerts by preferences.budgetAlertsEnabled.collectAsStateWithLifecycle(initialValue=false)
+    var permissionForBudget by rememberSaveable {mutableStateOf(false)}
+    fun saveBudgetAlerts(enabled:Boolean) {model.action("Budget alert settings saved") {preferences.setBudgetAlerts(enabled)}}
     LaunchedEffect(Unit) {settings=model.repository.reminderSettings();hour=settings!!.hour;minute=settings!!.minute}
     fun save(enabled:Boolean) {model.action("Reminder settings saved") {model.repository.saveReminderSettings(ReminderSettings(enabled,hour,minute));settings=model.repository.reminderSettings()}}
     fun saveBackup(enabled:Boolean,day:Int=backupStatus.weeklyDay?:7,backupHour:Int=backupStatus.hour,backupMinute:Int=backupStatus.minute) {model.action("Backup reminder settings saved") {preferences.setBackupSchedule(day,backupHour,backupMinute,enabled,System.currentTimeMillis());withContext(Dispatchers.IO) {backupCoordinator.syncNotifications()}}}
     val permission=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {granted->
         denied=!granted
-        if(granted) {if(permissionForBackup) saveBackup(true) else save(true)}
+        if(granted) {if(permissionForBudget) saveBudgetAlerts(true) else if(permissionForBackup) saveBackup(true) else save(true)}
     }
-    fun enable(enabled:Boolean,backup:Boolean) {
+    fun enable(enabled:Boolean,backup:Boolean,budget:Boolean=false) {
         if(enabled && Build.VERSION.SDK_INT>=33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            permissionForBackup=backup;permission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        } else if(backup) saveBackup(enabled) else save(enabled)
+            permissionForBackup=backup;permissionForBudget=budget;permission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else if(budget) saveBudgetAlerts(enabled) else if(backup) saveBackup(enabled) else save(enabled)
     }
     Page("Reminders") {
         item {SectionLabel("DAILY RECURRING DRAFTS")}
@@ -66,6 +69,9 @@ import java.time.format.DateTimeFormatter
             ReferenceDetailRow("Time",R.drawable.ic_clock_outline,LocalTime.of(backupStatus.hour,backupStatus.minute).format(DateTimeFormatter.ofPattern("h:mm a"))) {if(!app.busy) backupTimePicker=true}
         }}
         item {Text(if(backupStatus.weeklyDay==null && backupStatus.reminderEnabled) "Current reminder repeats every seven days. Choose a day or time to use a weekly schedule. Files are never exported automatically." else "Approximate timing depends on Android battery settings. Files are never exported automatically.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)}
+        item {SectionLabel("BUDGET ALERTS")}
+        item {GroupedCard {ReferenceToggleRow("Budget alerts",budgetAlerts,{enable(it,false,budget=true)},enabled=!app.busy)}}
+        item {Text("Alerts when this month's spending reaches 80% and 100% of a budget you set. Checked on this device when your records change.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)}
         if(denied) item {ReferenceInfo("Notification permission was not granted. The reminder remains off.")}
         item {SectionLabel("NOTIFICATION EXAMPLE")}
         item {GroupedCard {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {

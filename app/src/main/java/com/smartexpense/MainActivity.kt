@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
     private val model:AppViewModel by viewModels()
     private val deviceLock by lazy {com.smartexpense.data.DeviceLockController(this)}
     @javax.inject.Inject lateinit var reminders:com.smartexpense.data.ReminderCoordinator
+    @javax.inject.Inject lateinit var budgetAlerts:com.smartexpense.data.BudgetAlertCoordinator
     @javax.inject.Inject lateinit var backupReminders:com.smartexpense.data.BackupReminderCoordinator
     override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState);val lock=deviceLock;enableEdgeToEdge(statusBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT),navigationBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT));setContent { TrackerTheme { androidx.compose.runtime.CompositionLocalProvider(LocalDeviceLock provides lock) {SecureLedgerSurface(lock.view,lock::unlock) {TrackerApp(model)}} } }
@@ -32,6 +33,9 @@ import kotlinx.coroutines.withContext
                 try {withContext(Dispatchers.IO) {reminders.syncNotifications()}}
                 catch(e:kotlinx.coroutines.CancellationException) {throw e}
                 catch(e:Exception) {android.util.Log.w("LocalReminders","Could not reconcile local reminders",e)}
+                try {withContext(Dispatchers.IO) {budgetAlerts.check()}}
+                catch(e:kotlinx.coroutines.CancellationException) {throw e}
+                catch(e:Exception) {android.util.Log.w("BudgetAlerts","Could not check budget alerts",e)}
                 try {com.smartexpense.widget.QuickExpenseWidget.refresh(this@MainActivity,model.repository)}
                 catch(e:kotlinx.coroutines.CancellationException) {throw e}
                 catch(e:Exception) {android.util.Log.w("TallyWidget","Could not update expense shortcuts",e)}
@@ -48,6 +52,7 @@ import kotlinx.coroutines.withContext
     private fun handleLaunch(intent:android.content.Intent?) {
         when(intent?.action) {
             com.smartexpense.data.BackupReminderCoordinator.OPEN_BACKUP->model.requestLaunch("backup")
+            com.smartexpense.data.BudgetAlertCoordinator.OPEN_BUDGETS->model.requestLaunch("budgets")
             "com.smartexpense.QUICK_ADD"->model.requestLaunch("quick-add")
             com.smartexpense.widget.QuickExpenseWidget.ACTION_FAVOURITE->intent.getStringExtra(com.smartexpense.widget.QuickExpenseWidget.EXTRA_FAVOURITE_ID)?.let(model::requestFavourite)
         }

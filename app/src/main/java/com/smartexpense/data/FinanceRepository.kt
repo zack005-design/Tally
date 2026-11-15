@@ -15,6 +15,8 @@ class LocalDataFailure(cause:Throwable):Exception("Could not save local data. Yo
 /** Widget-safe shortcut metadata; never includes an amount, account, or history. */
 data class WidgetFavourite(val id:String,val name:String,val categoryName:String,val categoryIcon:String)
 
+data class BudgetAlertInputs(val budgets:List<Budget>,val report:PeriodReport,val categoryNames:Map<String,String>)
+
 data class ReminderInputs(val templates:List<RecurringTemplate>,val recorded:Set<String>)
 
 @Singleton
@@ -86,6 +88,12 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         dao.plans().asSequence().filter {it.kind=="favourite"}.mapNotNull {runCatching {PlanCodec.favourite(it)}.getOrNull()}
             .filter {it.accountId in activeAccounts && (it.categoryId==null || it.categoryId in activeCategories)}
             .take(3).map {value->val category=activeCategories[value.categoryId];WidgetFavourite(value.id,value.description,category?.name.orEmpty(),category?.icon.orEmpty())}.toList()
+    }}
+    /** Only this month's budgets, totals and category names; no individual records. */
+    suspend fun budgetAlertInputs(month:java.time.YearMonth,today:java.time.LocalDate):BudgetAlertInputs=storage {db.withTransaction {
+        val budgets=dao.budgets().filter {it.month==month.toString()}.map {Budget(it.id,it.month,it.categoryId,it.amount)}
+        if(budgets.isEmpty()) BudgetAlertInputs(emptyList(),PeriodReport(0,0,emptyMap(),emptyMap()),emptyMap())
+        else BudgetAlertInputs(budgets,report(month.atDay(1),today),dao.categories().associate {it.id to it.name})
     }}
     suspend fun reminderSettings():ReminderSettings=storage {dao.reminderSettingsRow()?.let(PlanCodec::reminder)?:ReminderSettings()}
     /** Scheduling needs templates and stable occurrence IDs, never balances or reports. */
