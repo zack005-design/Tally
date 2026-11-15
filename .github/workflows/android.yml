@@ -56,7 +56,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [26, 35, 36, 37]
+        # Android 17 images are published as android-37.0, not android-37.
+        api: [26, 35, 36, '37.0']
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
