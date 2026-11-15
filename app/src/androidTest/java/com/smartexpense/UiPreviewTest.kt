@@ -66,19 +66,20 @@ class UiPreviewTest {
     @Test fun activityPreview() {val s=snapshot();render("activity") {ActivityScreen(s,{})};compose.onNodeWithText("Shared dinner").assertExists();capture("activity")}
     @Test fun addPreview() {val s=snapshot();render("add") {AdvancedEntryScreen(EntryUiState(amount="890",description="Shared dinner",accountId="bank",categoryId="food",shared=true,participants=people.map {it.id},paid=mapOf("self" to "500","r" to "290","k" to "100","a" to "0")),s.accounts,s.people,s.categories,s.groups,{},{},{})};compose.onNodeWithText("Total amount (₹)").assertExists();capture("split-review");compose.onNode(hasScrollAction()).performScrollToNode(hasText("Save transaction"));capture("split-review-details")}
     @Test fun describePreview() {val s=snapshot();render("add") {AdvancedEntryScreen(EntryUiState(),s.accounts,s.people,s.categories,s.groups,{},{},{},records=s.records)};capture("describe")}
-    @Test fun manualPreview() {val s=snapshot();render("add") {AdvancedEntryScreen(EntryUiState(),s.accounts,s.people,s.categories,s.groups,{},{},{})};compose.onNodeWithText("Manual").performClick();compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToIndex(0);capture("manual")}
+    @Test fun manualPreview() {val s=snapshot();render("add") {AdvancedEntryScreen(EntryUiState(),s.accounts,s.people,s.categories,s.groups,{},{},{})};compose.onNodeWithContentDescription("Entry options").performClick();compose.onNodeWithText("Use manual entry").performClick();compose.onNodeWithText("Describe entry").assertDoesNotExist();capture("manual")}
     @Test fun splitPreview() {val s=snapshot();render("split") {SplitScreen(s,{},{},{},{_,_->},{},{_,_,_,_->})};compose.onAllNodesWithText("₹277.50").onFirst().assertExists();capture("split")}
-    @Test fun insightsPreview() {val s=snapshot();render("insights") {InsightsScreen(s,month.toString(),{},{_,_,_->})};compose.onAllNodesWithText("₹6420.00").onFirst().assertExists();capture("insights")}
+    @Test fun insightsPreview() {val s=snapshot();render("insights") {InsightsScreen(s,month.toString(),{},{_,_,_->})};compose.onAllNodesWithText("₹6,420").onFirst().assertExists();capture("insights")}
     @Test fun narrowLargeTextKeepsQuickActionAndMenuUsable() {
         compose.setContent {val density=LocalDensity.current;CompositionLocalProvider(LocalDensity provides Density(density.density,2f)) {TrackerTheme {androidx.compose.material3.Surface(color=Tokens.background,modifier=Modifier.width(androidx.compose.ui.unit.Dp(320f)).fillMaxHeight()) {HomeScreen(snapshot(),{_,_->},{},{},{},{})}}}}
         compose.onNodeWithContentDescription("Settings").assertIsDisplayed().performClick()
-        compose.onNodeWithText("Add expense").assertIsDisplayed().performClick()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Add money"))
+        compose.onNodeWithText("Add money").assertIsDisplayed().performClick()
         capture("overview-large-text")
     }
     @Test fun allNavigationDestinationsRemainInteractive() {
         var route=""
         compose.setContent {TrackerTheme {LedgerNavigation("home") {route=it}}}
-        listOf("Today" to "home","Friends" to "split","Activity" to "activity").forEach {(label,value)->compose.onNodeWithText(label).performClick();assertEquals(value,route)}
+        compose.onNodeWithText("Overview").assertIsSelected();listOf("Spending" to "insights","Friends" to "split").forEach {(label,value)->compose.onNodeWithText(label).performClick();assertEquals(value,route)}
     }
     @Test fun largeTextActivityPreview() {val s=snapshot();render("activity",true) {ActivityScreen(s,{})};compose.onNodeWithText("Filter").performScrollTo().performClick();compose.onNodeWithText("Type").performScrollTo().performClick();compose.onNodeWithText("Expense").performScrollTo().performClick();compose.onNodeWithText("Apply filters").performScrollTo().performClick();compose.onNodeWithText("Shared dinner").assertExists();capture("activity-large-text")}
     @Test fun largeTextAddKeepsSaveReachable() {
@@ -86,12 +87,12 @@ class UiPreviewTest {
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Save transaction"))
         compose.onNodeWithText("Save transaction").assertIsDisplayed().assertIsEnabled();capture("add-large-text")
     }
-    @Test fun largeTextSplitPreview() {val s=snapshot();render("split",true) {SplitScreen(s,{},{},{},{_,_->},{},{_,_,_,_->})};compose.onNode(hasScrollAction()).performScrollToNode(hasText("Record repayment"));compose.onNodeWithText("Record repayment").assertIsDisplayed();capture("split-large-text")}
-    @Test fun largeTextInsightsPreview() {val s=snapshot();render("insights",true) {InsightsScreen(s,month.toString(),{},{_,_,_->})};compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasText("Daily spending"));compose.onNodeWithText("Daily spending").assertIsDisplayed();capture("insights-large-text")}
+    @Test fun largeTextSplitPreview() {val s=snapshot();render("split",true) {SplitScreen(s,{},{},{},{_,_->},{},{_,_,_,_->})};compose.onNode(hasScrollAction()).performScrollToNode(hasText("Settlement history"));compose.onAllNodesWithText("Settlement history").onFirst().performClick();compose.onNode(hasScrollAction()).performScrollToNode(hasText("Record repayment"));compose.onNodeWithText("Record repayment").assertIsDisplayed();capture("split-large-text")}
+    @Test fun largeTextInsightsPreview() {val s=snapshot();render("insights",true) {InsightsScreen(s,month.toString(),{},{_,_,_->})};compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasText("Daily breakdown"));compose.onNodeWithText("Daily breakdown").assertIsDisplayed();capture("insights-large-text")}
     @Test fun largeTextNavigationKeepsEveryDestinationUsable() {
         var route="home"
         compose.setContent {val density=LocalDensity.current;CompositionLocalProvider(LocalDensity provides Density(density.density,2f)) {TrackerTheme {Box(Modifier.width(androidx.compose.ui.unit.Dp(320f))) {LedgerNavigation(route) {route=it}}}}}
-        listOf("Today" to "home","Friends" to "split","Activity" to "activity").forEach {(label,value)->compose.onNodeWithText(label).assertIsDisplayed().performClick();assertEquals(value,route)}
+        compose.onNodeWithText("Overview").assertIsDisplayed().assertIsSelected();listOf("Spending" to "insights","Friends" to "split").forEach {(label,value)->compose.onNodeWithText(label).assertIsDisplayed().performClick();assertEquals(value,route)}
         capture("navigation-large-text")
     }
 }

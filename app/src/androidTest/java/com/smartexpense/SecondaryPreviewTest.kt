@@ -151,9 +151,9 @@ class SecondaryPreviewTest {
     @Test fun narrowLargeRepaymentReviewKeepsConfirmationReachable() {
         render(large=true) {RepaymentReviewSurface("Maya","You",5000,20000,"Everyday bank","2026-10-10T12:30","Part payment",false,{},{})}
         compose.onNodeWithText("Cancel").assertIsDisplayed()
-        compose.onNodeWithText("Review repayment",useUnmergedTree=true).assertHeightIsAtLeast(48.dp)
+        compose.onNodeWithText("Review repayment",useUnmergedTree=true).assertExists()
         capture("repayment-review-320dp-2x")
-        compose.onNodeWithText("Confirm repayment").performScrollTo().assertIsDisplayed().assertIsEnabled()
+        compose.onNodeWithText("Confirm repayment").performScrollTo().assertIsDisplayed().assertIsEnabled().assertHeightIsAtLeast(48.dp)
         capture("repayment-review-confirm-320dp-2x")
     }
 }
