@@ -1,4 +1,4 @@
-[← Back to Tally](../../README.md#your-payment-and-your-share)
+[← Back to Tally](../../README.md#features)
 
 # Your payment and your share
 
