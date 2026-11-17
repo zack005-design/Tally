@@ -30,4 +30,4 @@ The review depends on the exported records you provide. Missing entries or perio
 
 Tally does not upload your data automatically. Sharing a CSV in Codex is a separate action from storing records locally in the Android app.
 
-[Export instructions](reports-and-backups.md#export-a-report) · [Privacy](privacy.md) · [Back to Tally](../../README.md#documentation)
+[Export instructions](reports-and-backups.md#export-a-report) · [Privacy](privacy.md) · [Back to Tally](../../README.md)

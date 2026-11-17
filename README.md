@@ -72,7 +72,7 @@ Tally keeps what you paid separate from what you spent, so lending money to frie
 
 <img src="docs/assets/readme-split.png" width="100%" alt="A ₹900 dinner paid by you and split three ways: ₹300 counts as your spending and ₹600 is owed to you by Rahul and Ananya.">
 
-Transfers between your own accounts are never counted as spending either. Read more about [payments, shares and settlements](docs/features/payment-and-share.md).
+Transfers between your own accounts are never counted as spending either.
 
 ## Privacy
 
@@ -84,8 +84,6 @@ Transfers between your own accounts are never counted as spending either. Read m
 | **Encrypted backups** | Backups are protected by your password. Automatic Android cloud backup is turned off. |
 | **You decide what to share** | Reports and receipts are exported only when you ask. Shared receipts leave out private notes and account balances. |
 
-See [privacy and app lock](docs/features/privacy.md) for details.
-
 ## Download
 
 The current version is **0.2.4**, for Android 8.0 and later. Tally comes in two editions with the same finance and receipt features:
@@ -95,16 +93,14 @@ The current version is **0.2.4**, for Android 8.0 and later. Tally comes in two 
 | **AI** | A local model suggests drafts, with rules as a fallback | [tally-0.2.4-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.4-20261115/tally-0.2.4-ai-debug.apk) |
 | **Non-AI** | Rule-based parsing only | [tally-0.2.4-non-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.4-20261115/tally-0.2.4-non-ai-debug.apk) |
 
-Both editions share one app ID, so either installs over 0.2.3 or over the other edition and keeps your data. Make an encrypted backup before updating.
-
-For step-by-step instructions, see the [installation guide](docs/getting-started.md). Checksums are listed on the [downloads page](docs/downloads.md), and changes are described in the [0.2.4 release notes](docs/releases/0.2.4.md).
+Both editions share one app ID, so you can switch between them without losing data. Make an encrypted backup before updating. See the [installation guide](docs/getting-started.md) for step-by-step instructions.
 
 > [!NOTE]
-> Tally is in active development. The APKs are debug-signed test builds and are not published on the Play Store. Testing on physical phones is still in progress; see [installation safety](docs/installation-safety.md) and the [known limitations](docs/releases/0.2.4.md).
+> Tally is in active development. These APKs are debug-signed test builds and are not published on the Play Store.
 
 ## Building from source
 
-Tally is written in Kotlin with Jetpack Compose, Room and Hilt, and targets Android 17 (API 37) with Android Gradle Plugin 9. Finance calculations live in a plain Kotlin domain layer, separate from the UI and Android services.
+Tally is written in Kotlin with Jetpack Compose, Room and Hilt, and targets Android 17 (API 37).
 
 ```bash
 ./gradlew :app:assembleDebug                      # AI edition
@@ -112,14 +108,4 @@ Tally is written in Kotlin with Jetpack Compose, Room and Hilt, and targets Andr
 ./gradlew :app:testDebugUnitTest :app:lintDebug   # Unit tests and lint
 ```
 
-Every change runs unit tests, lint and database compatibility checks on Android 8, 15, 16 and 17 in CI. See the [source guide](docs/project.md) for the project layout.
-
-## Documentation
-
-- [User guides](docs/README.md) for every feature
-- [Source guide](docs/project.md) and [contributing](CONTRIBUTING.md)
-- [On-device model design](ml/tally-command/COMMAND_MODEL.md) and [evaluation](ml/tally-command/VERIFICATION_V3.md)
-- [Tally Companion](docs/features/companion.md), an optional, separate tool for reviewing exported CSVs and [importing chat history](docs/features/chat-history-import.md)
-- [Changelog](CHANGELOG.md)
-
-Found a problem? [Open an issue](https://github.com/zack005-design/Tally/issues/new/choose).
+[Contributing](CONTRIBUTING.md)&nbsp;&nbsp;|&nbsp;&nbsp;[Report an issue](https://github.com/zack005-design/Tally/issues/new/choose)
