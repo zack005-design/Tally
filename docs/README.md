@@ -17,6 +17,7 @@ Learn how to record everyday spending, manage shared bills, and keep control of 
 | [Spending and planning](features/spending-and-planning.md) | Calendars, budgets, allowances, and savings goals. |
 | [Reports and backups](features/reports-and-backups.md) | Exporting reports and creating restorable backups. |
 | [Quicker daily entry](features/quick-entry.md) | Favourites, repeat purchases, and home-screen entry. |
+| [Appearance](features/appearance.md) | Light, dark, or following your phone's theme. |
 | [Privacy and app lock](features/privacy.md) | Local storage, authentication, and sharing controls. |
 | [Phone compatibility](phone-compatibility.md) | Supported Android versions, Xiaomi 17T, and testing limits. |
 | [Tally Companion](features/companion.md) | Reviewing an exported CSV with your Codex plugins. |

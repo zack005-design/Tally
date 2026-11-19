@@ -9,6 +9,9 @@ import javax.inject.Singleton
 import com.smartexpense.domain.*
 private val Context.preferences by preferencesDataStore("tracker-settings")
 @Singleton class Preferences @Inject constructor(@param:ApplicationContext private val context:Context) {
+    private val theme=stringPreferencesKey("theme-mode")
+    val themeMode=context.preferences.data.map {ThemeMode.from(it[theme])}
+    suspend fun setThemeMode(value:ThemeMode) {context.preferences.edit {it[theme]=value.id}}
     private val compact=booleanPreferencesKey("compact-amounts")
     val compactAmounts=context.preferences.data.map { it[compact]?:false }
     suspend fun setCompact(value:Boolean) { context.preferences.edit { it[compact]=value } }

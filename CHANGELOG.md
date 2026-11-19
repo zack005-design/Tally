@@ -4,7 +4,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
-No changes yet.
+- Add a dark theme. Tally follows your phone's dark theme setting by default; choose Light or Dark under **Settings → Appearance**. [Appearance guide](docs/features/appearance.md)
 
 ## [0.2.4](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115)
 

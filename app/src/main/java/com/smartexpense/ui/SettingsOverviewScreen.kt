@@ -16,6 +16,10 @@ import com.smartexpense.domain.LocalSettings
             GroupedDivider()
             GroupedRow("Replay walkthrough", R.drawable.ic_document_outline, "See key features again") { onNavigate("welcome") }
         } }
+        item { SectionLabel("APPEARANCE") }
+        item { GroupedCard {
+            GroupedRow("Theme", R.drawable.ic_visibility, "System default, light or dark") { onNavigate("appearance") }
+        } }
         item { SectionLabel("SECURITY") }
         item { GroupedCard {
             GroupedRow("App lock", R.drawable.ic_lock_outline, "Protect your data") { onNavigate("app-lock") }

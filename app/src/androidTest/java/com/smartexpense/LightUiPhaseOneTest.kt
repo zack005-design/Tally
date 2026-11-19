@@ -51,11 +51,13 @@ class LightUiPhaseOneTest {
         }
     }
 
-    @Test fun lightPaletteIsUsedEvenWhenDarkIsRequested() {
+    @Test fun darkPaletteIsUsedOnlyWhenRequested() {
+        var dark by androidx.compose.runtime.mutableStateOf(false)
         var background = Color.Unspecified
         var primary = Color.Unspecified
-        compose.setContent { TrackerTheme(darkTheme = true) { background = MaterialTheme.colorScheme.background; primary = MaterialTheme.colorScheme.primary } }
-        compose.runOnIdle { assertEquals(Color(0xFFF6F7F9), background); assertEquals(Color(0xFF0066FF), primary) }
+        compose.setContent { TrackerTheme(darkTheme = dark) { background = MaterialTheme.colorScheme.background; primary = MaterialTheme.colorScheme.primary } }
+        compose.runOnIdle { assertEquals(Color(0xFFF6F7F9), background); assertEquals(Color(0xFF0066FF), primary); dark = true }
+        compose.runOnIdle { assertEquals(Color(0xFF0E1116), background); assertEquals(Color(0xFF8DB2FF), primary) }
     }
 
     @Test fun navigationIncludesSpendingAndFreshComposeAction() {

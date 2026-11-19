@@ -205,7 +205,7 @@ import java.time.format.DateTimeFormatter
                     Text(amount,style=MaterialTheme.typography.titleMedium)
                 }
                 FlowRow(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                    (if(owners.size>=3) listOf("Shared") else owners).forEach {owner->Surface(shape=Tokens.field,color=when {owner=="You" || owner=="Shared"->Tokens.secondarySurface;owner.startsWith("R")->Color(0xFFFFEEE3);else->MaterialTheme.colorScheme.tertiaryContainer}) {
+                    (if(owners.size>=3) listOf("Shared") else owners).forEach {owner->Surface(shape=Tokens.field,color=when {owner=="You" || owner=="Shared"->Tokens.secondarySurface;owner.startsWith("R")->Tints.peachSoft;else->MaterialTheme.colorScheme.tertiaryContainer}) {
                         Text(owner,Modifier.padding(horizontal=10.dp,vertical=6.dp),style=MaterialTheme.typography.bodySmall,color=if(owner=="You") Tokens.accent else MaterialTheme.colorScheme.onTertiaryContainer)
                     }}
                     Surface(shape=androidx.compose.foundation.shape.CircleShape,color=Tokens.paper,border=androidx.compose.foundation.BorderStroke(1.dp,Tokens.border)) {

@@ -38,6 +38,8 @@ private fun trendAxis(paise:Double):String {
     var breakdown by rememberSaveable {mutableStateOf(false)}
     val line=Tokens.accent
     val grid=Tokens.border
+    val fillTop=tint(Color(0xFFB9ACFF).copy(alpha=.55f),Color(0xFF8D7BE0).copy(alpha=.40f))
+    val fillBottom=tint(Color(0xFFE8E4FF).copy(alpha=.15f),Color(0xFF8D7BE0).copy(alpha=.04f))
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Column(Modifier.height(170.dp).widthIn(min=38.dp),verticalArrangement=Arrangement.SpaceBetween) {
@@ -58,7 +60,7 @@ private fun trendAxis(paise:Double):String {
                     points.zipWithNext().forEach {(a,b)->val center=(a.x+b.x)/2; cubicTo(center,a.y,center,b.y,b.x,b.y)}
                 }
                 val area=Path().apply {addPath(path);lineTo(size.width,baseline);lineTo(0f,baseline);close()}
-                drawPath(area,Brush.verticalGradient(listOf(Color(0xFFB9ACFF).copy(alpha=.55f),Color(0xFFE8E4FF).copy(alpha=.15f))))
+                drawPath(area,Brush.verticalGradient(listOf(fillTop,fillBottom)))
                 drawPath(path,line,style=Stroke(width=2.dp.toPx(),cap=StrokeCap.Round))
             }
         }

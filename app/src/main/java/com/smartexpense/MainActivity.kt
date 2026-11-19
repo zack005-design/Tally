@@ -5,6 +5,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.SystemBarStyle
 import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smartexpense.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.lifecycle.lifecycleScope
@@ -20,8 +22,19 @@ import kotlinx.coroutines.withContext
     @javax.inject.Inject lateinit var reminders:com.smartexpense.data.ReminderCoordinator
     @javax.inject.Inject lateinit var budgetAlerts:com.smartexpense.data.BudgetAlertCoordinator
     @javax.inject.Inject lateinit var backupReminders:com.smartexpense.data.BackupReminderCoordinator
+    @javax.inject.Inject lateinit var preferences:com.smartexpense.data.Preferences
     override fun onCreate(savedInstanceState:Bundle?) {
-        super.onCreate(savedInstanceState);val lock=deviceLock;enableEdgeToEdge(statusBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT),navigationBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT));setContent { TrackerTheme { androidx.compose.runtime.CompositionLocalProvider(LocalDeviceLock provides lock) {SecureLedgerSurface(lock.view,lock::unlock) {TrackerApp(model)}} } }
+        super.onCreate(savedInstanceState);val lock=deviceLock;enableEdgeToEdge(statusBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT),navigationBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT));setContent {
+            val mode by preferences.themeMode.collectAsStateWithLifecycle(initialValue=com.smartexpense.domain.ThemeMode.System)
+            val dark=mode.isDark(androidx.compose.foundation.isSystemInDarkTheme())
+            // Status and navigation bar icons must contrast with the app background, not the system theme.
+            androidx.compose.runtime.LaunchedEffect(dark) {
+                val transparent=android.graphics.Color.TRANSPARENT
+                val bars=if(dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent,transparent)
+                enableEdgeToEdge(statusBarStyle=bars,navigationBarStyle=bars)
+            }
+            TrackerTheme(darkTheme=dark) { androidx.compose.runtime.CompositionLocalProvider(LocalDeviceLock provides lock) {SecureLedgerSurface(lock.view,lock::unlock) {TrackerApp(model)}} }
+        }
         if(savedInstanceState==null) handleLaunch(intent)
         lifecycleScope.launch {repeatOnLifecycle(Lifecycle.State.STARTED) {
             launch {

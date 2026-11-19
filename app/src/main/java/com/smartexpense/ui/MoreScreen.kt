@@ -16,7 +16,7 @@ private val toolGroups = listOf(
     ToolGroup("friends", "Friends & groups", "Split expenses and settle up", R.drawable.ic_people, listOf("split" to "Shared balances", "people" to "Friends", "groups" to "Groups", "default-splits" to "Default group splits")),
     ToolGroup("history", "History & reports", "Spending, trends and exports", R.drawable.ic_clock_outline, listOf("activity" to "Transactions", "calendar" to "Spending calendar", "diary" to "Daily diary", "monthly-review" to "Monthly review", "export" to "Export monthly report", "history-import" to "Import from ChatGPT")),
     ToolGroup("bills", "Bills & categories", "Manage categories and rules", R.drawable.ic_tag_outline, listOf("bill-import" to "Photo / PDF bill", "foreign-entry" to "Foreign bill to INR", "categories" to "Categories", "category-rules" to "Merchant categories")),
-    ToolGroup("settings", "Settings & backup", "App preferences and data", R.drawable.ic_settings_outline, listOf("profile" to "Your profile", "app-lock" to "App lock", "reminders" to "Local reminders", "backup" to "Backup & restore"))
+    ToolGroup("settings", "Settings & backup", "App preferences and data", R.drawable.ic_settings_outline, listOf("profile" to "Your profile", "appearance" to "Appearance", "app-lock" to "App lock", "reminders" to "Local reminders", "backup" to "Backup & restore"))
 )
 
 @Composable fun MoreScreen(section: String? = null, onNavigate: (String) -> Unit) {

@@ -170,14 +170,14 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
         val stacked=density.fontScale>1.3f || (maxWidth-8.dp)/options.size<labelWidth+24.dp
         if(stacked) {
             Column(Modifier.fillMaxWidth().selectableGroup(),verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                options.forEach {(id,label)->Surface(onClick={onSelect(id)},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp).semantics {this.selected=id==selected},shape=Tokens.field,color=if(id==selected) Tokens.accent else Tokens.secondarySurface,contentColor=if(id==selected) Color.White else Tokens.text) {
+                options.forEach {(id,label)->Surface(onClick={onSelect(id)},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp).semantics {this.selected=id==selected},shape=Tokens.field,color=if(id==selected) Tokens.accent else Tokens.secondarySurface,contentColor=if(id==selected) MaterialTheme.colorScheme.onPrimary else Tokens.text) {
                     Box(Modifier.padding(12.dp),contentAlignment=Alignment.CenterStart) {Text(label,style=style)}
                 }}
             }
         } else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).selectableGroup().background(Tokens.secondarySurface,CircleShape).padding(4.dp)) {
             options.forEach {(id,label)->
                 val fill by androidx.compose.animation.animateColorAsState(if(id==selected) Tokens.accent else Tokens.secondarySurface, label="segment fill")
-                Surface(onClick={onSelect(id)},modifier=Modifier.weight(1f).fillMaxHeight().heightIn(min=48.dp).semantics {this.selected=id==selected},shape=CircleShape,color=fill,contentColor=if(id==selected) Color.White else Tokens.text) {
+                Surface(onClick={onSelect(id)},modifier=Modifier.weight(1f).fillMaxHeight().heightIn(min=48.dp).semantics {this.selected=id==selected},shape=CircleShape,color=fill,contentColor=if(id==selected) MaterialTheme.colorScheme.onPrimary else Tokens.text) {
                     Box(Modifier.padding(horizontal=12.dp,vertical=8.dp),contentAlignment=Alignment.Center) {
                         Text(label,style=style,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
                     }
@@ -273,8 +273,8 @@ fun personLabel(person:com.smartexpense.domain.Person,people:List<com.smartexpen
 }
 @Composable fun InitialAvatar(name:String,modifier:Modifier=Modifier) {
     val tone=when(name.trim().firstOrNull()?.uppercaseChar()) {'Y'->0;'R','F'->1;'A','W'->2;else->Math.floorMod(name.hashCode(),3)+1}
-    val background=when(tone) {0->Color(0xFFDDEBFF);1->Color(0xFFFFE3D3);2->Color(0xFFE8DDFF);else->Color(0xFFFFE4EB)}
-    val foreground=when(tone) {0->Tokens.accent;1->Color(0xFFAD4D19);2->Color(0xFF7952CB);else->Color(0xFFB53061)}
+    val background=when(tone) {0->tint(Color(0xFFDDEBFF),Color(0xFF1B2F57));1->tint(Color(0xFFFFE3D3),Color(0xFF3D2719));2->tint(Color(0xFFE8DDFF),Color(0xFF2E2650));else->tint(Color(0xFFFFE4EB),Color(0xFF3D1B28))}
+    val foreground=when(tone) {0->Tokens.accent;1->tint(Color(0xFFAD4D19),Color(0xFFFFB38A));2->tint(Color(0xFF7952CB),Color(0xFFC3B4FF));else->Tints.pink}
     Box(modifier.size(40.dp).background(background,CircleShape),contentAlignment=Alignment.Center) {
         Text(name.trim().take(1).uppercase(),style=MaterialTheme.typography.titleMedium,color=foreground)
     }

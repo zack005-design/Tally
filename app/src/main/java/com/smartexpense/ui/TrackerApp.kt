@@ -113,6 +113,7 @@ import com.smartexpense.domain.*
                 composable("export") {LocalExportScreen(model)}
                 composable("history-import") {ChatHistoryImportScreen(model.repository,ui.snapshot) {nav.popBackStack()}}
                 composable("app-lock") {AppLockSettingsScreen()}
+                composable("appearance") {AppearanceScreen()}
                 composable("reminders") {RemindersScreen(model)}
                 composable("foreign-entry") {ManualExchangeScreen {currency,amount,rate,date,inr->
                     if(!billExpected) model.newEntry()

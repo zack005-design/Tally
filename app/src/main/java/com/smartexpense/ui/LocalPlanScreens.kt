@@ -13,7 +13,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.CircleShape
 import com.smartexpense.R
 import com.smartexpense.domain.*
@@ -45,7 +44,7 @@ import java.time.*
             item {SectionLabel("GROUP")}
             item {GroupedCard {Surface(onClick={choosingGroup=true},color=Tokens.paper,modifier=Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(14.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Surface(shape=CircleShape,color=Color(0xFFFFEEE3),modifier=Modifier.size(40.dp)) {Box(contentAlignment=Alignment.Center) {Text(group.name.take(1).uppercase(),color=Color(0xFFC35A26),style=MaterialTheme.typography.titleMedium)}}
+                    Surface(shape=CircleShape,color=Tints.peachSoft,modifier=Modifier.size(40.dp)) {Box(contentAlignment=Alignment.Center) {Text(group.name.take(1).uppercase(),color=Tints.peach,style=MaterialTheme.typography.titleMedium)}}
                     Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                         Text(group.name,style=MaterialTheme.typography.bodyLarge)
                         Text("${people.size} people · ${people.joinToString(", ",transform=::name)}",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
@@ -65,7 +64,7 @@ import java.time.*
                 HorizontalDivider(color=Tokens.border)
                 preview.getOrNull()?.let {shares->people.forEachIndexed {index,id->
                     Row(Modifier.fillMaxWidth().padding(vertical=12.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                        Surface(shape=CircleShape,color=if(index%3==1) Color(0xFFFFEEE3) else Tokens.secondarySurface,modifier=Modifier.size(40.dp)) {Box(contentAlignment=Alignment.Center) {Text(name(id).take(1).uppercase(),color=Tokens.accent,style=MaterialTheme.typography.titleMedium)}}
+                        Surface(shape=CircleShape,color=if(index%3==1) Tints.peachSoft else Tokens.secondarySurface,modifier=Modifier.size(40.dp)) {Box(contentAlignment=Alignment.Center) {Text(name(id).take(1).uppercase(),color=Tokens.accent,style=MaterialTheme.typography.titleMedium)}}
                         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                             Text(name(id),style=MaterialTheme.typography.bodyLarge)
                             Text(when(method) {"Percentage"->"${values[id].orEmpty()}%";"Weighted"->"${values[id].orEmpty()} shares";else->"1 share"},color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
@@ -206,7 +205,7 @@ import java.time.*
     val options=listOf("Equal" to "Equal","Percentage" to "Percent","Weighted" to "Shares","Fixed" to "Exact","Itemized" to "Itemized")
     if(androidx.compose.ui.platform.LocalDensity.current.fontScale>1.3f) EditorialSegmentedControl(selectedMethod,options,onSelect)
     else Row(Modifier.fillMaxWidth().background(Tokens.paper,Tokens.field).padding(4.dp)) {
-        options.forEach {(id,label)->Surface(onClick={onSelect(id)},modifier=Modifier.weight(1f).heightIn(min=48.dp).semantics {selected=id==selectedMethod;role=androidx.compose.ui.semantics.Role.Tab},shape=Tokens.field,color=if(id==selectedMethod) Tokens.accent else Tokens.secondarySurface,contentColor=if(id==selectedMethod) Color.White else Tokens.muted) {
+        options.forEach {(id,label)->Surface(onClick={onSelect(id)},modifier=Modifier.weight(1f).heightIn(min=48.dp).semantics {selected=id==selectedMethod;role=androidx.compose.ui.semantics.Role.Tab},shape=Tokens.field,color=if(id==selectedMethod) Tokens.accent else Tokens.secondarySurface,contentColor=if(id==selectedMethod) MaterialTheme.colorScheme.onPrimary else Tokens.muted) {
             Box(Modifier.padding(horizontal=2.dp,vertical=8.dp),contentAlignment=Alignment.Center) {Text(label,style=MaterialTheme.typography.labelSmall)}
         }}
     }

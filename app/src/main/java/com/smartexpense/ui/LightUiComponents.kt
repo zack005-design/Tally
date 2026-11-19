@@ -32,11 +32,11 @@ internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray }
 
 @Composable internal fun ReferenceIcon(icon: Int, tone: ReferenceTone = ReferenceTone.Blue, size: androidx.compose.ui.unit.Dp = 36.dp) {
     val (background, foreground) = when (tone) {
-        ReferenceTone.Blue -> Color(0xFFEAF1FF) to Tokens.accent
-        ReferenceTone.Lavender -> Color(0xFFF0EAFF) to Color(0xFF7052C4)
-        ReferenceTone.Peach -> Color(0xFFFFEEE3) to Color(0xFFC35A26)
-        ReferenceTone.Pink -> Color(0xFFFFEBF1) to Color(0xFFB53061)
-        ReferenceTone.Gray -> Color(0xFFEEF0F5) to Tokens.muted
+        ReferenceTone.Blue -> Tints.blueSoft to Tokens.accent
+        ReferenceTone.Lavender -> Tints.lavenderSoft to Tints.lavender
+        ReferenceTone.Peach -> Tints.peachSoft to Tints.peach
+        ReferenceTone.Pink -> Tints.pinkSoft to Tints.pink
+        ReferenceTone.Gray -> Tints.graySoft to Tokens.muted
     }
     Surface(shape = if(size>=64.dp) CircleShape else RoundedCornerShape(size*.28f), color = background, modifier = Modifier.size(size)) {
         Box(contentAlignment = Alignment.Center) { Icon(painterResource(icon), null, Modifier.size(size * .55f), tint = foreground) }
@@ -91,10 +91,10 @@ internal fun referenceMoney(paise: Long): String = editorialMoney(paise).let { i
 }
 
 @Composable internal fun ReferenceInfo(text: String, warning: Boolean = false) {
-    Surface(Modifier.fillMaxWidth(), shape = Tokens.field, color = if (warning) Color(0xFFFFF3DD) else Tokens.secondarySurface) {
+    Surface(Modifier.fillMaxWidth(), shape = Tokens.field, color = if (warning) Tints.warningSoft else Tokens.secondarySurface) {
         Row(Modifier.padding(14.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.Top) {
             Icon(painterResource(R.drawable.ic_info),null,Modifier.size(20.dp),tint=Tokens.muted)
-            Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = if (warning) Color(0xFF865315) else Tokens.muted)
+            Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = if (warning) Tints.warning else Tokens.muted)
         }
     }
 }
@@ -145,7 +145,7 @@ internal fun referenceMoney(paise: Long): String = editorialMoney(paise).let { i
     Surface(shape = CircleShape, color = Tokens.secondarySurface) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = RoundedCornerShape(7.dp), color = Tokens.accent, modifier = Modifier.size(27.dp)) {
-                Icon(painterResource(R.drawable.ic_tally_mark), null, Modifier.fillMaxSize().padding(2.dp), tint = Color.White)
+                Icon(painterResource(R.drawable.ic_tally_mark), null, Modifier.fillMaxSize().padding(2.dp), tint = MaterialTheme.colorScheme.onPrimary)
             }
             Text("tally", style = MaterialTheme.typography.titleSmall, color = Tokens.accent)
         }
