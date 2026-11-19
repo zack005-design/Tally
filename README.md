@@ -27,7 +27,7 @@ Tally is a personal finance app for Android that works entirely offline. It reco
   <tr>
     <td width="50%" valign="top">
       <h4><a href="docs/features/everyday-money.md">Accounts and transactions</a></h4>
-      Keep balances for a bank account, cash, GPay and more. Record expenses, income and refunds, move money between accounts and reconcile balances.
+      Keep balances for a bank account, cash, GPay and more. Record expenses, income and refunds, move money between accounts, reconcile balances and tag transactions with your own labels.
     </td>
     <td width="50%" valign="top">
       <h4><a href="docs/features/shared-bills.md">Shared bills</a></h4>
@@ -41,7 +41,7 @@ Tally is a personal finance app for Android that works entirely offline. It reco
     </td>
     <td valign="top">
       <h4><a href="docs/features/spending-and-planning.md">Spending and planning</a></h4>
-      Daily and category views, monthly budgets with optional alerts, allowances, recurring drafts and savings goals.
+      Daily and category views, a yearly summary, monthly budgets with optional alerts, allowances, recurring drafts and savings goals.
     </td>
   </tr>
   <tr>
