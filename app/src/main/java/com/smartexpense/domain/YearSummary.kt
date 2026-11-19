@@ -23,6 +23,8 @@ data class YearSummary(
     val recordCount: Int,
     /** First year with an active record, so the screen does not offer empty years before it. */
     val earliestYear: Int? = null,
+    /** Your spending on records carrying each tag. A record with two tags counts towards both. */
+    val tags: Map<String, Long> = emptyMap(),
 ) {
     val hasRecords: Boolean get() = recordCount > 0
 
@@ -52,6 +54,10 @@ object YearSummaries {
         }
         val from = start.atStartOfDay(zone).toInstant().toEpochMilli()
         val end = through.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        val inYear = records.filter { !it.reversed && it.date >= from && it.date < end }
+        val tags = Tags.all(inYear.filter { it.kind == Kind.EXPENSE || it.kind == Kind.REFUND })
+            .associateWith { tag -> Reports.period(inYear.filter { Tags.has(it, tag) }, start, through, zone).spending }
+            .filterValues { it != 0L }
         return YearSummary(
             year = year,
             through = through,
@@ -60,7 +66,8 @@ object YearSummaries {
             months = months,
             categories = current.categories.filterValues { it != 0L },
             previousSpending = previous.spending,
-            recordCount = records.count { !it.reversed && it.date >= from && it.date < end },
+            recordCount = inYear.size,
+            tags = tags,
         )
     }
 }

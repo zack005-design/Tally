@@ -54,6 +54,18 @@ class YearSummaryTest {
         assertEquals(0L, empty.spending)
     }
 
+    @Test fun tagTotalsUseYourShareAndCountRecordsUnderEveryTag() {
+        val records = listOf(
+            record("2025-02-01", Kind.EXPENSE, 90000, personal = 30000).copy(tags = listOf("Goa trip", "Friends")),
+            record("2025-02-02", Kind.EXPENSE, 20000).copy(tags = listOf("goa trip")),
+            record("2025-02-03", Kind.REFUND, 5000).copy(tags = listOf("Goa trip")),
+            record("2025-02-04", Kind.TRANSFER, 70000, personal = 0, category = null).copy(tags = listOf("Moving")),
+            record("2025-02-05", Kind.EXPENSE, 8000, reversed = true).copy(tags = listOf("Goa trip")),
+        )
+        val summary = YearSummaries.build(records, 2025, today = LocalDate.parse("2026-01-01"), zone = zone)
+        assertEquals(mapOf("Friends" to 30000L, "Goa trip" to 45000L), summary.tags)
+    }
+
     @Test fun leapDayInProgressComparesWithTheEndOfFebruary() {
         val records = listOf(record("2027-02-28", Kind.EXPENSE, 1000), record("2028-02-29", Kind.EXPENSE, 3000))
         val summary = YearSummaries.build(records, 2028, today = LocalDate.parse("2028-02-29"), zone = zone)

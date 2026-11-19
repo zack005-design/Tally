@@ -17,6 +17,9 @@ interface TrackerDao {
     @Insert suspend fun insertReceiptChunks(values:List<ReceiptChunkEntity>)
     @Query("DELETE FROM receipts WHERE transactionId=:id") suspend fun deleteReceipt(id:String)
     @Query("SELECT * FROM localPlans ORDER BY key") suspend fun plans():List<PlanEntity>
+    @Query("SELECT * FROM localPlans WHERE `key`=:key") suspend fun plan(key:String):PlanEntity?
+    @Query("SELECT * FROM localPlans WHERE `key`=:key") fun observePlan(key:String):Flow<PlanEntity?>
+    @Query("SELECT * FROM localPlans WHERE kind='tags'") suspend fun tagPlans():List<PlanEntity>
     @Query("SELECT * FROM localPlans WHERE `key`='settings:reminder'") suspend fun reminderSettingsRow():PlanEntity?
     @Query("SELECT * FROM localPlans WHERE kind='template' ORDER BY `key`") suspend fun reminderTemplates():List<PlanEntity>
     // Reversed recurring entries still reserve their stable occurrence ID.

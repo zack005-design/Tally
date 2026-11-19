@@ -20,6 +20,7 @@ Open **Tools → History & reports → Yearly summary** to see a whole year at o
 - how spending compares with last year. For the year in progress, Tally compares the same dates, so January to November is measured against January to November last year.
 - spending for each month, with the highest month marked
 - your top categories and their share of the year
+- your spending for each [tag](everyday-money.md#tag-transactions)
 
 Use the arrows to move between years. The summary uses the same rules as monthly reports: only your share of a shared bill counts, refunds reduce spending, and transfers and repayments are not spending. It is built only from the records you entered.
 

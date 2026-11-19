@@ -21,6 +21,20 @@ Keep a clear record of what you have, what you spend, and how money moves betwee
 3. When moving cash between accounts, record a transfer.
 4. Check your account balances against your cash or payment app and use balance reconciliation when needed.
 
+## Tag transactions
+
+Tags are your own labels, such as `Goa trip` or `work`, that group transactions across categories.
+
+1. Open a saved transaction.
+2. Tap **Tags** and type one or more tags separated by commas. Tags you have used before appear as shortcuts.
+3. Tap **Save**. Leave the box empty and save to remove all tags.
+
+Each transaction can have up to 10 tags of up to 30 characters. A leading `#` is optional, and `Goa Trip` and `goa trip` count as the same tag.
+
+In **Transactions**, tap a tag above the list to show only those transactions, or search for a tag by name. The [yearly summary](spending-and-planning.md#yearly-summary) totals your spending for each tag.
+
+Tags never change amounts, balances or budgets. They are kept when you edit a transaction and are included in encrypted backups. A backup that contains tags cannot be restored by Tally 0.2.4 or earlier.
+
 ## How the accounting works
 
 A ₹500 transfer from GPay to Wallet changes the two account balances without creating income or spending. An expense reduces the selected account; a personal refund records money returned for a purchase.

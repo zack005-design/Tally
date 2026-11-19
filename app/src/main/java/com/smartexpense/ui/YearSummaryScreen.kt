@@ -56,6 +56,7 @@ import java.util.Locale
                 item { YearHero(shown) }
                 item { YearMonths(shown) }
                 if (shown.categories.isNotEmpty()) item { YearCategories(shown, s.categories) }
+                if (shown.tags.any { it.value > 0 }) item { YearTags(shown) }
                 item { ReferenceInfo("Only your share of shared bills counts as spending. Refunds reduce spending. Transfers and repayments are not spending.") }
             }
         }
@@ -118,6 +119,21 @@ private fun comparison(summary: YearSummary): String {
                     Text(referenceMoney(amount), Modifier.widthIn(min = 72.dp), style = MaterialTheme.typography.bodySmall, textAlign = androidx.compose.ui.text.style.TextAlign.End)
                 }
             }
+        }
+    }
+}
+
+@Composable private fun YearTags(summary: YearSummary) {
+    GroupedCard {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("By tag", style = MaterialTheme.typography.titleSmall)
+            summary.tags.entries.filter { it.value > 0 }.sortedByDescending { it.value }.take(10).forEach { (tag, amount) ->
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("#$tag", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    Text(referenceMoney(amount), style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            Text("A transaction with several tags counts towards each of them.", style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
         }
     }
 }

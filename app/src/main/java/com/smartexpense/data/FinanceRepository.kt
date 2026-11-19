@@ -36,7 +36,7 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
             "walletSources","gpaySchedule","resetTargets"
         ).map {snapshot(historyLimit,selectedMonth)}
         return combine(financial,dao.observeDiary(),dao.observeLocalSettings(),dao.observePlans()) {base,diary,settings,plans->
-            base.copy(
+            withTags(base.copy(
                 diary=diary.associate {it.date to it.text},
                 localSettings=settings?.let {LocalSettings(it.name,it.avatar,it.welcomeDone,it.lastReviewMonth)}?:LocalSettings(),
                 groupDefaults=plans.filter {it.kind=="group"}.map(PlanCodec::group),
@@ -44,9 +44,23 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
                 goals=plans.filter {it.kind=="goal"}.map(PlanCodec::goal),
                 categoryRules=plans.filter {it.kind=="category"}.map(PlanCodec::category),
                 favourites=plans.filter {it.kind=="favourite"}.map(PlanCodec::favourite)
-            )
+            ),plans)
         }.distinctUntilChanged()
     }
+
+    private fun tagMap(plans:List<PlanEntity>):Map<String,List<String>> = plans.filter {it.kind=="tags"}.associate {PlanCodec.tags(it)}
+    /** Tags are stored beside the ledger, so they are attached after the financial snapshot loads. */
+    private fun withTags(snapshot:Snapshot,plans:List<PlanEntity>):Snapshot {
+        val tags=tagMap(plans)
+        return snapshot.copy(records=snapshot.records.map {record->tags[record.id].orEmpty().let {if(it==record.tags) record else record.copy(tags=it)}})
+    }
+    /** Replaces a transaction's tags. An empty list removes them. Tags never change balances. */
+    suspend fun saveTags(transactionId:String,tags:List<String>)=storage {db.withTransaction {
+        val values=Tags.normalize(tags)
+        val record=requireNotNull(dao.transaction(transactionId)) {"This transaction no longer exists"}
+        require(!record.reversed) {"Reversed transactions cannot be tagged"}
+        if(values.isEmpty()) dao.deletePlan(PlanCodec.tagsKey(transactionId)) else dao.savePlan(PlanCodec.tags(transactionId,values))
+    }}
 
     private class HistoryPreviewRollback(val preview:HistoryLedgerPreview):RuntimeException()
 
@@ -245,7 +259,8 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
     /** Loads every record, so it works even when the on-screen history is limited. */
     suspend fun yearSummary(year:Int,today:java.time.LocalDate=java.time.LocalDate.now()):YearSummary=storage {db.withTransaction {
         val zone=java.time.ZoneId.systemDefault()
-        val records=dao.transactions().map {Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed)}
+        val tags=tagMap(dao.tagPlans())
+        val records=dao.transactions().map {Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,tags=tags[it.id].orEmpty())}
         val earliest=records.filter {!it.reversed}.minOfOrNull {it.date}?.let {java.time.Instant.ofEpochMilli(it).atZone(zone).year}
         YearSummaries.build(records,year,today,zone).copy(earliestYear=earliest)
     }}
@@ -254,7 +269,7 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val transactions=dao.recentTransactions(historyLimit);val ids=transactions.map {it.id}
         val plans=dao.plans();val members=dao.members();val entries=ids.chunked(900).flatMap {dao.entriesForRecords(it)}.groupBy {it.transactionId};val shares=ids.chunked(900).flatMap {dao.sharesForRecords(it)}.groupBy {it.transactionId};val settlements=ids.chunked(900).flatMap {dao.settlementsForRecords(it)}.groupBy {it.transactionId}
         val today=java.time.LocalDate.now();val month=java.time.YearMonth.from(today);val previous=month.minusMonths(1);val selected=java.time.YearMonth.parse(selectedMonth)
-        Snapshot(dao.balances().map { Account(it.id,it.name,it.type,it.balance,it.archived) },dao.people().map { Person(it.id,it.name,it.aliases.split('|').filter(String::isNotBlank)) },dao.groups().map { g -> Group(g.id,g.name,members.filter { it.groupId==g.id }.map { it.personId }) },dao.categories().map { Category(it.id,it.name,it.color,it.icon,it.archived) },dao.budgets().map { Budget(it.id,it.month,it.categoryId,it.amount) },transactions.map { Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,entries[it.id].orEmpty().map {it.accountId},(shares[it.id].orEmpty().map {it.personId}+settlements[it.id].orEmpty().flatMap {listOf(it.fromPerson,it.toPerson)}).distinct()) },dao.debts().map { Debt(it.id,it.transactionId,it.fromPerson,it.toPerson,it.amount,it.outstanding,it.date,it.groupId) },DashboardMetrics(report(today,today).spending,report(today.with(java.time.DayOfWeek.MONDAY),today).spending,report(month.atDay(1),today),report(previous.atDay(1),previous.atDay(minOf(today.dayOfMonth,previous.lengthOfMonth()))).spending),report(selected.atDay(1),selected.atEndOfMonth()),dao.groupSpending().associate {it.groupId to it.amount},dao.transactionCount(),selectedMonth,report(selected.minusMonths(1).atDay(1),selected.minusMonths(1).atEndOfMonth()).spending,walletSources=dao.walletSources()?.let {WalletSources(it.walletId,it.gpayId,it.lastResetMonth,dao.transaction("gpay-reset:${it.gpayId}:${it.lastResetMonth}")?.date,dao.gpaySchedule()?.toDomain()?:GpaySchedule())},diary=dao.diary().associate {it.date to it.text},localSettings=dao.localSettings()?.let {LocalSettings(it.name,it.avatar,it.welcomeDone,it.lastReviewMonth)}?:LocalSettings(),groupDefaults=plans.filter {it.kind=="group"}.map(PlanCodec::group),templates=plans.filter {it.kind=="template"}.map(PlanCodec::template),goals=plans.filter {it.kind=="goal"}.map(PlanCodec::goal),categoryRules=plans.filter {it.kind=="category"}.map(PlanCodec::category),favourites=plans.filter {it.kind=="favourite"}.map(PlanCodec::favourite))
+        withTags(Snapshot(dao.balances().map { Account(it.id,it.name,it.type,it.balance,it.archived) },dao.people().map { Person(it.id,it.name,it.aliases.split('|').filter(String::isNotBlank)) },dao.groups().map { g -> Group(g.id,g.name,members.filter { it.groupId==g.id }.map { it.personId }) },dao.categories().map { Category(it.id,it.name,it.color,it.icon,it.archived) },dao.budgets().map { Budget(it.id,it.month,it.categoryId,it.amount) },transactions.map { Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,entries[it.id].orEmpty().map {it.accountId},(shares[it.id].orEmpty().map {it.personId}+settlements[it.id].orEmpty().flatMap {listOf(it.fromPerson,it.toPerson)}).distinct()) },dao.debts().map { Debt(it.id,it.transactionId,it.fromPerson,it.toPerson,it.amount,it.outstanding,it.date,it.groupId) },DashboardMetrics(report(today,today).spending,report(today.with(java.time.DayOfWeek.MONDAY),today).spending,report(month.atDay(1),today),report(previous.atDay(1),previous.atDay(minOf(today.dayOfMonth,previous.lengthOfMonth()))).spending),report(selected.atDay(1),selected.atEndOfMonth()),dao.groupSpending().associate {it.groupId to it.amount},dao.transactionCount(),selectedMonth,report(selected.minusMonths(1).atDay(1),selected.minusMonths(1).atEndOfMonth()).spending,walletSources=dao.walletSources()?.let {WalletSources(it.walletId,it.gpayId,it.lastResetMonth,dao.transaction("gpay-reset:${it.gpayId}:${it.lastResetMonth}")?.date,dao.gpaySchedule()?.toDomain()?:GpaySchedule())},diary=dao.diary().associate {it.date to it.text},localSettings=dao.localSettings()?.let {LocalSettings(it.name,it.avatar,it.welcomeDone,it.lastReviewMonth)}?:LocalSettings(),groupDefaults=plans.filter {it.kind=="group"}.map(PlanCodec::group),templates=plans.filter {it.kind=="template"}.map(PlanCodec::template),goals=plans.filter {it.kind=="goal"}.map(PlanCodec::goal),categoryRules=plans.filter {it.kind=="category"}.map(PlanCodec::category),favourites=plans.filter {it.kind=="favourite"}.map(PlanCodec::favourite)),plans)
     } }
     suspend fun report(start:java.time.LocalDate,end:java.time.LocalDate):PeriodReport = storage {
         val zone=java.time.ZoneId.systemDefault();val from=start.atStartOfDay(zone).toInstant().toEpochMilli();val until=end.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli();val totals=dao.reportTotals(from,until)
@@ -368,7 +383,11 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
             // Commit a deterministic original bill allocation. Later group netting is only a suggestion.
             dao.insertObligations(Finance.settlements(net).map { ObligationEntity(id(),draft.id,it.from,it.to,it.amount) })
         }
-        if(replaces!=null) dao.insertRevision(RevisionEntity(id(),replaces,draft.id,System.currentTimeMillis(),"Corrected transaction"))
+        if(replaces!=null) {
+            dao.insertRevision(RevisionEntity(id(),replaces,draft.id,System.currentTimeMillis(),"Corrected transaction"))
+            // A correction keeps the user's labels.
+            dao.plan(PlanCodec.tagsKey(replaces))?.let {dao.savePlan(PlanCodec.tags(draft.id,PlanCodec.tags(it).second))}
+        }
         validateBalances()
         draft.id
     } }
@@ -380,10 +399,10 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         EntryDraft(kind=Kind.valueOf(tx.kind),amount=tx.amount,description=tx.description,accountId=entries.firstOrNull { it.amount<0 }?.accountId?:entries.firstOrNull()?.accountId?:dao.accounts().firstOrNull()?.id.orEmpty(),destinationAccountId=if(tx.kind==Kind.TRANSFER.name) entries.firstOrNull { it.amount>0 }?.accountId else null,categoryId=tx.categoryId,groupId=tx.groupId,date=tx.date,notes=tx.notes,participants=shares.map { it.personId }.ifEmpty { listOf("self") },contributions=contributions.associate { it.personId to it.amount }.ifEmpty { mapOf("self" to tx.amount) },splitRule=if(shares.isEmpty()) SplitRule.Equal else SplitRule.Fixed(shares.associate { it.personId to it.amount }),refundOf=tx.refundOf,selfPayments=payments.takeIf {it.size>1}.orEmpty())
     } }
     suspend fun detail(txId:String):RecordDetail = storage { db.withTransaction {
-        val t=requireNotNull(dao.transaction(txId));val record=Record(t.id,Kind.valueOf(t.kind),t.description,t.amount,t.personalAmount,t.categoryId,t.groupId,t.date,t.notes,t.reversed);val settlements=dao.settlementsForRecords(listOf(txId))
+        val t=requireNotNull(dao.transaction(txId));val record=Record(t.id,Kind.valueOf(t.kind),t.description,t.amount,t.personalAmount,t.categoryId,t.groupId,t.date,t.notes,t.reversed,tags=dao.plan(PlanCodec.tagsKey(txId))?.let {PlanCodec.tags(it).second}.orEmpty());val settlements=dao.settlementsForRecords(listOf(txId))
         RecordDetail(record,dao.entriesFor(txId).map {Movement(it.accountId,it.amount)},dao.sharesFor(txId).associate {it.personId to it.amount},dao.contributionsFor(txId).associate {it.personId to it.amount},settlements.map {SuggestedSettlement(it.fromPerson,it.toPerson,it.amount)},dao.allocations().filter {allocation->settlements.any {it.id==allocation.settlementId}}.associate {it.obligationId to it.amount})
     } }
-    fun details(txId:String):Flow<RecordDetail> = dao.observeTransaction(txId).map {detail(txId)}
+    fun details(txId:String):Flow<RecordDetail> = combine(dao.observeTransaction(txId),dao.observePlan(PlanCodec.tagsKey(txId))) {_,_->detail(txId)}
     suspend fun reverse(txId:String) = storage { db.withTransaction { reverseInternal(txId); dao.insertRevision(RevisionEntity(id(),txId,null,System.currentTimeMillis(),"User reversed transaction")) } }
     private suspend fun validateBalances() {
         // A corrected/backdated entry before a reset cannot leak the previous month's cash into this month.

@@ -24,7 +24,14 @@ object PlanCodec {
         val hour=integer(j.get("hour"));val minute=integer(j.get("minute"));require(hour in 0..23 && minute in 0..59)
         return ReminderSettings(enabled,hour.toInt(),minute.toInt(),j.getString("lastDate"))
     }
-    fun validate(row:PlanEntity,groups:List<Group>,accountIds:Set<String>,categoryIds:Set<String>) {
+    fun tagsKey(transactionId:String)="tags:$transactionId"
+    fun tags(transactionId:String,values:List<String>)=PlanEntity(tagsKey(transactionId),"tags",JSONObject().put("transaction",transactionId).put("tags",JSONArray().apply {values.forEach {put(it)}}).toString())
+    fun tags(row:PlanEntity):Pair<String,List<String>> {
+        val j=JSONObject(row.json);val array=j.getJSONArray("tags")
+        return j.getString("transaction") to (0 until array.length()).map {array.getString(it)}
+    }
+    /** [transactionIds] is null when there is no transaction list to check tags against. */
+    fun validate(row:PlanEntity,groups:List<Group>,accountIds:Set<String>,categoryIds:Set<String>,transactionIds:Set<String>?=null) {
         require(row.json.length<=10000)
         when(row.kind) {
             "favourite"->{val value=favourite(row);require(row.key=="favourite:${value.id}" && value.accountId in accountIds && (value.categoryId==null || value.categoryId in categoryIds))}
@@ -32,6 +39,7 @@ object PlanCodec {
             "group"->{val value=group(row);require(row.key=="group:${value.groupId}");value.validate((listOf("self")+groups.single {it.id==value.groupId}.members).distinct())}
             "template"->{val value=template(row);require(row.key=="template:${value.id}" && value.accountId in accountIds)}
             "goal"->{val value=goal(row);require(row.key=="goal:${value.id}" && value.allocated<=value.target)}
+            "tags"->{val (transaction,values)=tags(row);require(row.key==tagsKey(transaction) && Tags.isNormalized(values) && (transactionIds==null || transaction in transactionIds))}
             "category"->{val value=category(row);require(row.key=="category:${value.id}" && value.merchant.isNotBlank() && value.merchant.length<=100 && value.categoryId in categoryIds)}
             else->throw IllegalArgumentException("Unknown planning record")
         }

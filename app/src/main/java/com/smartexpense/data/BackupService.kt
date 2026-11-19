@@ -99,10 +99,12 @@ private data class BackupBundle(val accounts:List<AccountEntity>,val people:List
             val bytes=ReceiptStorage.join(chunks.filter {it.transactionId==receipt.transactionId}.sortedBy {it.position})
             ReceiptStorage.validate(ScannedBill(bytes,receipt.mime,receipt.text));require(ReceiptStorage.hash(bytes)==receipt.hash) {"Receipt checksum mismatch"}
         }
-        require(plans.map {it.key}.distinct().size==plans.size && plans.size<=10000) {"Invalid planning records"}
+        // Tags are one row per tagged transaction, so they are limited by the transaction count instead.
+        require(plans.map {it.key}.distinct().size==plans.size && plans.count {it.kind!="tags"}<=10000 && plans.count {it.kind=="tags"}<=transactions.size) {"Invalid planning records"}
         require(plans.count {it.kind=="favourite"}<=6) {"A backup can contain at most six favourites"}
         val planGroups=groups.map {group->Group(group.id,group.name,members.filter {it.groupId==group.id}.map {it.personId})}
-        plans.forEach {PlanCodec.validate(it,planGroups,accounts.map {it.id}.toSet(),categories.map {it.id}.toSet())}
+        val transactionIds=transactions.map {it.id}.toSet()
+        plans.forEach {PlanCodec.validate(it,planGroups,accounts.map {it.id}.toSet(),categories.map {it.id}.toSet(),transactionIds)}
         require(schedules.size<=1 && schedules.all {it.id==1 && it.day in 1..31 && it.target>=0 && walletSources.isNotEmpty()}) {"Invalid GPay reset settings"}
         schedules.forEach {GpaySchedule(it.enabled,it.target,it.day,it.startMonth,it.nextMonth);require(it.nextMonth>=it.startMonth)}
         require(settings.size<=1 && settings.all {it.id==1 && it.name.length<=100 && it.avatar in listOf("initials","wallet","leaf","star")}) {"Invalid local profile"}

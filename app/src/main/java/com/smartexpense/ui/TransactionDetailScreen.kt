@@ -35,6 +35,8 @@ import kotlinx.coroutines.launch
     var receipt by remember(id) {mutableStateOf<com.smartexpense.data.ScannedBill?>(null)}
     var showReceipt by rememberSaveable(id) {mutableStateOf(false)}
     var removeReceipt by rememberSaveable(id) {mutableStateOf(false)}
+    var editingTags by rememberSaveable(id) {mutableStateOf(false)}
+    var tagText by rememberSaveable(id) {mutableStateOf("")}
     fun sharePdf(original:Boolean=false) {
         val savedDetail=detail
         val savedReceipt=receipt
@@ -61,7 +63,12 @@ import kotlinx.coroutines.launch
         TransactionDetailView(record,detail,s,receipt!=null,{showReceipt=true},onShare=if(canShare) ({sharing=true}) else null,
             onEdit=if(!record.reversed && !sharedRefund && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,onReady=onEdit)}) else null,
             onDuplicate=if(!record.reversed && !sharedRefund && record.kind !in listOf(Kind.REPAYMENT,Kind.ADJUSTMENT,Kind.OFFSET)) ({model.edit(id,duplicate=true,onReady=onEdit)}) else null,
-            onRefund=if(!record.reversed && record.kind==Kind.EXPENSE && detail!=null) ({onRefund(refundRecord)}) else null) {actions=true}
+            onRefund=if(!record.reversed && record.kind==Kind.EXPENSE && detail!=null) ({onRefund(refundRecord)}) else null,
+            onTags=if(!record.reversed) ({tagText=record.tags.joinToString(", ");editingTags=true}) else null) {actions=true}
+        if(editingTags) TagEditorSheet(tagText,{tagText=it},Tags.all(s.records),onDismiss={editingTags=false}) {tags->
+            editingTags=false
+            model.action(if(tags.isEmpty()) "Tags removed" else "Tags saved") {model.repository.saveTags(id,tags)}
+        }
         if(sharing && canShare) EditorialBottomSheet("Share receipt PDF",{sharing=false;shareError=null}) {
             val summary=if(requireNotNull(detail).shares.size>1) billSummary(requireNotNull(detail),s.people,s.debts) else "${record.description}\nBill total: ${Money.format(record.amount)}"
             Text(summary)
@@ -98,7 +105,7 @@ import kotlinx.coroutines.launch
     }
 }
 
-@Composable fun TransactionDetailView(record:Record,detail:RecordDetail?,snapshot:Snapshot,hasReceipt:Boolean=false,onReceipt:()->Unit={},onShare:(()->Unit)?=null,onEdit:(()->Unit)?=null,onDuplicate:(()->Unit)?=null,onRefund:(()->Unit)?=null,onActions:()->Unit) {
+@Composable fun TransactionDetailView(record:Record,detail:RecordDetail?,snapshot:Snapshot,hasReceipt:Boolean=false,onReceipt:()->Unit={},onShare:(()->Unit)?=null,onEdit:(()->Unit)?=null,onDuplicate:(()->Unit)?=null,onRefund:(()->Unit)?=null,onTags:(()->Unit)?=null,onActions:()->Unit) {
     fun name(id:String)=if(id=="self") "You" else snapshot.people.find {it.id==id}?.let {personLabel(it,snapshot.people)}?:"Participant"
     var expanded by rememberSaveable(record.id) {mutableStateOf(false)}
     val date=Instant.ofEpochMilli(record.date).atZone(ZoneId.systemDefault()).toLocalDateTime()
@@ -116,6 +123,9 @@ import kotlinx.coroutines.launch
             ReferenceDetailRow("Account",R.drawable.ic_wallet_outline,record.accountIds.mapNotNull {id->snapshot.accounts.find {it.id==id}?.name}.joinToString().ifBlank {"No cash movement"})
             snapshot.categories.find {it.id==record.categoryId}?.let {GroupedDivider(14.dp);ReferenceDetailRow("Category",R.drawable.ic_food,it.name)}
             GroupedDivider(14.dp);ReferenceDetailRow("Description",R.drawable.ic_document_outline,record.description)
+        }}
+        if(onTags!=null || record.tags.isNotEmpty()) item {GroupedCard {
+            ReferenceDetailRow("Tags",R.drawable.ic_tag_outline,record.tags.joinToString(", ").ifEmpty {"Add tags"},onClick=onTags)
         }}
         if(hasReceipt) item {Surface(color=Tokens.secondarySurface,shape=Tokens.card) {Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("Attachment",style=MaterialTheme.typography.labelMedium,color=Tokens.muted)

@@ -27,6 +27,8 @@ import java.time.format.DateTimeFormatter
     var account by rememberSaveable {mutableStateOf("all")}
     var person by rememberSaveable {mutableStateOf("all")}
     var group by rememberSaveable {mutableStateOf("all")}
+    // Empty means every tag; tags themselves are never empty.
+    var tag by rememberSaveable {mutableStateOf("")}
     var start by rememberSaveable {mutableStateOf("")}
     var end by rememberSaveable {mutableStateOf("")}
     var minimum by rememberSaveable {mutableStateOf("")}
@@ -37,14 +39,16 @@ import java.time.format.DateTimeFormatter
         filters=false
     }
     fun resetFilters() {
-        query="";kind="all";category="all";account="all";person="all";group="all"
+        query="";kind="all";category="all";account="all";person="all";group="all";tag=""
         start="";end="";minimum="";maximum="";monthText=""
     }
     val zone=ZoneId.systemDefault()
+    val allTags=remember(s.records) {Tags.all(s.records)}
+    LaunchedEffect(allTags) {if(tag.isNotEmpty() && allTags.none {it.equals(tag,true)}) tag=""}
     val categoryNames=remember(s.categories) {s.categories.associate {it.id to it.name}}
     val accountNames=remember(s.accounts) {s.accounts.associate {it.id to it.name}}
     val personNames=remember(s.people) {s.people.associate {it.id to it.name}}
-    val filtered=remember(s.records,categoryNames,accountNames,personNames,query,monthText,kind,category,account,person,group,start,end,minimum,maximum,zone) {
+    val filtered=remember(s.records,categoryNames,accountNames,personNames,query,monthText,kind,category,account,person,group,tag,start,end,minimum,maximum,zone) {
         val selectedMonth=monthText.takeIf {it.isNotEmpty()}?.let(YearMonth::parse)
         val from=runCatching {start.takeIf {it.isNotBlank()}?.let {LocalDate.parse(it).atStartOfDay(zone).toInstant().toEpochMilli()}}.getOrNull()
         val through=runCatching {end.takeIf {it.isNotBlank()}?.let {LocalDate.parse(it).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()}}.getOrNull()
@@ -57,9 +61,10 @@ import java.time.format.DateTimeFormatter
             (selectedMonth==null || YearMonth.from(Instant.ofEpochMilli(r.date).atZone(zone))==selectedMonth) &&
                 (kind=="all" || r.kind.name==kind) && (category=="all" || r.categoryId==category) &&
                 (account=="all" || account in r.accountIds) && (person=="all" || person in r.personIds) &&
-                (group=="all" || r.groupId==group) && (from==null || r.date>=from) &&
+                (group=="all" || r.groupId==group) && (tag.isEmpty() || Tags.has(r,tag)) && (from==null || r.date>=from) &&
                 (through==null || r.date<through) && (min==null || r.amount>=min) && (max==null || r.amount<=max) &&
                 (search.isEmpty() || r.description.contains(search,true) || r.notes.contains(search,true) ||
+                    r.tags.any {it.contains(search.removePrefix("#"),true)} ||
                     categoryNames[r.categoryId].orEmpty().contains(search,true) ||
                     r.accountIds.mapNotNull(accountNames::get).joinToString(" ").contains(search,true) ||
                     r.personIds.mapNotNull(personNames::get).joinToString(" ").contains(search,true))
@@ -74,6 +79,7 @@ import java.time.format.DateTimeFormatter
             val count=listOf(kind,category,account,person,group).count {it!="all"}+listOf(start,end,minimum,maximum).count {it.isNotBlank()}
             OutlinedButton({previousFilters=listOf(kind,category,account,person,group,start,end,minimum,maximum,monthText);filters=true}) {Text("Filter"+if(count>0) " · $count" else "")}
         }}
+        if(allTags.isNotEmpty()) item(key="tags") {Box(Modifier.padding(bottom=8.dp)) {ChipChoices(tag,listOf("" to "All tags")+allTags.map {it to "#$it"}) {tag=it}}}
         if(filtered.isEmpty()) item(key="empty") {
             EmptyLedger("No matching activity",if(s.records.isEmpty()) "Add your first transaction to start your journal." else "Try another search or clear your filters.",
                 action=if(s.records.isEmpty()) null else "Reset search & filters",onAction=::resetFilters)

@@ -7,7 +7,7 @@ data class Person(val id: String, val name: String, val aliases: List<String> = 
 data class Group(val id: String, val name: String, val members: List<String>)
 data class Category(val id: String, val name: String, val color: Long, val icon: String, val archived: Boolean)
 data class Budget(val id: String, val month: String, val categoryId: String?, val amount: Long)
-data class Record(val id: String, val kind: Kind, val description: String, val amount: Long, val personalAmount: Long, val categoryId: String?, val groupId: String?, val date: Long, val notes: String, val reversed: Boolean, val accountIds:List<String> = emptyList(),val personIds:List<String> = emptyList())
+data class Record(val id: String, val kind: Kind, val description: String, val amount: Long, val personalAmount: Long, val categoryId: String?, val groupId: String?, val date: Long, val notes: String, val reversed: Boolean, val accountIds:List<String> = emptyList(),val personIds:List<String> = emptyList(),val tags:List<String> = emptyList())
 data class RecordDetail(val record:Record,val entries:List<Movement>,val shares:Map<String,Long>,val contributions:Map<String,Long>,val settlements:List<SuggestedSettlement>,val allocations:Map<String,Long>)
 data class Debt(val id: String, val transactionId: String, val from: String, val to: String, val original: Long, val outstanding: Long, val date: Long,val groupId:String?=null)
 data class DashboardMetrics(val today:Long=0,val week:Long=0,val month:PeriodReport=PeriodReport(0,0,emptyMap(),emptyMap()),val previousToDate:Long=0)
