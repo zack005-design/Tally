@@ -29,6 +29,6 @@ Tally is a native Android application written in Kotlin with Jetpack Compose. It
 
 [Android checks](../.github/workflows/android.yml) cover JVM tests, lint, and APK compilation for both editions, plus a disposable-emulator job for upgrade and restore safety. The [current release report](releases/0.2.3.md) records published-build verification and its limits.
 
-Source changes on `main` can be newer than the latest APK. Read the release notes and versioned verification report to identify what a download contains. Both current APK editions are development builds. Signing and update compatibility are documented in [installation safety](installation-safety.md).
+Source changes on `main` can be newer than the latest APK. Read the release notes and versioned verification report to identify what a download contains. Both current APK editions are development builds. Signing and update compatibility are documented in [installation safety](installation-safety.md). To build a signed APK with your own key, follow [Build a signed release](release-signing.md).
 
 [Changelog](../CHANGELOG.md) · [Contribution guide](../CONTRIBUTING.md) · [Downloads](downloads.md)

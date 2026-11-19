@@ -6,6 +6,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 - Add a dark theme. Tally follows your phone's dark theme setting by default; choose Light or Dark under **Settings → Appearance**. [Appearance guide](docs/features/appearance.md)
 - Add a yearly summary under **Tools → History & reports**: total spending and income, a like-for-like comparison with last year, month-by-month spending and top categories. [Spending and planning](docs/features/spending-and-planning.md#yearly-summary)
+- Document how to create a release key, build and verify a signed APK, and move a phone from the debug build. [Build a signed release](docs/release-signing.md)
 
 ## [0.2.4](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115)
 

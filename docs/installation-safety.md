@@ -12,12 +12,14 @@ The release verifier rejects debug certificates even when their fingerprint is s
 
 ## Release configuration
 
+For step-by-step instructions on creating a key, building a signed APK and moving a phone from the debug build, see [Build a signed release](release-signing.md).
+
 Set `TALLY_KEYSTORE_FILE`, `TALLY_KEYSTORE_PASSWORD`, `TALLY_KEY_ALIAS` and `TALLY_KEY_PASSWORD` in the build environment. Keep the keystore and passwords outside the repository, and keep an independently recoverable secure copy of the signing identity. Release packaging fails without this configuration; it does not fall back to the debug identity.
 
 Build with `gradlew.bat :app:testReleaseUnitTest :app:lintRelease :app:assembleRelease`. Then run:
 
 ```powershell
-.\tools\verify-apk.ps1 -Apk app/build/outputs/apk/release/app-release.apk -ExpectedCertificateSha256 <trusted-certificate-sha256> -ExpectedVersionCode 5 -SdkRoot <android-sdk>
+.\tools\verify-apk.ps1 -Apk app/build/outputs/apk/release/app-release.apk -ExpectedCertificateSha256 <trusted-certificate-sha256> -ExpectedVersionCode <versionCode> -SdkRoot <android-sdk>
 ```
 
 Obtain the expected certificate fingerprint independently from the maintained signing identity, not from an untrusted APK. The script verifies the signature, trusted certificate, package, version, non-debuggable status, absence of Internet permission and disabled automatic Android backup. It writes an adjacent `.sha256` only after all checks pass. Distribution remains a separate, explicit step; no artifacts are uploaded by this tool.
