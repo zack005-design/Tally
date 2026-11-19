@@ -20,7 +20,7 @@ import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
+import androidx.compose.ui.platform.LocalConfiguration
 
 @Composable fun YearSummaryScreen(s: Snapshot, load: suspend (Int) -> YearSummary) {
     val currentYear = LocalDate.now().year
@@ -64,6 +64,7 @@ import java.util.Locale
 }
 
 @Composable private fun YearHero(summary: YearSummary) {
+    val locale = LocalConfiguration.current.locales[0]
     val inProgress = summary.through.year == summary.year && summary.through != LocalDate.of(summary.year, 12, 31)
     GroupedCard {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -81,7 +82,7 @@ import java.util.Locale
             GroupedDivider(16.dp)
             Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Highest month", style = MaterialTheme.typography.bodyLarge)
-                Text(Month.of(month).getDisplayName(TextStyle.FULL, Locale.getDefault()), style = MaterialTheme.typography.bodyLarge)
+                Text(Month.of(month).getDisplayName(TextStyle.FULL, locale), style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
@@ -99,16 +100,17 @@ private fun comparison(summary: YearSummary): String {
 }
 
 @Composable private fun YearMonths(summary: YearSummary) {
+    val locale = LocalConfiguration.current.locales[0]
     val lastMonth = if (summary.through.year == summary.year) summary.through.monthValue else 12
     val highest = summary.months.maxOrNull()?.coerceAtLeast(1L) ?: 1L
     GroupedCard {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("By month", style = MaterialTheme.typography.titleSmall)
             summary.months.take(lastMonth).forEachIndexed { index, amount ->
-                val name = Month.of(index + 1).getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                val name = Month.of(index + 1).getDisplayName(TextStyle.SHORT, locale)
                 val fraction = if (amount > 0) (amount.toFloat() / highest).coerceIn(0.02f, 1f) else 0f
                 Row(
-                    Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = "${Month.of(index + 1).getDisplayName(TextStyle.FULL, Locale.getDefault())}: ${referenceMoney(amount)}" },
+                    Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = "${Month.of(index + 1).getDisplayName(TextStyle.FULL, locale)}: ${referenceMoney(amount)}" },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
