@@ -242,6 +242,13 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val records=dao.transactions().map {Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,personIds=shares[it.id].orEmpty().map {share->share.personId})}
         com.smartexpense.domain.monthlyReview(records,dao.entries().map {CashMovement(it.transactionId,it.accountId,it.amount)},java.time.YearMonth.parse(month))
     }}
+    /** Loads every record, so it works even when the on-screen history is limited. */
+    suspend fun yearSummary(year:Int,today:java.time.LocalDate=java.time.LocalDate.now()):YearSummary=storage {db.withTransaction {
+        val zone=java.time.ZoneId.systemDefault()
+        val records=dao.transactions().map {Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed)}
+        val earliest=records.filter {!it.reversed}.minOfOrNull {it.date}?.let {java.time.Instant.ofEpochMilli(it).atZone(zone).year}
+        YearSummaries.build(records,year,today,zone).copy(earliestYear=earliest)
+    }}
     suspend fun exportReport(month:String):Pair<Snapshot,MonthlyReview> = storage {db.withTransaction {snapshot(Int.MAX_VALUE,month) to monthlyReview(month)}}
     suspend fun snapshot(historyLimit:Int=Int.MAX_VALUE,selectedMonth:String=java.time.YearMonth.now().toString()):Snapshot = storage { db.withTransaction {
         val transactions=dao.recentTransactions(historyLimit);val ids=transactions.map {it.id}
