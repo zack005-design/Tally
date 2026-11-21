@@ -4,6 +4,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
@@ -67,12 +68,19 @@ import com.smartexpense.domain.*
             }
         }
     }
+    // Short windows (landscape phones) get a side rail so content keeps the full height.
+    val windowHeight=with(androidx.compose.ui.platform.LocalDensity.current) {androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp()}
+    val useRail=windowHeight<480.dp
+    val showNavigation=route in listOf("home","insights","split") && WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current)==0
+    val onTab:(String)->Unit={destination->exitGuard.navigate {
+        if(destination=="add") add() else nav.navigate(destination) {popUpTo("home") {saveState=true};launchSingleTop=true;restoreState=true}
+    }}
     Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
-        if(route in listOf("home","insights","split") && WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current)==0) LedgerNavigation(route) {destination->exitGuard.navigate {
-            if(destination=="add") add() else nav.navigate(destination) {popUpTo("home") {saveState=true};launchSingleTop=true;restoreState=true}
-        }}
+        if(showNavigation && !useRail) LedgerNavigation(route,onTab)
     }) {padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        Row(Modifier.fillMaxSize().padding(padding)) {
+        if(showNavigation && useRail) EditorialNavigationRail(route,onTab)
+        Column(Modifier.weight(1f).fillMaxHeight()) {
             if(ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) {CircularProgressIndicator()} else CompositionLocalProvider(LocalNavigationExitGuard provides exitGuard,LocalEditorialBack provides if(route!=null && route !in listOf("home","insights","add","split","balance-setup")) ({nav.popBackStack();Unit}) else null) {NavHost(nav,startDestination=remember {launchDestination(ui.snapshot)},modifier=Modifier.weight(1f),
                 // Compose's animation clock respects Android's animator duration scale, including zero.
@@ -152,6 +160,7 @@ import com.smartexpense.domain.*
                     else {model.newEntry(Kind.REFUND);model.change(model.entry.value.copy(description="Refund: ${record.description}",categoryId=record.categoryId,refundOf=id));nav.navigate("add")}
                 }}
             }}
+        }
         }
     }
     replacementFavourite?.let {id->

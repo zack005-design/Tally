@@ -1,6 +1,7 @@
 package com.smartexpense.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -40,7 +41,8 @@ private val lightTabs = listOf(
     val labelWidth = with(density) { lightTabs.maxOf { measurer.measure(it.second, style).size.width }.toDp() }
     Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
         BoxWithConstraints(Modifier.widthIn(max = 560.dp).fillMaxWidth()) {
-            val expanded = maxWidth - 80.dp < (labelWidth + 20.dp) * lightTabs.size
+            // Tabs need their labels plus 10dp padding each and 12dp of group padding; the add button needs 60dp plus a 12dp gap.
+            val expanded = maxWidth < (labelWidth + 10.dp) * lightTabs.size + 12.dp + 72.dp
             val stackedTabs = maxWidth - 12.dp < (labelWidth + 10.dp) * lightTabs.size
             val tab: @Composable (Triple<String, String, Int>, Modifier) -> Unit = { (destination, label, icon), modifier ->
                 val selected = route == destination
@@ -84,6 +86,36 @@ private val lightTabs = listOf(
                 Surface(onClick = addAction, interactionSource = addInteraction, shape = CircleShape, color = Tokens.accent,
                     contentColor = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(60.dp).softPress(addInteraction), shadowElevation = 3.dp) {
                     Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ic_compose), "Add expense", Modifier.size(26.dp)) }
+                }
+            }
+        }
+    }
+}
+
+
+/** Side navigation for short windows such as landscape phones, so screen content keeps the full height. */
+@Composable fun EditorialNavigationRail(route: String?, onNavigate: (String) -> Unit) {
+    val addInteraction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val addAction = lightHapticAction { onNavigate("add") }
+    Surface(Modifier.fillMaxHeight().width(96.dp), color = Tokens.paper.copy(alpha = .94f), border = BorderStroke(.5.dp, Tokens.border)) {
+        Column(Modifier.fillMaxHeight().navigationBarsPadding().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(vertical = 12.dp, horizontal = 8.dp).selectableGroup(),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)) {
+            Surface(onClick = addAction, interactionSource = addInteraction, shape = CircleShape, color = Tokens.accent,
+                contentColor = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(56.dp).softPress(addInteraction), shadowElevation = 3.dp) {
+                Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ic_compose), "Add expense", Modifier.size(24.dp)) }
+            }
+            lightTabs.forEach { (destination, label, icon) ->
+                val selected = route == destination
+                val selectAction = lightHapticAction { onNavigate(destination) }
+                val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                val tint by animateColorAsState(if (selected) Tokens.accent else Tokens.muted, tween(180), label = "Rail tint")
+                val fill by animateColorAsState(if (selected) Tokens.secondarySurface else Color.Transparent, tween(220), label = "Rail selection")
+                Column(Modifier.fillMaxWidth().softPress(interaction).clip(Tokens.card).background(fill)
+                    .selectable(selected, interactionSource = interaction, indication = androidx.compose.foundation.LocalIndication.current, role = Role.Tab, onClick = { if (!selected) selectAction() })
+                    .heightIn(min = 56.dp).padding(vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically)) {
+                    Icon(painterResource(icon), null, Modifier.size(22.dp), tint = tint)
+                    Text(label, style = MaterialTheme.typography.labelSmall, color = tint, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 2)
                 }
             }
         }
