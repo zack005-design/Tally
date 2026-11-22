@@ -42,8 +42,8 @@ A design preview of Tally with an iOS look, built for the Android app. It covers
 
 - **Adding an expense:** the New expense keypad sheet is the main path. Describe an entry and a scanned bill both fill in that same sheet. Turning on "Split with friends" opens the five-step shared bill.
 - **Money in:** "Add income" covers salary, allowances and any other money you receive. Transfers move money between your own accounts. "Adjust balance" corrects a balance that doesn't match.
-- **Shared bills:** spending totals, the calendar and budgets always count your share. Activity shows what you actually paid, with each day's "Spent" total showing your share.
-- **Daily limit:** the ₹500 a day on Summary is a budget you set. The money planner shows what your balance could cover, about ₹1,160 a day.
+- **Shared bills:** every list and total counts your share. A bill you paid for shows −₹420 (your share), with "You paid ₹1,680" underneath. The bill's detail screen shows the full amount and each person, including you.
+- **Daily limit:** the ₹500 a day on Summary is a budget you set. The money planner shows what your balance could cover, about ₹1,160 a day. Rent of ₹12,000 on 1 December is paid from that day's salary, not from this balance.
 - **App lock:** a new 6-digit passcode with fingerprint unlock. The phone's own screen lock always works as a fallback. The current app uses the phone's screen lock only.
 
 ## Example data
