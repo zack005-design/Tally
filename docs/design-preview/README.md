@@ -10,8 +10,7 @@ A design preview of Tally with an iOS look, built for the Android app. It covers
 
 ## Download
 
-- [Light screens (PDF, 33 pages)](tally-redesign-light.pdf): cover with contents, Android behaviour rules, every app screen and the design notes.
-- [Dark screens (PDF, 25 pages)](tally-redesign-dark.pdf): the dark version of every app screen that has one.
+[Full redesign (PDF, 58 pages, 5.7 MB)](tally-redesign.pdf): cover with contents, Android behaviour rules, every app screen, the design notes, then the dark version of every screen that has one (from page 34).
 
 ## Overview
 
