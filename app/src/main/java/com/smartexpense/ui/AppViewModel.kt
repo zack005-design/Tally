@@ -25,8 +25,6 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
     val reviewMonth=reviewMonthMutable.asStateFlow()
     private val reviewMutable=MutableStateFlow<MonthlyReview?>(null)
     val monthlyReview=reviewMutable.asStateFlow()
-    private val pendingReviewMutable=MutableStateFlow<String?>(null)
-    val pendingReview=pendingReviewMutable.asStateFlow()
     fun selectReviewMonth(value:String) {
         java.time.YearMonth.parse(value);reviewMonthMutable.value=value;saved["reviewMonth"]=value;reviewMutable.value=null;loadReview()
     }
@@ -38,13 +36,11 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
             catch(e:Exception) {mutable.update {it.copy(message=e.message?:"Could not load monthly review")}}
         }
     }
-    private fun checkReview(snapshot:Snapshot) {
-        val current=java.time.YearMonth.now().toString()
-        if(snapshot.localSettings.lastReviewMonth!=current && snapshot.transactionCount>0) pendingReviewMutable.value=java.time.YearMonth.now().minusMonths(1).toString()
+    private fun refreshOpenReview() {
         if(route.value=="monthly-review") loadReview()
     }
     fun acknowledgeReview(onDone:()->Unit)=action("Monthly review saved") {
-        repository.acknowledgeReview(java.time.YearMonth.now().toString());pendingReviewMutable.value=null;onDone()
+        repository.acknowledgeReview(java.time.YearMonth.now().toString());onDone()
     }
     fun observeRoute(value:String) {route.value=value}
     fun selectMonth(value:String) {if(runCatching {java.time.YearMonth.parse(value)}.isSuccess) {month.value=value;saved["reportMonth"]=value}}
@@ -109,7 +105,7 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
                 // Route entry refreshes time-dependent reports and runs monthly-review loading.
                 Triple(screen,limit,selected)
             }.distinctUntilChanged().flatMapLatest {(_,limit,selected)->repository.observeSnapshots(limit,selected)}
-                .collect { snapshot -> mutable.update { it.copy(snapshot=snapshot,loading=false) };checkReview(snapshot) } }
+                .collect { snapshot -> mutable.update { it.copy(snapshot=snapshot,loading=false) };refreshOpenReview() } }
             catch(e:CancellationException) { throw e } catch(e:Exception) { mutable.update { it.copy(loading=false,message=e.message?:"Could not load data") } }
         }
     }
@@ -148,7 +144,7 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
     fun refreshWallet() {
         if(state.value.loading) return
         viewModelScope.launch {
-            try {repository.refreshMonthlyGpay();checkReview(repository.snapshot(5))}
+            try {repository.refreshMonthlyGpay();refreshOpenReview()}
             catch(e:CancellationException) {throw e}
             catch(e:Exception) {mutable.update {it.copy(message=e.message?:"Could not refresh GPay balance")}}
         }

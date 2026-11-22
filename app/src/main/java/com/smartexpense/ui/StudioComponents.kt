@@ -13,12 +13,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import com.smartexpense.R
 
 /** Paper surfaces shared by the everyday screens. */
@@ -37,23 +32,6 @@ import com.smartexpense.R
         Text(label,Modifier.weight(1f),textAlign=androidx.compose.ui.text.style.TextAlign.Start)
         Spacer(Modifier.width(8.dp))
         Icon(painterResource(R.drawable.ic_chevron_down),null,Modifier.size(18.dp).rotate(if(expanded==null) -90f else if(expanded) 180f else 0f))
-    }
-}
-
-/** A small paper edge distinguishes saved receipts from editable cards. */
-internal object ReceiptPaperShape:Shape {
-    override fun createOutline(size:Size,layoutDirection:LayoutDirection,density:Density):Outline {
-        val radius=with(density) {24.dp.toPx()}.coerceAtMost(minOf(size.width,size.height)/2)
-        val tooth=with(density) {4.dp.toPx()}
-        val path=Path().apply {
-            moveTo(radius,0f);lineTo(size.width-radius,0f)
-            quadraticTo(size.width,0f,size.width,radius)
-            lineTo(size.width,size.height-tooth)
-            var x=size.width
-            while(x>0f) {lineTo((x-tooth).coerceAtLeast(0f),size.height);lineTo((x-2*tooth).coerceAtLeast(0f),size.height-tooth);x-=2*tooth}
-            lineTo(0f,radius);quadraticTo(0f,0f,radius,0f);close()
-        }
-        return Outline.Generic(path)
     }
 }
 

@@ -71,7 +71,6 @@ signing.properties
 !/docs/screenshots/all-screens/
 !/docs/screenshots/ios-polish/
 !/docs/screenshots/readme/
-!/docs/screenshots/redesign/
 
 # Gradle wrapper JAR and Room schema JSON files are required source assets.
 # Do not exclude gradle/wrapper/gradle-wrapper.jar or app/schemas/.
