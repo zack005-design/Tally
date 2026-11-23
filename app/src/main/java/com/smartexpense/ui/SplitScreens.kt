@@ -55,7 +55,7 @@ import androidx.activity.compose.BackHandler
         }
     }
     Page("Friends",largeTitle=true,actions={TextButton(onFriends) {Text("Add",color=Tokens.accent,style=MaterialTheme.typography.bodyLarge)}}) {
-        item {TextField(search,{search=it},Modifier.fillMaxWidth(),placeholder={Text("Search people",color=Tokens.muted)},leadingIcon={Text("⌕",style=MaterialTheme.typography.headlineSmall,color=Tokens.muted)},singleLine=true,shape=androidx.compose.foundation.shape.RoundedCornerShape(24.dp),colors=TextFieldDefaults.colors(unfocusedContainerColor=Tokens.inputSurface,focusedContainerColor=Tokens.inputSurface,unfocusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent,focusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent))}
+        item {SearchPill("Search people",search,{search=it})}
         item {Column(Modifier.fillMaxWidth().padding(top=12.dp,bottom=8.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text(referenceMoney(kotlin.math.abs(owed-owing)),style=MaterialTheme.typography.displayMedium)
             Text(if(owed>=owing) "Net amount owed to you" else "Net amount you owe",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)

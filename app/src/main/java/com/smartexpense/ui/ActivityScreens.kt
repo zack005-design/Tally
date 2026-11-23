@@ -81,7 +81,7 @@ import java.time.format.DateTimeFormatter
         Spacer(Modifier.width(8.dp))
         StudioSettingsButton(onSettings)
     }) {
-        item(key="search") {Box(Modifier.padding(vertical=16.dp)) {Field("Search transactions",query,{query=it})}}
+        item(key="search") {Box(Modifier.padding(vertical=16.dp)) {SearchPill("Search transactions",query,{query=it})}}
         item(key="filters") {Row(Modifier.fillMaxWidth().padding(bottom=8.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             OutlinedButton({monthPicker=true}) {Text((if(monthText.isEmpty()) "All dates" else YearMonth.parse(monthText).format(DateTimeFormatter.ofPattern("MMMM yyyy")))+" ⌄")}
             val count=listOf(kind,category,account,person,group).count {it!="all"}+listOf(start,end,minimum,maximum).count {it.isNotBlank()}
@@ -143,22 +143,14 @@ import java.time.format.DateTimeFormatter
 
 @Composable internal fun HistoryTransactionRow(record:Record,snapshot:Snapshot,onClick:()->Unit) {
     val category=snapshot.categories.find {it.id==record.categoryId}
-    val icon=when {
-        record.kind==Kind.INCOME || record.kind==Kind.REFUND->R.drawable.ic_arrow_in
-        record.kind==Kind.TRANSFER->R.drawable.ic_transfer
-        record.kind==Kind.REPAYMENT->R.drawable.ic_people
-        category?.icon=="food" || category?.name?.contains("food",true)==true->R.drawable.ic_food
-        category?.icon=="shopping" || category?.name?.contains("grocer",true)==true->R.drawable.ic_basket
-        category?.icon=="transport" || category?.name?.contains("travel",true)==true->R.drawable.ic_transit
-        else->R.drawable.ic_activity
-    }
+    val (icon,iconColor)=recordVisual(record,category)
     val amount=if(record.kind in listOf(Kind.EXPENSE,Kind.REFUND)) record.personalAmount else record.amount
     val amountText=(when(record.kind) {Kind.EXPENSE->"−";Kind.INCOME,Kind.REFUND->"+";else->""})+referenceMoney(amount)
     val large=LocalDensity.current.fontScale>1.3f || amountText.length>14
     val time=Instant.ofEpochMilli(record.date).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("h:mm a"))
     Surface(onClick=onClick,color=Tokens.paper,modifier=Modifier.fillMaxWidth()) {
         Row(Modifier.padding(horizontal=12.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            ReferenceIcon(icon,if(icon==R.drawable.ic_food || icon==R.drawable.ic_basket) ReferenceTone.Peach else ReferenceTone.Lavender)
+            SolidIcon(icon,iconColor,36.dp)
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)) {
                 Text(record.description,style=MaterialTheme.typography.titleSmall)
                 Text(listOfNotNull(time,category?.name).joinToString(" · "),color=Tokens.muted,style=MaterialTheme.typography.bodySmall)

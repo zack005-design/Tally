@@ -162,3 +162,11 @@ internal fun sentenceCaseLabel(text: String): String {
         Text("Tally", style = MaterialTheme.typography.titleLarge, color = Tokens.text)
     }
 }
+
+/** iOS-style search field: a white pill with a search glyph and no underline. */
+@Composable internal fun SearchPill(placeholder:String,value:String,onChange:(String)->Unit,modifier:Modifier=Modifier) {
+    TextField(value,onChange,modifier.fillMaxWidth(),placeholder={Text(placeholder,color=Tokens.muted)},
+        leadingIcon={Icon(painterResource(R.drawable.ic_search),null,Modifier.size(20.dp),tint=Tokens.muted)},
+        singleLine=true,shape=Tokens.pill,textStyle=MaterialTheme.typography.bodyLarge,
+        colors=TextFieldDefaults.colors(unfocusedContainerColor=Tokens.inputSurface,focusedContainerColor=Tokens.inputSurface,unfocusedIndicatorColor=Color.Transparent,focusedIndicatorColor=Color.Transparent))
+}
