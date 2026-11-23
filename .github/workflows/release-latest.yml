@@ -1,0 +1,38 @@
+name: Mark release as latest
+
+# Manual only. Marks an already published development build as the repository's latest
+# release, so the Releases sidebar and releases/latest links point to it, and refreshes its
+# notes from docs/releases/ with full links. The APKs on the release are not changed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, for example v0.2.5-20261123
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  mark-latest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in v[0-9]*.[0-9]*.[0-9]*-*) ;; *) echo "::error::Unexpected tag $TAG"; exit 1 ;; esac
+          version=${TAG#v}; version=${version%%-*}
+          test -f "docs/releases/$version.md"
+          sha=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json targetCommitish --jq .targetCommitish)
+          base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$sha"
+          sed -E -e "s#\]\(\.\./\.\./#](${base}/#g" -e "s#\]\(\.\./#](${base}/docs/#g" \
+            -e "s#\]\(([^)h#][^)]*)\)#](${base}/docs/releases/\1)#g" "docs/releases/$version.md" > release-notes.md
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease=false --latest --notes-file release-notes.md
