@@ -158,5 +158,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="v$VERSION-$(date -u +%Y%m%d)"
+          # The notes use links relative to docs/releases/, which break on the release page.
+          # Point them at the published commit instead.
+          base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA"
+          sed -E -e "s#\]\(\.\./\.\./#](${base}/#g" -e "s#\]\(\.\./#](${base}/docs/#g" \
+            -e "s#\]\(([^)h#][^)]*)\)#](${base}/docs/releases/\1)#g" "docs/releases/$VERSION.md" > release-notes.md
           gh release create "$tag" out/* --prerelease --target "$GITHUB_SHA" \
-            --title "Tally $VERSION (development build)" --notes-file "docs/releases/$VERSION.md"
+            --title "Tally $VERSION (development build)" --notes-file release-notes.md
