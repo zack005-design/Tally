@@ -48,7 +48,7 @@ class EditorialAdaptiveTest(private val width:Int,private val scale:Float) {
                 }}
             }
         }
-        listOf("Overview","Spending","Friends").forEach {label->
+        listOf("Summary","Spending","Split").forEach {label->
             val tab=compose.onNode(hasText(label) and hasClickAction())
             tab.assertIsDisplayed()
             val bounds=tab.fetchSemanticsNode().boundsInRoot

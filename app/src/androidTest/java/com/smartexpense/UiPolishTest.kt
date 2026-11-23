@@ -44,7 +44,7 @@ class UiPolishTest {
                 Box(Modifier.padding(padding)) {HomeScreen(sample(),{_,_->},{},{},{},{destination=it})}
             }
         }}
-        compose.onNodeWithText("Add expense").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Expense").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Add money").performScrollTo().assertIsDisplayed()
         capture(if(dark) "today-dark" else "today-light")
         compose.onNodeWithText("Add money").performClick()

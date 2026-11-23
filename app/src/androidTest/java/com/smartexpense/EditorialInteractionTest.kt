@@ -60,7 +60,7 @@ class EditorialInteractionTest {
     }
     @Test fun navigationHonorsTwoTimesSystemText() {
         compose.setContent {val d=LocalDensity.current;CompositionLocalProvider(LocalDensity provides Density(d.density,2f)) {TrackerTheme {LedgerNavigation("home",{})}}}
-        compose.onNodeWithText("Friends",useUnmergedTree=true).assertHeightIsAtLeast(24.dp)
+        compose.onNodeWithText("Split",useUnmergedTree=true).assertHeightIsAtLeast(24.dp)
     }
     @Test fun descriptionContinueStaysVisibleWithKeyboard() {
         compose.setContent {var form by remember {mutableStateOf(EntryUiState())};TrackerTheme {AdvancedEntryScreen(form,accounts,people,emptyList(),emptyList(),{form=it},{},{})}}

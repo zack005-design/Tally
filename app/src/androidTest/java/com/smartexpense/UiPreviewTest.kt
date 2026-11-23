@@ -79,7 +79,7 @@ class UiPreviewTest {
     @Test fun allNavigationDestinationsRemainInteractive() {
         var route=""
         compose.setContent {TrackerTheme {LedgerNavigation("home") {route=it}}}
-        compose.onNodeWithText("Overview").assertIsSelected();listOf("Spending" to "insights","Friends" to "split").forEach {(label,value)->compose.onNodeWithText(label).performClick();assertEquals(value,route)}
+        compose.onNodeWithText("Summary").assertIsSelected();listOf("Spending" to "insights","Split" to "split").forEach {(label,value)->compose.onNodeWithText(label).performClick();assertEquals(value,route)}
     }
     @Test fun largeTextActivityPreview() {val s=snapshot();render("activity",true) {ActivityScreen(s,{})};compose.onNodeWithText("Filter").performScrollTo().performClick();compose.onNodeWithText("Type").performScrollTo().performClick();compose.onNodeWithText("Expense").performScrollTo().performClick();compose.onNodeWithText("Apply filters").performScrollTo().performClick();compose.onNodeWithText("Shared dinner").assertExists();capture("activity-large-text")}
     @Test fun largeTextAddKeepsSaveReachable() {
@@ -92,7 +92,7 @@ class UiPreviewTest {
     @Test fun largeTextNavigationKeepsEveryDestinationUsable() {
         var route="home"
         compose.setContent {val density=LocalDensity.current;CompositionLocalProvider(LocalDensity provides Density(density.density,2f)) {TrackerTheme {Box(Modifier.width(androidx.compose.ui.unit.Dp(320f))) {LedgerNavigation(route) {route=it}}}}}
-        compose.onNodeWithText("Overview").assertIsDisplayed().assertIsSelected();listOf("Spending" to "insights","Friends" to "split").forEach {(label,value)->compose.onNodeWithText(label).assertIsDisplayed().performClick();assertEquals(value,route)}
+        compose.onNodeWithText("Summary").assertIsDisplayed().assertIsSelected();listOf("Spending" to "insights","Split" to "split").forEach {(label,value)->compose.onNodeWithText(label).assertIsDisplayed().performClick();assertEquals(value,route)}
         capture("navigation-large-text")
     }
 }

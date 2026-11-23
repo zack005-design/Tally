@@ -30,7 +30,7 @@ class AuditRegressionTest {
             compose.runOnIdle {model=AppViewModel(repo,BackupService(db),BillScanner(context),androidx.lifecycle.SavedStateHandle());models.put("foreign",model)}
             compose.setContent {TrackerTheme {TrackerApp(model)}}
             compose.waitUntil(10000) {!model.state.value.loading}
-            compose.onNodeWithContentDescription("Add expense").performClick()
+            compose.onNodeWithText("Expense").performClick()
             compose.runOnIdle {
                 val text="Cafe\nLunch 10.00\nTotal 10.00"
                 model.prepareBill(ScannedBill(byteArrayOf(),"image/png",text),BillRecognition.parse(text),null)

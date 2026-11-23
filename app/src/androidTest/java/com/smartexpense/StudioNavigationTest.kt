@@ -38,7 +38,7 @@ class StudioNavigationTest {
 
     @Test fun savingActualPaymentsOpensCommittedReceiptAndReturnsHome() {
         val friend=start()
-        compose.onNodeWithContentDescription("Add expense").performClick()
+        compose.onNodeWithText("Expense").performClick()
         compose.runOnIdle {
             model.change(model.entry.value.copy(amount="330",description="Dinner",shared=true,participants=listOf("self",friend),paid=mapOf("self" to "300",friend to "30")))
         }
@@ -47,7 +47,7 @@ class StudioNavigationTest {
         compose.onNodeWithText("Continue").performClick()
         compose.onNodeWithText("Save shared bill").performClick()
         compose.waitUntil(10000) {compose.onAllNodesWithText("Transaction").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNode(hasText("Overview") and isSelectable()).assertDoesNotExist()
+        compose.onNode(hasText("Summary") and isSelectable()).assertDoesNotExist()
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Rahul owes You"))
         compose.onNodeWithText("Rahul owes You").assertExists()
         compose.onNodeWithText("₹135.00").assertExists()
@@ -55,7 +55,7 @@ class StudioNavigationTest {
         assertEquals(90000L,snapshot.accounts.single {it.name=="Wallet"}.balance)
         assertEquals(16500L,snapshot.records.single {it.description=="Dinner"}.personalAmount)
         compose.onNodeWithContentDescription("Back").assertIsDisplayed().performClick()
-        compose.onNode(hasText("Overview") and isSelectable()).assertIsSelected()
+        compose.onNode(hasText("Summary") and isSelectable()).assertIsSelected()
     }
 
     @Test fun incomeRemainsReachableFromSettingsAfterRemovingTheAddTab() {
@@ -65,7 +65,7 @@ class StudioNavigationTest {
         compose.onNodeWithText("Money & planning").performClick()
         compose.onNodeWithText("Record income").performClick()
         compose.runOnIdle {assertEquals(Kind.INCOME,model.entry.value.kind)}
-        compose.onNode(hasText("Overview") and isSelectable()).assertDoesNotExist()
+        compose.onNode(hasText("Summary") and isSelectable()).assertDoesNotExist()
         compose.onNodeWithContentDescription("Back").assertExists()
     }
 }

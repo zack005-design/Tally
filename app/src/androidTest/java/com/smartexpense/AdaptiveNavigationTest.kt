@@ -20,11 +20,11 @@ class AdaptiveNavigationTest {
     @Test fun landscapeRailKeepsEveryDestinationAndAddReachable() {
         var route = ""
         compose.setContent { TrackerTheme { Box(Modifier.size(915.dp, 400.dp)) { EditorialNavigationRail("home") { route = it } } } }
-        compose.onNodeWithText("Overview").assertIsDisplayed().assertIsSelected()
+        compose.onNodeWithText("Summary").assertIsDisplayed().assertIsSelected()
         compose.onNodeWithText("Spending").assertIsDisplayed().performClick(); assertEquals("insights", route)
-        compose.onNodeWithText("Friends").assertIsDisplayed().performClick(); assertEquals("split", route)
-        compose.onNodeWithContentDescription("Add expense").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
-        assertEquals("add", route)
+        compose.onNodeWithText("Split").assertIsDisplayed().performClick(); assertEquals("split", route)
+        compose.onNodeWithContentDescription("Search").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
+        assertEquals("search", route)
     }
 
     @Test fun largeTextOnALargePhoneKeepsAddOnTheTabRow() {
@@ -34,8 +34,8 @@ class AdaptiveNavigationTest {
                 TrackerTheme { Box(Modifier.width(412.dp)) { LedgerNavigation("home") {} } }
             }
         }
-        val tab = compose.onNodeWithText("Overview").fetchSemanticsNode().boundsInRoot
-        val add = compose.onNodeWithContentDescription("Add expense").fetchSemanticsNode().boundsInRoot
+        val tab = compose.onNodeWithText("Summary").fetchSemanticsNode().boundsInRoot
+        val add = compose.onNodeWithContentDescription("Search").fetchSemanticsNode().boundsInRoot
         // The add button shares the tab row instead of taking a second row below it.
         assert(add.top < tab.bottom && add.bottom > tab.top) { "Add button moved to its own row: tab=$tab add=$add" }
     }

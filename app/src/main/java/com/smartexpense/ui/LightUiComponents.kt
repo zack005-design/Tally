@@ -30,21 +30,26 @@ import androidx.compose.ui.semantics.stateDescription
 
 internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray }
 
-@Composable internal fun ReferenceIcon(icon: Int, tone: ReferenceTone = ReferenceTone.Blue, size: androidx.compose.ui.unit.Dp = 36.dp) {
-    val (background, foreground) = when (tone) {
-        ReferenceTone.Blue -> Tints.blueSoft to Tokens.accent
-        ReferenceTone.Lavender -> Tints.lavenderSoft to Tints.lavender
-        ReferenceTone.Peach -> Tints.peachSoft to Tints.peach
-        ReferenceTone.Pink -> Tints.pinkSoft to Tints.pink
-        ReferenceTone.Gray -> Tints.graySoft to Tokens.muted
+/** Solid colour icon square with a white glyph, as in iOS Settings. */
+@Composable internal fun ReferenceIcon(icon: Int, tone: ReferenceTone = ReferenceTone.Blue, size: androidx.compose.ui.unit.Dp = 32.dp) {
+    val background = when (tone) {
+        ReferenceTone.Blue -> CategoryColors.brand
+        ReferenceTone.Lavender -> CategoryColors.groceries
+        ReferenceTone.Peach -> CategoryColors.food
+        ReferenceTone.Pink -> CategoryColors.shopping
+        ReferenceTone.Gray -> CategoryColors.gray
     }
-    Surface(shape = if(size>=64.dp) CircleShape else RoundedCornerShape(size*.28f), color = background, modifier = Modifier.size(size)) {
-        Box(contentAlignment = Alignment.Center) { Icon(painterResource(icon), null, Modifier.size(size * .55f), tint = foreground) }
+    SolidIcon(icon, background, size)
+}
+
+@Composable internal fun SolidIcon(icon: Int, background: Color, size: androidx.compose.ui.unit.Dp = 32.dp) {
+    Surface(shape = RoundedCornerShape(size * .26f), color = background, modifier = Modifier.size(size)) {
+        Box(contentAlignment = Alignment.Center) { Icon(painterResource(icon), null, Modifier.size(size * .58f), tint = Color.White) }
     }
 }
 
 @Composable internal fun GroupedCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Surface(modifier.fillMaxWidth(), shape = Tokens.card, color = Tokens.paper, shadowElevation = 1.dp, border = BorderStroke(.5.dp, Tokens.border.copy(alpha = .5f))) { Column(content = content) }
+    Surface(modifier.fillMaxWidth(), shape = Tokens.card, color = Tokens.paper) { Column(content = content) }
 }
 
 @Composable internal fun GroupedDivider(inset: androidx.compose.ui.unit.Dp = 64.dp) {
@@ -60,19 +65,19 @@ internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray }
     val style = MaterialTheme.typography.bodyLarge
     BoxWithConstraints(Modifier.fillMaxWidth()) {
     // Reserve the leading icon, gaps and chevron before deciding whether values fit.
-    val available = with(density) { (maxWidth - 28.dp - 36.dp - 24.dp - if(showChevron) 26.dp else 0.dp).toPx() }
+    val available = with(density) { (maxWidth - 28.dp - 32.dp - 24.dp - if(showChevron) 26.dp else 0.dp).toPx() }
     val labelWidth = measurer.measure(label, style).size.width
     val valueWidth = value?.let { measurer.measure(it, style).size.width } ?: 0
     val large = density.fontScale > 1.3f || value != null && labelWidth + valueWidth > available
-    Surface(onClick = rowAction, interactionSource = interaction, color = color, modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp).softPress(interaction)) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = if(roomy) 16.dp else 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Surface(onClick = rowAction, interactionSource = interaction, color = color, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).softPress(interaction)) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = if(roomy) 16.dp else 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             if(leading!=null) leading() else if(bareIcon) Icon(painterResource(icon),null,Modifier.size(30.dp),tint=Tokens.accent) else ReferenceIcon(icon, tone)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(label, style = MaterialTheme.typography.bodyLarge, fontWeight=if(supporting!=null) FontWeight.Medium else FontWeight.Normal)
                 supporting?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Tokens.muted) }
                 if (large) value?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
             }
-            if (!large) value?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            if (!large) value?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = Tokens.muted) }
             if (showChevron) Icon(painterResource(R.drawable.ic_chevron_down), null, Modifier.size(14.dp).rotate(-90f), tint = Tokens.muted)
         }
     }
@@ -101,7 +106,7 @@ internal fun referenceMoney(paise: Long): String = editorialMoney(paise).let { i
 
 @Composable internal fun ReferenceAction(label: String, icon: Int, enabled: Boolean = true, onClick: () -> Unit) {
     val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Surface(onClick = lightHapticAction(onClick), interactionSource = interaction, enabled = enabled, color = Tokens.secondarySurface, contentColor = Tokens.accent, shape = Tokens.field, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).softPress(interaction)) {
+    Surface(onClick = lightHapticAction(onClick), interactionSource = interaction, enabled = enabled, color = Tokens.tonal, contentColor = Tokens.accent, shape = Tokens.pill, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp).softPress(interaction)) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(icon), null, Modifier.size(20.dp))
             Text(label, style = MaterialTheme.typography.labelLarge)
@@ -130,24 +135,30 @@ internal fun referenceMoney(paise: Long): String = editorialMoney(paise).let { i
             supporting?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Tokens.muted) }
         }
         val thumbOffset by androidx.compose.animation.core.animateDpAsState(if(checked) 20.dp else 0.dp,label="Switch position")
-        val track by animateColorAsState(if(checked) Tokens.accent else Tokens.border, tween(180), label="Switch color")
+        // Switches use the system green from the redesign rather than the app tint.
+        val track by animateColorAsState(if(checked) tint(Color(0xFF34C759), Color(0xFF30D158)) else MaterialTheme.colorScheme.surfaceContainerHighest, tween(180), label="Switch color")
         Box(Modifier.size(51.dp,31.dp).background(if(enabled) track else track.copy(alpha=.45f),CircleShape).padding(2.dp),contentAlignment=Alignment.CenterStart) {
             Surface(Modifier.offset {androidx.compose.ui.unit.IntOffset(thumbOffset.roundToPx(),0)}.size(27.dp),shape=CircleShape,color=Color.White,shadowElevation=1.dp) {}
         }
     }
 }
 
+/** Grouped-list header in sentence case, as iOS inset lists use. */
 @Composable internal fun SectionLabel(text: String) {
-    Text(text, Modifier.padding(start = 12.dp, top = 8.dp).semantics { heading() }, style = MaterialTheme.typography.labelMedium, color = Tokens.muted)
+    Text(sentenceCaseLabel(text), Modifier.padding(start = 16.dp, top = 8.dp).semantics { heading() }, style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
+}
+
+private val labelAcronyms = mapOf("gpay" to "GPay", "upi" to "UPI", "pdf" to "PDF", "csv" to "CSV")
+
+/** Older all-caps labels read as sentence case; acronyms keep their capitals. */
+internal fun sentenceCaseLabel(text: String): String {
+    if (text != text.uppercase() || text.none { it.isLetter() }) return text
+    return text.lowercase().split(" ").joinToString(" ") { word -> labelAcronyms[word] ?: word }.replaceFirstChar { it.uppercase() }
 }
 
 @Composable internal fun TallyWordmark() {
-    Surface(shape = CircleShape, color = Tokens.secondarySurface) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Surface(shape = RoundedCornerShape(7.dp), color = Tokens.accent, modifier = Modifier.size(27.dp)) {
-                Icon(painterResource(R.drawable.ic_tally_mark), null, Modifier.fillMaxSize().padding(2.dp), tint = MaterialTheme.colorScheme.onPrimary)
-            }
-            Text("tally", style = MaterialTheme.typography.titleSmall, color = Tokens.accent)
-        }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(R.drawable.ic_tally_mark), null, Modifier.size(30.dp), tint = Tokens.accent)
+        Text("Tally", style = MaterialTheme.typography.titleLarge, color = Tokens.text)
     }
 }

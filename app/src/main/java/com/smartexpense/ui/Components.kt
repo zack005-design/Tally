@@ -54,10 +54,7 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
                     verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     if(back!=null && (parent!=null || largeTitle)) {
                         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                            TextButton(back,Modifier.semantics {contentDescription="Back"},contentPadding=PaddingValues(0.dp)) {
-                                Icon(painterResource(R.drawable.ic_chevron_down),null,Modifier.size(20.dp).rotate(90f))
-                                Text(parent?:"Back",style=MaterialTheme.typography.bodyLarge)
-                            }
+                            BackCircle(back,if(parent!=null) "Back to $parent" else "Back")
                             Spacer(Modifier.weight(1f))
                             Row(horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically,content=actions)
                         }
@@ -72,13 +69,12 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
                             Row(Modifier.width(72.dp),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically,content=actions)
                         }
                     } else if (back != null && !largeTitle) {
+                        // iOS navigation bar: round back button, centred title, actions balanced on the right.
                         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(back, Modifier.size(48.dp).semantics { contentDescription = "Back" }) {
-                                Icon(painterResource(R.drawable.ic_chevron_down), null, Modifier.size(22.dp).then(Modifier.rotate(90f)), tint = Tokens.accent)
-                            }
-                            Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleLarge)
-                            Row(horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically, content = actions)
-                            Spacer(Modifier.width(12.dp))
+                            Box(Modifier.widthIn(min = 56.dp)) { BackCircle(back) }
+                            Text(title, Modifier.weight(1f).padding(horizontal = 8.dp).semantics { heading() }, style = MaterialTheme.typography.titleMedium,
+                                textAlign = if (LocalDensity.current.fontScale > 1.3f) androidx.compose.ui.text.style.TextAlign.Start else androidx.compose.ui.text.style.TextAlign.Center)
+                            Row(Modifier.widthIn(min = 56.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically, content = actions)
                         }
                     } else if (LocalDensity.current.fontScale > 1.3f) {
                         Text(title, style = MaterialTheme.typography.headlineLarge.copy(
@@ -106,8 +102,16 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
 }
 
 
+/** Round white back button from the redesign. Android's back gesture still works everywhere. */
+@Composable fun BackCircle(onClick:()->Unit,label:String="Back") {
+    FilledTonalIconButton(onClick,Modifier.size(44.dp).semantics {contentDescription=label},
+        colors=IconButtonDefaults.filledTonalIconButtonColors(containerColor=Tokens.paper,contentColor=Tokens.text)) {
+        Icon(painterResource(R.drawable.ic_chevron_down),null,Modifier.size(20.dp).rotate(90f))
+    }
+}
+
 @Composable fun Panel(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit) {
-    Surface(modifier.fillMaxWidth(),shape=Tokens.card,color=Tokens.paper,border=BorderStroke(.7.dp,Tokens.border.copy(alpha=.65f))) {
+    Surface(modifier.fillMaxWidth(),shape=Tokens.card,color=Tokens.paper) {
         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp),content=content)
     }
 }
@@ -174,12 +178,13 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
                     Box(Modifier.padding(12.dp),contentAlignment=Alignment.CenterStart) {Text(label,style=style)}
                 }}
             }
-        } else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).selectableGroup().background(Tokens.secondarySurface,CircleShape).padding(4.dp)) {
+        } else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).selectableGroup().background(Tokens.secondarySurface,CircleShape).padding(3.dp)) {
             options.forEach {(id,label)->
-                val fill by androidx.compose.animation.animateColorAsState(if(id==selected) Tokens.accent else Tokens.secondarySurface, label="segment fill")
-                Surface(onClick={onSelect(id)},modifier=Modifier.weight(1f).fillMaxHeight().heightIn(min=48.dp).semantics {this.selected=id==selected},shape=CircleShape,color=fill,contentColor=if(id==selected) MaterialTheme.colorScheme.onPrimary else Tokens.text) {
+                val segment=MaterialTheme.colorScheme.surfaceContainerHighest
+                val fill by androidx.compose.animation.animateColorAsState(if(id==selected) (if(LocalDarkTheme.current) segment else Tokens.paper) else Tokens.secondarySurface, label="segment fill")
+                Surface(onClick={onSelect(id)},modifier=Modifier.weight(1f).fillMaxHeight().heightIn(min=44.dp).semantics {this.selected=id==selected},shape=CircleShape,color=fill,contentColor=Tokens.text,shadowElevation=if(id==selected) 1.dp else 0.dp) {
                     Box(Modifier.padding(horizontal=12.dp,vertical=8.dp),contentAlignment=Alignment.Center) {
-                        Text(label,style=style,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+                        Text(label,style=if(id==selected) style.copy(fontWeight=androidx.compose.ui.text.font.FontWeight.SemiBold) else style,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
                     }
                 }
             }
@@ -207,7 +212,7 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
 }
 @Composable fun EditorialPrimaryButton(label:String,enabled:Boolean=true,onClick:()->Unit) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Button(lightHapticAction(onClick),Modifier.fillMaxWidth().heightIn(min=48.dp).softPress(interaction),interactionSource=interaction,enabled=enabled,shape=Tokens.field,
+    Button(lightHapticAction(onClick),Modifier.fillMaxWidth().heightIn(min=50.dp).softPress(interaction),interactionSource=interaction,enabled=enabled,shape=Tokens.pill,
         colors=ButtonDefaults.buttonColors(containerColor=Tokens.accent,contentColor=MaterialTheme.colorScheme.onPrimary,
             disabledContainerColor=MaterialTheme.colorScheme.surfaceContainerHighest,disabledContentColor=Tokens.muted),
         contentPadding=PaddingValues(horizontal=20.dp,vertical=12.dp)) {
@@ -230,7 +235,7 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun ChipChoices(selected:String?,options:List<Pair<String,String>>,onSelect:(String)->Unit) {
     Row(Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-        options.forEach {(id,label)->FilterChip(selected==id,{onSelect(id)},label={Text(label,style=MaterialTheme.typography.labelMedium,maxLines=1)},shape=CircleShape,border=null,colors=FilterChipDefaults.filterChipColors(containerColor=Tokens.surface,selectedContainerColor=Tokens.accent,selectedLabelColor=MaterialTheme.colorScheme.onPrimary))}
+        options.forEach {(id,label)->FilterChip(selected==id,{onSelect(id)},label={Text(label,style=MaterialTheme.typography.labelMedium,maxLines=1)},shape=CircleShape,border=null,colors=FilterChipDefaults.filterChipColors(containerColor=Tokens.paper,selectedContainerColor=Tokens.accent,selectedLabelColor=MaterialTheme.colorScheme.onPrimary))}
     }
 }
 fun personLabel(person:com.smartexpense.domain.Person,people:List<com.smartexpense.domain.Person>):String {
@@ -265,7 +270,7 @@ fun personLabel(person:com.smartexpense.domain.Person,people:List<com.smartexpen
 }
 @Composable fun EmptyLedger(title:String,description:String,action:String?=null,onAction:()->Unit={}) {
     Column(Modifier.fillMaxWidth().padding(vertical=12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        Icon(painterResource(R.drawable.ic_activity),contentDescription=null,tint=Tokens.muted,modifier=Modifier.size(28.dp))
+        Icon(painterResource(R.drawable.ic_tally_mark),contentDescription=null,tint=Tokens.muted,modifier=Modifier.size(32.dp))
         Text(title,style=MaterialTheme.typography.titleMedium)
         Text(description,color=Tokens.muted,style=MaterialTheme.typography.bodyMedium)
         if(action!=null) FilledTonalButton(onAction) {Text(action)}
@@ -273,8 +278,9 @@ fun personLabel(person:com.smartexpense.domain.Person,people:List<com.smartexpen
 }
 @Composable fun InitialAvatar(name:String,modifier:Modifier=Modifier) {
     val tone=when(name.trim().firstOrNull()?.uppercaseChar()) {'Y'->0;'R','F'->1;'A','W'->2;else->Math.floorMod(name.hashCode(),3)+1}
-    val background=when(tone) {0->tint(Color(0xFFDDEBFF),Color(0xFF1B2F57));1->tint(Color(0xFFFFE3D3),Color(0xFF3D2719));2->tint(Color(0xFFE8DDFF),Color(0xFF2E2650));else->tint(Color(0xFFFFE4EB),Color(0xFF3D1B28))}
-    val foreground=when(tone) {0->Tokens.accent;1->tint(Color(0xFFAD4D19),Color(0xFFFFB38A));2->tint(Color(0xFF7952CB),Color(0xFFC3B4FF));else->Tints.pink}
+    // Contact-style avatars: a solid colour per person with a white initial.
+    val background=when(tone) {0->CategoryColors.brand;1->CategoryColors.food;2->CategoryColors.transport;else->CategoryColors.shopping}
+    val foreground=Color.White
     Box(modifier.size(40.dp).background(background,CircleShape),contentAlignment=Alignment.Center) {
         Text(name.trim().take(1).uppercase(),style=MaterialTheme.typography.titleMedium,color=foreground)
     }

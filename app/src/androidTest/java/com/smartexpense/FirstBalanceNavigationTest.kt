@@ -47,8 +47,8 @@ class FirstBalanceNavigationTest {
         compose.onNodeWithContentDescription("GPay balance (₹)").performImeAction()
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Continue to Tally"))
         compose.onNodeWithText("Continue to Tally").performClick()
-        compose.waitUntil(10000) {compose.onAllNodesWithText("TOTAL AVAILABLE").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNode(hasText("Overview") and isSelectable()).assertIsSelected()
+        compose.waitUntil(10000) {compose.onAllNodesWithText("Available to spend").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNode(hasText("Summary") and isSelectable()).assertIsSelected()
         compose.onNodeWithText("₹1,250").assertExists()
         capture("today")
         compose.onNodeWithText("Add money").performScrollTo().performClick()
@@ -64,7 +64,7 @@ class FirstBalanceNavigationTest {
             models.put("reopened",reopened);current.value=reopened
         }
         compose.waitUntil(10000) {!current.value.state.value.loading}
-        compose.onNode(hasText("Overview") and isSelectable()).assertIsSelected()
+        compose.onNode(hasText("Summary") and isSelectable()).assertIsSelected()
         compose.onNodeWithText("Your\nstarting point.").assertDoesNotExist()
         compose.onNodeWithText("₹1,350").assertExists()
     }

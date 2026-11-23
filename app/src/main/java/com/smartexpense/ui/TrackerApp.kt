@@ -71,18 +71,26 @@ import com.smartexpense.domain.*
     // Short windows (landscape phones) get a side rail so content keeps the full height.
     val windowHeight=with(androidx.compose.ui.platform.LocalDensity.current) {androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp()}
     val useRail=windowHeight<480.dp
-    val showNavigation=route in listOf("home","insights","split") && WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current)==0
+    val showNavigation=route in mainTabs && WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current)==0
     val onTab:(String)->Unit={destination->exitGuard.navigate {
-        if(destination=="add") add() else nav.navigate(destination) {popUpTo("home") {saveState=true};launchSingleTop=true;restoreState=true}
+        when(destination) {
+            "add"->add()
+            "search"->nav.navigate("search") {launchSingleTop=true}
+            else->nav.navigate(destination) {popUpTo("home") {saveState=true};launchSingleTop=true;restoreState=true}
+        }
     }}
+    // Tabs are switched, not stacked, wherever a screen links to one.
+    val openRoute:(String)->Unit={destination->if(destination in mainTabs) onTab(destination) else nav.navigate(destination)}
     Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
         if(showNavigation && !useRail) LedgerNavigation(route,onTab)
     }) {padding ->
         Row(Modifier.fillMaxSize().padding(padding)) {
         if(showNavigation && useRail) EditorialNavigationRail(route,onTab)
-        Column(Modifier.weight(1f).fillMaxHeight()) {
+        // Tablets, foldables and landscape keep a phone-width column instead of stretching every row.
+        Box(Modifier.weight(1f).fillMaxHeight(),contentAlignment=androidx.compose.ui.Alignment.TopCenter) {
+        Column(Modifier.widthIn(max=720.dp).fillMaxSize()) {
             if(ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) {CircularProgressIndicator()} else CompositionLocalProvider(LocalNavigationExitGuard provides exitGuard,LocalEditorialBack provides if(route!=null && route !in listOf("home","insights","add","split","balance-setup")) ({nav.popBackStack();Unit}) else null) {NavHost(nav,startDestination=remember {launchDestination(ui.snapshot)},modifier=Modifier.weight(1f),
+            if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) {CircularProgressIndicator()} else CompositionLocalProvider(LocalNavigationExitGuard provides exitGuard,LocalEditorialBack provides if(route!=null && route !in listOf("home","activity","insights","add","split","search","balance-setup")) ({nav.popBackStack();Unit}) else null) {NavHost(nav,startDestination=remember {launchDestination(ui.snapshot)},modifier=Modifier.weight(1f),
                 // Compose's animation clock respects Android's animator duration scale, including zero.
                 enterTransition = {
                     if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(180))
@@ -98,8 +106,9 @@ import com.smartexpense.domain.*
                         nav.navigate("home") {popUpTo("balance-setup") {inclusive=true};launchSingleTop=true}
                     }
                 }}
-                composable("home") {HomeScreen(ui.snapshot,::add,{nav.navigate("accounts")},{nav.navigate("repayment/all")},::detail,{nav.navigate(it)},onRepeat={id->model.repeatExpense(id) {nav.navigate("add")}})}
+                composable("home") {HomeScreen(ui.snapshot,::add,{nav.navigate("accounts")},{nav.navigate("repayment/all")},::detail,openRoute,onRepeat={id->model.repeatExpense(id) {nav.navigate("add")}})}
                 composable("activity") {ActivityScreen(ui.snapshot,::detail,onCalendar={nav.navigate("calendar")},onSettings={nav.navigate("more")})}
+                composable("search") {SearchScreen(ui.snapshot,::detail) {nav.popBackStack()}}
                 composable("calendar") {SpendingCalendarScreen(ui.snapshot,::detail,onDiary={nav.navigate("diary/$it")})}
                 composable("gpay-settings") {GpaySettingsScreen(ui.snapshot,ui.busy,onBalance={amount,finished->model.action("GPay balance updated") {model.repository.reconcile(ui.snapshot.walletSources!!.gpayId,amount);finished()}},onSchedule={enabled,target,day,month,finished->model.action("GPay reset settings saved") {model.repository.saveGpaySchedule(enabled,target,day,month);finished()}},onSetup={nav.navigate("wallet")})}
                 fun androidx.navigation.NavGraphBuilder.diaryRoute(path:String) {composable(path) {entry->DiaryScreen(ui.snapshot,ui.busy,
@@ -142,7 +151,7 @@ import com.smartexpense.domain.*
                 walletRoute("wallet");walletRoute("wallet/add-money",true)
                 composable("add") {EntryScreen(form,paymentAccounts,ui.snapshot.people,ui.snapshot.categories,ui.snapshot.groups,{value->val group=ui.snapshot.groups.find {it.id==value.groupId && value.groupId!=form.groupId};model.change(if(group==null) value else model.withGroupDefault(value,group).let {if(billExpected && form.items.isNotBlank()) it.copy(items=form.items,billItemNames=form.billItemNames,method="Itemized") else it})},model::parseText,onSave={model.saveEntry {id->nav.navigate("detail/$id") {popUpTo("add") {inclusive=true}}}},records=ui.snapshot.records,onBack={nav.popBackStack()},onFriends={nav.navigate("people")},walletSources=ui.snapshot.walletSources,hasBill=billExpected,onDiscardBill=model::discardDraftBill,onExchange={nav.navigate("foreign-entry")},onImportBill={nav.navigate("bill-import")})}
                 composable("split") {SplitScreen(ui.snapshot,{add(Kind.EXPENSE,true)},{nav.navigate("people")},{nav.navigate("groups")},{debt,group->nav.navigate("repayment/${debt?.id?:"all"}?group=${group.orEmpty()}")},::detail,onOffset={a,b,amount,group->model.action("Mutual offset recorded") {model.repository.recordOffset(a,b,amount,group)}},onRepeatGroup={group->model.repeatGroup(group);nav.navigate("add")},onSettings={nav.navigate("more")})}
-                composable("insights") {InsightsScreen(ui.snapshot,reportMonth,model::selectMonth,onBudget={_,_,_->},onPlanner={nav.navigate("planner")},onBudgetSave={month,category,amount,finished->model.action("Budget saved") {model.repository.saveBudget(month,category,amount);finished()}},busy=ui.busy,onTransactions={nav.navigate("activity")},onPeriodReport=model.repository::report)}
+                composable("insights") {InsightsScreen(ui.snapshot,reportMonth,model::selectMonth,onBudget={_,_,_->},onPlanner={nav.navigate("planner")},onBudgetSave={month,category,amount,finished->model.action("Budget saved") {model.repository.saveBudget(month,category,amount);finished()}},busy=ui.busy,onTransactions={onTab("activity")},onPeriodReport=model.repository::report)}
                 composable("budgets") {BudgetsScreen(ui.snapshot,reportMonth,model::selectMonth,{nav.popBackStack()},{month,category,amount,finished->model.action("Budget saved") {model.repository.saveBudget(month,category,amount);finished()}},ui.busy)}
                 composable("planner") {MoneyPlannerScreen(ui.snapshot,onBack={nav.popBackStack()})}
                 composable("calculator") {CalculatorScreen(onBack={nav.popBackStack()})}
@@ -162,6 +171,7 @@ import com.smartexpense.domain.*
             }}
         }
         }
+        }
     }
     replacementFavourite?.let {id->
         EditorialConfirmSheet("Replace your unfinished entry?","Your current entry and any attached receipt will be discarded. No saved transactions will change.","Discard draft and open",{replacementFavourite=null},enabled=!ui.busy) {
@@ -173,4 +183,4 @@ import com.smartexpense.domain.*
 
 @Composable fun LedgerNavigation(route:String?,onNavigate:(String)->Unit) = EditorialBottomNavigation(route,onNavigate)
 
-private val mainTabs = setOf("home", "insights", "split")
+private val mainTabs = setOf("home", "activity", "insights", "split")

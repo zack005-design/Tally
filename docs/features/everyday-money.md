@@ -31,7 +31,7 @@ Tags are your own labels, such as `Goa trip` or `work`, that group transactions 
 
 Each transaction can have up to 10 tags of up to 30 characters. A leading `#` is optional, and `Goa Trip` and `goa trip` count as the same tag.
 
-In **Transactions**, tap a tag above the list to show only those transactions, or search for a tag by name. The [yearly summary](spending-and-planning.md#yearly-summary) totals your spending for each tag.
+In **Activity**, tap a tag above the list to show only those transactions, or search for a tag by name. The [yearly summary](spending-and-planning.md#yearly-summary) totals your spending for each tag.
 
 Tags never change amounts, balances or budgets. They are kept when you edit a transaction and are included in encrypted backups. A backup that contains tags cannot be restored by Tally 0.2.4 or earlier.
 

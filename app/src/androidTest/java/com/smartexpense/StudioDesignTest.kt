@@ -50,9 +50,9 @@ class StudioDesignTest {
                 TrackerTheme {Box(Modifier.width(320.dp).fillMaxHeight()) {Scaffold(bottomBar={LedgerNavigation("home",{})}) {padding->Box(Modifier.padding(padding)) {HomeScreen(sample(),{_,_->},{},{},{},{})}}}}
             }
         }
-        compose.onNodeWithContentDescription("Add expense").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search").assertIsDisplayed()
         compose.onNodeWithContentDescription("Settings").assertIsDisplayed()
-        compose.onAllNodesWithText("Overview").onFirst().assertIsDisplayed()
+        compose.onAllNodesWithText("Summary").onFirst().assertIsDisplayed()
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Latest"))
         compose.onNodeWithText("Latest").assertIsDisplayed()
         capture("today-large")
@@ -86,12 +86,12 @@ class StudioDesignTest {
     @Test fun mainNavigationHasThreeClearDestinations() {
         var route=""
         compose.setContent {TrackerTheme {LedgerNavigation("home") {route=it}}}
-        compose.onNodeWithText("Overview").assertIsSelected()
-        compose.onNodeWithText("Friends").performClick()
+        compose.onNodeWithText("Summary").assertIsSelected()
+        compose.onNodeWithText("Split").performClick()
         assertEquals("split",route)
         compose.onNodeWithText("Spending").performClick()
         assertEquals("insights",route)
-        compose.onNodeWithContentDescription("Add expense").assertExists()
+        compose.onNodeWithContentDescription("Search").assertExists()
         compose.onNodeWithText("Insights").assertDoesNotExist()
     }
 
@@ -99,11 +99,11 @@ class StudioDesignTest {
         var kind:Kind?=null
         var route=""
         compose.setContent {TrackerTheme {HomeScreen(Snapshot(),{k,_->kind=k},{},{},{},{route=it})}}
-        compose.onNodeWithText("Add expense").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Add an expense").assertIsDisplayed().performClick()
         assertEquals(Kind.EXPENSE,kind)
         compose.onNodeWithContentDescription("Settings").performClick()
         assertEquals("more",route)
-        compose.onNodeWithText("Set up your accounts").assertExists()
+        compose.onNodeWithText("Add your wallet or UPI account").assertExists()
         compose.onNodeWithText("Daily spending diary ›").assertDoesNotExist()
     }
 

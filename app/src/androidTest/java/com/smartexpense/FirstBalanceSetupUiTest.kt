@@ -47,7 +47,7 @@ class FirstBalanceSetupUiTest {
 
     @Test fun todayShowsTodaySpendingAndAddMoney() {
         compose.setContent {EditorialPreviewTheme {HomeScreen(Snapshot(accounts=listOf(Account("w","Wallet","Cash",5000,false)),dashboard=DashboardMetrics(today=1200)),{_,_->},{},{},{},{})}}
-        compose.onNodeWithText("Overview").assertIsDisplayed()
+        compose.onNodeWithText("Summary").assertIsDisplayed()
         reveal(hasText("Spent today")).assertIsDisplayed()
         compose.onNodeWithText("₹12").assertIsDisplayed()
         reveal(hasText("Add money")).assertIsDisplayed()

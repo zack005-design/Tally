@@ -72,7 +72,13 @@ import java.time.format.DateTimeFormatter
     }
     val days=remember(filtered,zone) {filtered.groupBy {Instant.ofEpochMilli(it.date).atZone(zone).toLocalDate()}}
     val dailySpending=remember(days) {days.mapValues {(date,records)->Reports.period(records,date,date).spending}}
-    Page("Transactions",largeTitle=true,gap=0.dp,actions={TextButton(onCalendar) {Text("Calendar")};StudioSettingsButton(onSettings)}) {
+    Page("Activity",largeTitle=true,gap=0.dp,actions={
+        FilledTonalIconButton(onCalendar,Modifier.size(44.dp),colors=IconButtonDefaults.filledTonalIconButtonColors(containerColor=Tokens.paper,contentColor=Tokens.text)) {
+            Icon(painterResource(R.drawable.ic_calendar),"Calendar",Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(8.dp))
+        StudioSettingsButton(onSettings)
+    }) {
         item(key="search") {Box(Modifier.padding(vertical=16.dp)) {Field("Search transactions",query,{query=it})}}
         item(key="filters") {Row(Modifier.fillMaxWidth().padding(bottom=8.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             OutlinedButton({monthPicker=true}) {Text((if(monthText.isEmpty()) "All dates" else YearMonth.parse(monthText).format(DateTimeFormatter.ofPattern("MMMM yyyy")))+" ⌄")}

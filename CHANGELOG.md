@@ -9,6 +9,10 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Add tags: label any transaction from its detail screen, filter Transactions by tag, and see spending per tag in the yearly summary. Tags never change money and are kept in encrypted backups; backups with tags need this version or later to restore. [Tag transactions](docs/features/everyday-money.md#tag-transactions)
 - Document how to create a release key, build and verify a signed APK, and move a phone from the debug build. [Build a signed release](docs/release-signing.md)
 - Adapt navigation to the screen: landscape and other short screens use a side rail so content keeps the full height, and with large text the add button stays on the tab row whenever it fits.
+- Redesign the app in an iOS style: a system-grey background, white grouped lists, solid colour icon squares, contact-style avatars, green switches, the Inter typeface and pine green as the app tint, with a matching black dark theme.
+- Replace the tab bar with a floating bar for **Summary**, **Activity**, **Spending** and **Split**, plus a round search button. Adding an expense, scanning a bill and transfers now start from the **Summary** card.
+- Rebuild **Summary** with available-to-spend, today against your daily limit, the month's budget, what friends owe and recent entries, plus a short setup list on first launch.
+- Fit every phone width: phones narrower than 360 dp, or set to a large display size, scale the whole layout down to fit instead of cutting content off, while your text-size setting still applies. Tablets and foldables keep a phone-width column.
 
 ## [0.2.4](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115)
 

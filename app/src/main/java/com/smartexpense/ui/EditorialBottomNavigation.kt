@@ -25,68 +25,72 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.smartexpense.R
 
-private val lightTabs = listOf(
-    Triple("home", "Overview", R.drawable.ic_tab_home),
+/** Main tabs in the redesign: Summary, Activity, Spending and Split. Search sits beside them. */
+internal val lightTabs = listOf(
+    Triple("home", "Summary", R.drawable.ic_tab_summary),
+    Triple("activity", "Activity", R.drawable.ic_tab_activity),
     Triple("insights", "Spending", R.drawable.ic_tab_insights),
-    Triple("split", "Friends", R.drawable.ic_tab_split)
+    Triple("split", "Split", R.drawable.ic_people)
 )
 
-/** Floating grouped navigation and a separate compose action, with an expanded large-text layout. */
+/** The glass bar: translucent paper over content, with a hairline edge. */
+@Composable private fun glassColor() = Tokens.paper.copy(alpha = if (LocalDarkTheme.current) .92f else .88f)
+
+@Composable private fun SearchButton(onNavigate: (String) -> Unit, size: androidx.compose.ui.unit.Dp) {
+    val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Surface(onClick = lightHapticAction { onNavigate("search") }, interactionSource = interaction, shape = CircleShape, color = glassColor(),
+        contentColor = Tokens.text, border = BorderStroke(.5.dp, Tokens.border), shadowElevation = 6.dp,
+        modifier = Modifier.size(size).softPress(interaction)) {
+        Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ic_search), "Search", Modifier.size(22.dp)) }
+    }
+}
+
+/** Floating glass tab bar with a separate search button, and a stacked layout for very large text. */
 @Composable fun EditorialBottomNavigation(route: String?, onNavigate: (String) -> Unit) {
-    val addInteraction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    val addAction = lightHapticAction { onNavigate("add") }
     val density = LocalDensity.current
     val style = MaterialTheme.typography.labelSmall
     val measurer = rememberTextMeasurer()
     val labelWidth = with(density) { lightTabs.maxOf { measurer.measure(it.second, style).size.width }.toDp() }
-    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
         BoxWithConstraints(Modifier.widthIn(max = 560.dp).fillMaxWidth()) {
-            // Tabs need their labels plus 10dp padding each and 12dp of group padding; the add button needs 60dp plus a 12dp gap.
-            val expanded = maxWidth < (labelWidth + 10.dp) * lightTabs.size + 12.dp + 72.dp
-            val stackedTabs = maxWidth - 12.dp < (labelWidth + 10.dp) * lightTabs.size
+            // Each tab needs its label plus 12dp; the bar adds 8dp of padding and search needs 56dp plus a 10dp gap.
+            val stackedTabs = maxWidth - 8.dp < (labelWidth + 12.dp) * lightTabs.size
             val tab: @Composable (Triple<String, String, Int>, Modifier) -> Unit = { (destination, label, icon), modifier ->
                 val selected = route == destination
                 val selectAction = lightHapticAction { onNavigate(destination) }
                 val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                val tint by animateColorAsState(if (selected) Tokens.accent else Tokens.muted, tween(180), label = "Tab tint")
-                val fill by animateColorAsState(if (selected) Tokens.secondarySurface else Color.Transparent, tween(220), label = "Tab selection")
-                val target = modifier.softPress(interaction).clip(Tokens.card).background(fill)
+                val tint by animateColorAsState(if (selected) Tokens.accent else Tokens.text, tween(180), label = "Tab tint")
+                val fill by animateColorAsState(if (selected) Tokens.tonal else Color.Transparent, tween(220), label = "Tab selection")
+                val target = modifier.softPress(interaction).clip(CircleShape).background(fill)
                     .selectable(selected, interactionSource = interaction, indication = androidx.compose.foundation.LocalIndication.current, role = Role.Tab, onClick = { if (!selected) selectAction() })
-                    .heightIn(min = 54.dp)
+                    .heightIn(min = 52.dp)
                 if (stackedTabs) Row(target.padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Icon(painterResource(icon), null, Modifier.size(22.dp), tint = tint)
                     Text(label, Modifier.weight(1f), style = style, color = tint)
-                } else Column(target.padding(horizontal = 5.dp, vertical = 7.dp),
+                } else Column(target.padding(horizontal = 4.dp, vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically)) {
+                    verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically)) {
                     Icon(painterResource(icon), null, Modifier.size(22.dp), tint = tint)
-                    Text(label, style = style, color = tint, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    Text(label, style = style, color = tint, maxLines = 1, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 }
             }
             val tabs: @Composable (Modifier) -> Unit = { modifier ->
-                Surface(modifier, shape = if(stackedTabs) Tokens.card else CircleShape, color = Tokens.paper.copy(alpha = .94f),
-                    border = BorderStroke(.5.dp, Tokens.border), shadowElevation = 1.dp) {
-                    if(stackedTabs) Column(Modifier.selectableGroup().padding(6.dp)) {
+                Surface(modifier, shape = if (stackedTabs) Tokens.card else CircleShape, color = glassColor(),
+                    border = BorderStroke(.5.dp, Tokens.border), shadowElevation = 6.dp) {
+                    if (stackedTabs) Column(Modifier.selectableGroup().padding(4.dp)) {
                         lightTabs.forEach { tab(it, Modifier.fillMaxWidth()) }
-                    } else Row(Modifier.selectableGroup().padding(6.dp).height(IntrinsicSize.Min)) {
+                    } else Row(Modifier.selectableGroup().padding(4.dp).height(IntrinsicSize.Min)) {
                         lightTabs.forEach { tab(it, Modifier.weight(1f).fillMaxHeight()) }
                     }
                 }
             }
-            if (expanded) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (stackedTabs) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 tabs(Modifier.fillMaxWidth())
-                Button(addAction, Modifier.align(Alignment.End).heightIn(min = 48.dp).softPress(addInteraction).semantics { contentDescription = "Add expense" }, shape = CircleShape, interactionSource = addInteraction) {
-                    Icon(painterResource(R.drawable.ic_compose), null, Modifier.size(22.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Add expense")
-                }
-            } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.align(Alignment.End)) { SearchButton(onNavigate, 56.dp) }
+            } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 tabs(Modifier.weight(1f))
-                Surface(onClick = addAction, interactionSource = addInteraction, shape = CircleShape, color = Tokens.accent,
-                    contentColor = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(60.dp).softPress(addInteraction), shadowElevation = 3.dp) {
-                    Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ic_compose), "Add expense", Modifier.size(26.dp)) }
-                }
+                SearchButton(onNavigate, 60.dp)
             }
         }
     }
@@ -95,21 +99,16 @@ private val lightTabs = listOf(
 
 /** Side navigation for short windows such as landscape phones, so screen content keeps the full height. */
 @Composable fun EditorialNavigationRail(route: String?, onNavigate: (String) -> Unit) {
-    val addInteraction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    val addAction = lightHapticAction { onNavigate("add") }
-    Surface(Modifier.fillMaxHeight().width(96.dp), color = Tokens.paper.copy(alpha = .94f), border = BorderStroke(.5.dp, Tokens.border)) {
+    Surface(Modifier.fillMaxHeight().width(96.dp), color = glassColor(), border = BorderStroke(.5.dp, Tokens.border)) {
         Column(Modifier.fillMaxHeight().navigationBarsPadding().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(vertical = 12.dp, horizontal = 8.dp).selectableGroup(),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)) {
-            Surface(onClick = addAction, interactionSource = addInteraction, shape = CircleShape, color = Tokens.accent,
-                contentColor = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(56.dp).softPress(addInteraction), shadowElevation = 3.dp) {
-                Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ic_compose), "Add expense", Modifier.size(24.dp)) }
-            }
+            SearchButton(onNavigate, 52.dp)
             lightTabs.forEach { (destination, label, icon) ->
                 val selected = route == destination
                 val selectAction = lightHapticAction { onNavigate(destination) }
                 val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                val tint by animateColorAsState(if (selected) Tokens.accent else Tokens.muted, tween(180), label = "Rail tint")
-                val fill by animateColorAsState(if (selected) Tokens.secondarySurface else Color.Transparent, tween(220), label = "Rail selection")
+                val tint by animateColorAsState(if (selected) Tokens.accent else Tokens.text, tween(180), label = "Rail tint")
+                val fill by animateColorAsState(if (selected) Tokens.tonal else Color.Transparent, tween(220), label = "Rail selection")
                 Column(Modifier.fillMaxWidth().softPress(interaction).clip(Tokens.card).background(fill)
                     .selectable(selected, interactionSource = interaction, indication = androidx.compose.foundation.LocalIndication.current, role = Role.Tab, onClick = { if (!selected) selectAction() })
                     .heightIn(min = 56.dp).padding(vertical = 6.dp),

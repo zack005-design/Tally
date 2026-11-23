@@ -63,13 +63,13 @@ class LightUiPhaseOneTest {
     @Test fun navigationIncludesSpendingAndFreshComposeAction() {
         var destination = ""
         compose.setContent { EditorialPreviewTheme { LedgerNavigation("home") { destination = it } } }
-        compose.onNodeWithText("Overview").assertIsSelected()
+        compose.onNodeWithText("Summary").assertIsSelected()
         compose.onNodeWithText("Spending").performClick()
         assertEquals("insights", destination)
-        compose.onNodeWithText("Friends").performClick()
+        compose.onNodeWithText("Split").performClick()
         assertEquals("split", destination)
-        compose.onNodeWithContentDescription("Add expense").performClick()
-        assertEquals("add", destination)
+        compose.onNodeWithContentDescription("Search").performClick()
+        assertEquals("search", destination)
     }
 
     @Test fun narrowLargeTextNavigationKeepsAllActionsReachable() {
@@ -81,12 +81,12 @@ class LightUiPhaseOneTest {
             }
         }
         // The selected tab is already open, so it does not navigate again.
-        compose.onNodeWithText("Overview").assertIsDisplayed().assertIsSelected()
-        listOf("Spending" to "insights", "Friends" to "split").forEach { (label, route) ->
+        compose.onNodeWithText("Summary").assertIsDisplayed().assertIsSelected()
+        listOf("Spending" to "insights", "Split" to "split").forEach { (label, route) ->
             compose.onNodeWithText(label).assertIsDisplayed().performClick(); assertEquals(route, destination)
         }
-        compose.onNodeWithContentDescription("Add expense").assertIsDisplayed().performClick()
-        assertEquals("add", destination)
+        compose.onNodeWithContentDescription("Search").assertIsDisplayed().performClick()
+        assertEquals("search", destination)
         capture("navigation-large")
     }
 
@@ -156,8 +156,8 @@ class LightUiPhaseOneTest {
         compose.setContent { EditorialPreviewTheme { Scaffold(bottomBar = { LedgerNavigation("home") {} }) { padding ->
             Box(Modifier.padding(padding)) { HomeScreen(snapshot, { _, _ -> }, {}, {}, {}, { route = it }) }
         } } }
-        compose.onAllNodesWithText("Overview").onFirst().assertExists()
-        compose.onNodeWithText("TOTAL AVAILABLE").assertExists()
+        compose.onAllNodesWithText("Summary").onFirst().assertExists()
+        compose.onNodeWithText("Available to spend").assertExists()
         compose.onNodeWithText("₹6,200").assertIsDisplayed()
         capture("overview")
         compose.onNodeWithContentDescription("Hide balance").performClick()

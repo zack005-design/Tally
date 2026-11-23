@@ -21,3 +21,7 @@ Layout checks cover compact widths and large system text. An Android emulator ca
 ## Moving or updating phones
 
 Use the [private development downloads](downloads.md). Keep an encrypted full backup and its password before moving phones. Updates must preserve the installed signing identity; do not uninstall or clear storage to resolve an update failure. See [installation safety](installation-safety.md).
+
+## Screen sizes
+
+Layouts are composed for widths of 360 dp and up. On narrower phones, or when Android's display size is set large enough to drop below 360 dp, Tally scales the whole layout down proportionally (to no less than 82%) so rows, amounts and buttons fit instead of being cut off. Android's font-size setting still applies on top of that, and rows stack their amounts under titles at large text sizes. Wider phones keep their native size and gain room. On tablets, foldables and landscape screens the content stays in a centred column up to 720 dp wide, and short screens use a side navigation rail.

@@ -23,16 +23,16 @@ import com.smartexpense.R
 
 /** Paper surfaces shared by the everyday screens. */
 @Composable internal fun StudioCard(shape:Shape=Tokens.card,content:@Composable ColumnScope.()->Unit) {
-    Surface(Modifier.fillMaxWidth(),shape=shape,color=Tokens.paper,border=BorderStroke(.7.dp,Tokens.border.copy(alpha=.65f))) {
+    Surface(Modifier.fillMaxWidth(),shape=shape,color=Tokens.paper) {
         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp),content=content)
     }
 }
 
 /** Shared secondary action: a clear touch target without competing with Save/Add. */
 @Composable internal fun StudioSecondaryAction(label:String,modifier:Modifier=Modifier,icon:Int?=null,expanded:Boolean?=null,onClick:()->Unit) {
-    OutlinedButton(onClick,modifier.fillMaxWidth().heightIn(min=48.dp).semantics {
+    FilledTonalButton(onClick,modifier.fillMaxWidth().heightIn(min=48.dp).semantics {
         if(expanded!=null) stateDescription=if(expanded) "Expanded" else "Collapsed"
-    },shape=Tokens.field,contentPadding=PaddingValues(horizontal=16.dp,vertical=10.dp)) {
+    },shape=Tokens.field,colors=ButtonDefaults.filledTonalButtonColors(containerColor=Tokens.paper,contentColor=Tokens.text),contentPadding=PaddingValues(horizontal=16.dp,vertical=10.dp)) {
         if(icon!=null) {Icon(painterResource(icon),null,Modifier.size(18.dp));Spacer(Modifier.width(8.dp))}
         Text(label,Modifier.weight(1f),textAlign=androidx.compose.ui.text.style.TextAlign.Start)
         Spacer(Modifier.width(8.dp))
@@ -58,7 +58,7 @@ internal object ReceiptPaperShape:Shape {
 }
 
 @Composable internal fun StudioSettingsButton(onClick:()->Unit) {
-    FilledTonalIconButton(onClick,colors=IconButtonDefaults.filledTonalIconButtonColors(containerColor=Tokens.paper)) {
+    FilledTonalIconButton(onClick,Modifier.size(44.dp),colors=IconButtonDefaults.filledTonalIconButtonColors(containerColor=Tokens.paper,contentColor=Tokens.text)) {
         Icon(painterResource(R.drawable.ic_more),contentDescription="Settings",modifier=Modifier.size(22.dp))
     }
 }

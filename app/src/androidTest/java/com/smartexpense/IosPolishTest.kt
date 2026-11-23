@@ -78,14 +78,14 @@ class IosPolishTest {
                 TrackerTheme { LedgerNavigation(route) { route = it } }
             }
         }
-        listOf("Overview", "Spending", "Friends").forEach { label ->
+        listOf("Summary", "Spending", "Split").forEach { label ->
             compose.onNode(hasText(label) and isSelectable()).assertIsDisplayed().performClick().assertIsSelected()
             val layouts = mutableListOf<TextLayoutResult>()
             compose.onNodeWithText(label, useUnmergedTree = true)
                 .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
             org.junit.Assert.assertEquals("$label should not break across lines", 1, layouts.single().lineCount)
         }
-        compose.onNodeWithContentDescription("Add expense").assertIsDisplayed().assertHasClickAction()
+        compose.onNodeWithContentDescription("Search").assertIsDisplayed().assertHasClickAction()
         capture("navigation-large-text")
     }
 

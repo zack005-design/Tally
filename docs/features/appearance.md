@@ -6,7 +6,7 @@ Tally has a light and a dark theme. By default it follows your phone's dark them
 
 ## Choose a theme
 
-1. Tap the settings button at the top of **Overview** to open **Tools**.
+1. Tap your avatar at the top of **Summary** to open **Tools**.
 2. Tap **Settings & backup**, then **Theme** under **Appearance**.
 3. Choose **System default**, **Light** or **Dark**. The change applies straight away and is remembered.
 
