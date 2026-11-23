@@ -74,6 +74,11 @@ Tally keeps what you paid separate from what you spent, so lending money to frie
 
 Transfers between your own accounts are never counted as spending either.
 
+## Fits your phone
+
+- **Light and dark themes.** Tally follows your phone's dark theme by default, or you can choose Light or Dark under **Settings → Appearance**. Shared receipts and reports always print on a white page. [Appearance guide](docs/features/appearance.md)
+- **Landscape and large text.** Short screens such as a phone in landscape use a side navigation rail, so content keeps the full height. With large text, the add button stays on the tab row whenever it fits.
+
 ## Privacy
 
 | Protection | How it works |

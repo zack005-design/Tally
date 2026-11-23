@@ -1,14 +1,16 @@
 # Tally CSV formats
 
-Grounded in the app's domain/LocalExport.kt, October 2026. Inspect headers in each uploaded file; future versions can change them. All monetary cells are decimal INR strings produced from integer paise.
+Grounded in the app's domain/LocalExport.kt, November 2026. Inspect headers in each uploaded file; future versions can change them. All monetary cells are decimal INR strings produced from integer paise.
 
 ## Transactions
 
 Starts with `Tally monthly report,<YYYY-MM>,INR`, followed by:
 
-`Date,Type,Description,Total INR,Personal INR,Category,Notes`
+`Date,Type,Description,Total INR,Personal INR,Category,Accounts,Tags,Notes`
 
-Dates are local ISO date-times without an offset. Respect the exported calendar dates; do not invent a UTC offset. Blank category means Uncategorised. Reversed records are filtered out by the exporter. Rows do not include stable IDs, payer contributions, friend debts, or transaction account identifiers. EXPENSE and REFUND personal amounts determine net spending. Unknown types should be reported separately.
+Files exported before November 2026 have no `Accounts` or `Tags` columns; read columns by header name.
+
+Dates are local ISO date-times without an offset. Respect the exported calendar dates; do not invent a UTC offset. Blank category means Uncategorised. `Accounts` lists the names of the user's own accounts the transaction moved money in, separated by `; ` (blank when none). `Tags` lists the user's own labels, separated by `; `; tags never change amounts, so do not treat them as categories or add tag totals to category totals. Reversed records are filtered out by the exporter. Rows do not include stable IDs, payer contributions, friend debts, or per-account amounts; never derive account balances from the `Accounts` column. EXPENSE and REFUND personal amounts determine net spending. Unknown types should be reported separately.
 
 ## Statement
 

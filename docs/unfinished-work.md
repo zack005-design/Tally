@@ -1,6 +1,6 @@
 # FIn unfinished work
 
-Updated 25 October 2026. This is the current task ledger; the untracked October 10 implementation checklist is historical and contains superseded statements.
+Updated 23 November 2026. This is the current task ledger; the untracked October 10 implementation checklist is historical and contains superseded statements.
 
 ## Execution scope
 
@@ -9,11 +9,12 @@ Continue the existing offline Kotlin/Room/Compose app. Preserve exact integer-pa
 ## Tasks
 
 - [x] Reduce reminder reconciliation overhead. Disabled/denied reminders avoid ledger reads; enabled reminders load scheduling inputs without rebuilding balances, debts or reports. Query-tracing regressions failed before the fix and pass afterward, including reversed occurrence IDs and archived accounts.
-- [ ] Complete remote compatibility verification on Android 8/API26, API35 and API36. The expanded CI matrix now runs migration, restore, reminder, model, distribution and layout checks with per-API reports. All 37 targeted device/layout checks passed locally on API36; API26/API35 results remain pending CI.
+- [x] Complete remote compatibility verification on Android 8/API26, API35 and API36. The CI device matrix (API 26, 35, 36 and 37) passed on `main` at commit `d10a297` ([run 45](https://github.com/zack005-design/Tally/actions/runs/44914366658)), covering migrations, rejected restores and the other device checks in the workflow. These are emulator results, not physical-phone evidence.
 - [ ] Check Xiaomi 17T-relevant behavior: Android 16, tall high-density display, gestures/keyboard, large text, interrupted/background work and offline inference. An emulator cannot prove HyperOS background delivery, camera behavior, biometric hardware or 120 Hz frame performance.
 - [x] Implement and verify dedicated shared-bill refund distribution. The flow separates refunded personal shares from actual cash recipients, caps partial/repeated refunds per person, preserves original bills and repayments, supports idempotent retries and dependency-aware reversal, and validates format-8 backups. The explicit review/save form survives state restoration and remains usable at 320dp/200% text. Source verification passed; private APK release packaging is separate.
 - [x] Resume a bounded separate local LLM research run. All 15 research tests passed; a fresh seed-43 run completed 1,200 steps on synthetic data. It matched 11/32 held-out synthetic commands and 7/8 historical commands. This is insufficient for app integration. That research run did not change the app model; its workspace and artifacts remain ignored. Later model updates are described in the [on-device AI guide](features/on-device-ai.md). Broader independent evaluation is still future work.
-- [ ] Check the latest GitHub Actions run and resolve reproducible failures. Publish completed verified source changes individually on main.
+- [x] Check the latest GitHub Actions run and resolve reproducible failures. Runs 42–46 all passed; keep publishing completed verified source changes individually on main.
+- [ ] Publish 0.2.5. Dark theme, yearly summary, tags, adaptive navigation, amount search and account/tag report columns are on `main` but in no release APK yet. Bump the version, run the full checks, and attach both editions with checksums as a development prerelease.
 - [x] Review the two pre-existing untracked files, `IMPLEMENTATION.md` and `ui-redesign.html`. Their local references resolve, but their no-OCR/no-model and mint/graphite design descriptions are historical. Preserve the originals and keep them outside this publication; the release notes and current guides describe the shipped app.
 - [ ] Physical-phone testing: unavailable until a device is supplied.
 - [ ] Production signing and store distribution: unavailable without the user's signing identity and store account. Continue private development distribution; do not create a replacement signing identity or claim store readiness.

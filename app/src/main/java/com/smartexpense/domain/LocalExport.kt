@@ -58,9 +58,10 @@ object ReportCsv {
             add(listOf("Net new funding less personal spending",Money.input(review.netFunding),"Excludes opening cash, repayment timing and negative corrections"))
             add(emptyList());add(listOf("Account","Opening INR","Closing INR"))
             (review.openingByAccount.keys+review.closingByAccount.keys).sorted().forEach {id->add(listOf(accounts[id]?:id,Money.input(review.openingByAccount[id]?:0),Money.input(review.closingByAccount[id]?:0)))}
-            add(emptyList());add(listOf("Date","Type","Description","Total INR","Personal INR","Category","Notes"))
+            add(emptyList());add(listOf("Date","Type","Description","Total INR","Personal INR","Category","Accounts","Tags","Notes"))
             snapshot.records.filter {!it.reversed && YearMonth.from(Instant.ofEpochMilli(it.date).atZone(ZoneId.systemDefault()))==month}.sortedBy {it.date}.forEach {record->
-                add(listOf(Instant.ofEpochMilli(record.date).atZone(ZoneId.systemDefault()).toLocalDateTime().toString(),record.kind.name,record.description,Money.input(record.amount),Money.input(record.personalAmount),categories[record.categoryId].orEmpty(),record.notes))
+                add(listOf(Instant.ofEpochMilli(record.date).atZone(ZoneId.systemDefault()).toLocalDateTime().toString(),record.kind.name,record.description,Money.input(record.amount),Money.input(record.personalAmount),categories[record.categoryId].orEmpty(),
+                    record.accountIds.map {accounts[it]?:it}.joinToString("; "),record.tags.joinToString("; "),record.notes))
             }
         }
     }
