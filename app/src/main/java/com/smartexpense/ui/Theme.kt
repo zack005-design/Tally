@@ -46,7 +46,6 @@ object Tokens {
     val expense @Composable get() = text
     val positive @Composable get() = accent
     val negative @Composable get() = MaterialTheme.colorScheme.error
-    val blue @Composable get() = accent
     val chartTones @Composable get() = listOf(accent, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.outline, secondarySurface)
     val card = RoundedCornerShape(18.dp)
     val field = RoundedCornerShape(12.dp)

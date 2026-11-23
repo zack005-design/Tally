@@ -12,9 +12,6 @@ private val Context.preferences by preferencesDataStore("tracker-settings")
     private val theme=stringPreferencesKey("theme-mode")
     val themeMode=context.preferences.data.map {ThemeMode.from(it[theme])}
     suspend fun setThemeMode(value:ThemeMode) {context.preferences.edit {it[theme]=value.id}}
-    private val compact=booleanPreferencesKey("compact-amounts")
-    val compactAmounts=context.preferences.data.map { it[compact]?:false }
-    suspend fun setCompact(value:Boolean) { context.preferences.edit { it[compact]=value } }
     private val budgetAlerts=booleanPreferencesKey("budget-alerts")
     private val budgetLevels=stringSetPreferencesKey("budget-alert-levels")
     val budgetAlertsEnabled=context.preferences.data.map {it[budgetAlerts]?:false}

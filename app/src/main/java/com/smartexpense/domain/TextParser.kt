@@ -75,11 +75,6 @@ class RuleBasedTextParser(private val clock:java.time.Clock=java.time.Clock.syst
     }
 }
 
-/** Future adapters return drafts; neither scanner nor local AI can write financial records. */
-interface ReceiptDraftSource { suspend fun draft(image: ByteArray): ParsedDraft }
-interface LocalIntelligenceDraftSource { suspend fun draft(text: String, people: List<PersonRef>): ParsedDraft }
-
-
 /** Resolves only a unique active account or an established Wallet/GPay slot. */
 fun resolveParsedAccount(name:String?,accounts:List<Account>,sources:WalletSources?=null):String? {
     if(name.isNullOrBlank()) return null
