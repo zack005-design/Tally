@@ -114,17 +114,17 @@ More detail is in the [privacy guide](docs/features/privacy.md).
 
 ## Download
 
-The latest published version is **0.2.4**, for Android 8.0 and later. Tally comes in two editions with the same finance and receipt features.
+The latest published version is **0.2.5**, for Android 8.0 and later. Tally comes in two editions with the same finance and receipt features.
 
 | Edition | Quick entry | APK |
 | --- | --- | --- |
-| **AI** | A local model suggests drafts, with rules as a fallback | [tally-0.2.4-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.4-20261115/tally-0.2.4-ai-debug.apk) |
-| **Non-AI** | Rule-based parsing only | [tally-0.2.4-non-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.4-20261115/tally-0.2.4-non-ai-debug.apk) |
+| **AI** | A local model suggests drafts, with rules as a fallback | [tally-0.2.5-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.5-20261123/tally-0.2.5-ai-debug.apk) |
+| **Non-AI** | Rule-based parsing only | [tally-0.2.5-non-ai-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.5-20261123/tally-0.2.5-non-ai-debug.apk) |
 
 Both editions share one app ID, so you can switch between them without losing data. Make an encrypted backup before updating, and follow the [installation guide](docs/getting-started.md) for step-by-step instructions.
 
 > [!NOTE]
-> Tally is in active development, and these APKs are debug-signed test builds that are not on the Play Store. The redesign, dark theme and adaptive layouts shown above are on `main` and will be included in the next release. See the [changelog](CHANGELOG.md).
+> Tally is in active development, and these APKs are debug-signed test builds that are not on the Play Store. Version 0.2.5 installs over 0.2.4 and keeps your data. See the [changelog](CHANGELOG.md) and the [0.2.5 release notes](docs/releases/0.2.5.md).
 
 ## Build from source
 

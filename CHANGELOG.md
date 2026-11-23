@@ -4,6 +4,10 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+Nothing yet.
+
+## [0.2.5](https://github.com/zack005-design/Tally/releases/tag/v0.2.5-20261123)
+
 - Add a dark theme. Tally follows your phone's dark theme setting by default; choose Light or Dark under **Settings → Appearance**. [Appearance guide](docs/features/appearance.md)
 - Add a yearly summary under **Tools → History & reports**: total spending and income, a like-for-like comparison with last year, month-by-month spending and top categories. [Spending and planning](docs/features/spending-and-planning.md#yearly-summary)
 - Add tags: label any transaction from its detail screen, filter Transactions by tag, and see spending per tag in the yearly summary. Tags never change money and are kept in encrypted backups; backups with tags need this version or later to restore. [Tag transactions](docs/features/everyday-money.md#tag-transactions)
@@ -16,6 +20,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Rebuild **Summary** with available-to-spend, today against your daily limit, the month's budget, what friends owe and recent entries, plus a short setup list on first launch.
 - Fit every phone width: phones narrower than 360 dp, or set to a large display size, scale the whole layout down to fit instead of cutting content off, while your text-size setting still applies. Tablets and foldables keep a phone-width column.
 - Bring the remaining screens into the new style: balance setup, budget progress bars, the spending trend chart, the calendar and calculator now use the pine-green tint and standard card and field shapes instead of the old blue and purple.
+
+[Verification and known limits](docs/releases/0.2.5.md)
 
 ## [0.2.4](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115)
 
