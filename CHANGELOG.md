@@ -6,6 +6,9 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 - Change the app tint from pine green to blue (#0A66D8) across every screen, and use the redesign's dark greys (#1C1C1E page, #2C2C2E cards) instead of black in the dark theme. Money in and switches stay green.
 - Rebuild first launch: **Welcome to Tally**, **How Tally works**, your starting balances, and an optional step to turn on the daily reminder and app lock. You can also restore a backup straight from the welcome screen. Summary then opens on a **You're all set** card with a three-step setup list.
+- Fit the narrowest phones: compact phones at their largest display size, and narrow split-screen windows, now scale far enough that no screen is laid out narrower than the 320 dp it is tested at.
+- In landscape, keep content and the side rail clear of the camera cutout or punch-hole.
+- Show the whole week in the date picker on narrow phones instead of hiding the weekend behind a sideways scroll.
 
 ## [0.2.5](https://github.com/zack005-design/Tally/releases/tag/v0.2.5-20261123)
 

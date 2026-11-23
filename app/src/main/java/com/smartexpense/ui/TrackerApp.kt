@@ -76,7 +76,8 @@ import com.smartexpense.domain.*
     }}
     // Tabs are switched, not stacked, wherever a screen links to one.
     val openRoute:(String)->Unit={destination->if(destination in mainTabs) onTab(destination) else nav.navigate(destination)}
-    Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
+    // Landscape phones with a camera cutout or punch-hole keep content clear of it on the side.
+    Scaffold(snackbarHost={SnackbarHost(snackbar)},contentWindowInsets=ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)),bottomBar={
         if(showNavigation && !useRail) LedgerNavigation(route,onTab)
     }) {padding ->
         Row(Modifier.fillMaxSize().padding(padding)) {
