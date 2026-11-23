@@ -71,7 +71,7 @@ import java.time.*
                     else if(reportType=="Statement") Row(Modifier.fillMaxWidth().padding(vertical=3.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                         Text(row.first(),Modifier.weight(1f),style=MaterialTheme.typography.bodySmall)
                         Text(row.getOrNull(1).orEmpty().let {runCatching {referenceMoney(Money.parse(it))}.getOrDefault(it)},style=MaterialTheme.typography.bodySmall)
-                    } else Text(row.joinToString(" · "),style=MaterialTheme.typography.bodySmall)
+                    } else Text(row.filter(String::isNotBlank).joinToString(" · "),style=MaterialTheme.typography.bodySmall)
                 }
             }?:Text(previewError?:"Loading report preview…",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
         }}}

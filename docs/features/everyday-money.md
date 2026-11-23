@@ -21,6 +21,10 @@ Keep a clear record of what you have, what you spend, and how money moves betwee
 3. When moving cash between accounts, record a transfer.
 4. Check your account balances against your cash or payment app and use balance reconciliation when needed.
 
+## Find a transaction
+
+In **Transactions**, type in the search box to match descriptions, notes, tags, categories, accounts and people. Type an amount such as `80`, `₹1,250` or `20.50` to also find transactions whose total or your share is exactly that amount. Use **Filter** for dates, types and amount ranges.
+
 ## Tag transactions
 
 Tags are your own labels, such as `Goa trip` or `work`, that group transactions across categories.

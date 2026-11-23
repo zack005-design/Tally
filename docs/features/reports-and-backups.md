@@ -13,6 +13,8 @@ Export a readable report to review your records, or create a full backup for res
 3. Select **CSV** for spreadsheet analysis or **PDF** for a readable report.
 4. Check the preview and filename, then export to a location you choose.
 
+Each transaction row lists its date, type, description, total, your share, category, the accounts it used, its [tags](everyday-money.md#tag-transactions) and notes. Several accounts or tags are separated by semicolons.
+
 Reports are for reading, sharing, and analysis. A CSV or PDF cannot restore your Tally database.
 
 ## Create a restorable backup

@@ -57,13 +57,15 @@ import java.time.format.DateTimeFormatter
         if((start.isNotBlank() && from==null) || (end.isNotBlank() && through==null) ||
             (minimum.isNotBlank() && min==null) || (maximum.isNotBlank() && max==null)) return@remember emptyList<Record>()
         val search=query.trim()
+        val searchAmount=TransactionSearch.amount(search)
         s.records.filter {r->
             (selectedMonth==null || YearMonth.from(Instant.ofEpochMilli(r.date).atZone(zone))==selectedMonth) &&
                 (kind=="all" || r.kind.name==kind) && (category=="all" || r.categoryId==category) &&
                 (account=="all" || account in r.accountIds) && (person=="all" || person in r.personIds) &&
                 (group=="all" || r.groupId==group) && (tag.isEmpty() || Tags.has(r,tag)) && (from==null || r.date>=from) &&
                 (through==null || r.date<through) && (min==null || r.amount>=min) && (max==null || r.amount<=max) &&
-                (search.isEmpty() || r.description.contains(search,true) || r.notes.contains(search,true) ||
+                (search.isEmpty() || (searchAmount!=null && TransactionSearch.matchesAmount(r,searchAmount)) ||
+                    r.description.contains(search,true) || r.notes.contains(search,true) ||
                     r.tags.any {it.contains(search.removePrefix("#"),true)} ||
                     categoryNames[r.categoryId].orEmpty().contains(search,true) ||
                     r.accountIds.mapNotNull(accountNames::get).joinToString(" ").contains(search,true) ||
