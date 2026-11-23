@@ -12,7 +12,9 @@ permissions:
 
 concurrency:
   group: android-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Only replace superseded pull-request runs. Runs on main queue instead, so a push never
+  # cancels checks for the previous commit or a release that is being published.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
