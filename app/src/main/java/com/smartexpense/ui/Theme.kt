@@ -142,16 +142,30 @@ private val darkColors = darkColorScheme(
 /** Narrowest width the layouts are composed for; smaller phones are scaled to fit it. */
 internal const val COMPACT_LAYOUT_WIDTH_DP = 360f
 
+/** Narrowest width every screen is verified at; layouts are never composed narrower than this. */
+internal const val MINIMUM_LAYOUT_WIDTH_DP = 320f
+
+/**
+ * Layout scale for a window [widthDp] wide. Phones narrower than 360dp shrink proportionally,
+ * normally no further than 82% so text stays comfortable. Extremely narrow windows (a compact
+ * phone at its largest Display size, or a narrow split-screen pane) shrink further when needed,
+ * so the layout always gets at least [MINIMUM_LAYOUT_WIDTH_DP] and nothing is cut off.
+ */
+internal fun adaptiveLayoutScale(widthDp: Int): Float =
+    if (widthDp in 1 until COMPACT_LAYOUT_WIDTH_DP.toInt())
+        maxOf(widthDp / COMPACT_LAYOUT_WIDTH_DP, minOf(.82f, widthDp / MINIMUM_LAYOUT_WIDTH_DP))
+    else 1f
+
 /**
  * Fits every phone width. Phones narrower than 360dp (small screens, or a large Display size
- * setting) shrink the whole layout proportionally, down to 82%, so nothing is cut off. Wider
- * phones keep their native density and gain room instead of growing. The user's font-size
- * setting is preserved as a ratio, so text scaling still works on every screen.
+ * setting) shrink the whole layout proportionally (see [adaptiveLayoutScale]) so nothing is cut
+ * off. Wider phones keep their native density and gain room instead of growing. The user's
+ * font-size setting is preserved as a ratio, so text scaling still works on every screen.
  */
 @Composable internal fun AdaptiveDensity(content: @Composable () -> Unit) {
     val width = LocalConfiguration.current.screenWidthDp
     val density = LocalDensity.current
-    val scale = if (width in 1 until COMPACT_LAYOUT_WIDTH_DP.toInt()) (width / COMPACT_LAYOUT_WIDTH_DP).coerceAtLeast(.82f) else 1f
+    val scale = adaptiveLayoutScale(width)
     if (scale == 1f) content()
     else CompositionLocalProvider(LocalDensity provides Density(density.density * scale, density.fontScale), content = content)
 }
