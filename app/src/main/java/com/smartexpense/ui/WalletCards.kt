@@ -25,9 +25,9 @@ fun walletPaymentAccounts(s:Snapshot):List<Account> = s.accounts.sortedBy {when(
     val wallet=s.accounts.find {it.id==sources.walletId};val gpay=s.accounts.find {it.id==sources.gpayId}
     Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
         GroupedCard {
-            GroupedRow("Wallet",R.drawable.ic_wallet_outline,value=if(visible && wallet!=null) referenceMoney(wallet.balance) else "••••••",tone=ReferenceTone.Peach,onClick=onManage)
+            GroupedRow("Wallet",R.drawable.ic_wallet_outline,value=if(visible && wallet!=null) referenceMoney(wallet.balance) else "••••••",tone=ReferenceTone.Wallet,onClick=onManage)
             GroupedDivider()
-            GroupedRow("GPay",R.drawable.ic_contactless,value=if(visible && gpay!=null) referenceMoney(gpay.balance) else "••••••",tone=ReferenceTone.Lavender,onClick=onManage)
+            GroupedRow("GPay",R.drawable.ic_contactless,value=if(visible && gpay!=null) referenceMoney(gpay.balance) else "••••••",tone=ReferenceTone.Blue,onClick=onManage)
         }
         val next=sources.schedule.nextDate(today)
         if(next!=null) Panel {

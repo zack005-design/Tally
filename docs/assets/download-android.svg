@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="260" height="60" viewBox="0 0 260 60" role="img" aria-labelledby="title">
   <title id="title">Download Tally for Android from the latest release</title>
-  <rect width="260" height="60" rx="16" fill="#1E6A50"/>
+  <rect width="260" height="60" rx="16" fill="#0A66D8"/>
   <rect x="14" y="12" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity=".16"/>
   <path d="M32 21v13m-5.5-5.5L32 34l5.5-5.5M25 39h14" fill="none" stroke="#FFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
   <text x="64" y="27" fill="#FFF" font-family="Inter, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="17" font-weight="700">Download for Android</text>

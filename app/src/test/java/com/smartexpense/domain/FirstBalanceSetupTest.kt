@@ -5,7 +5,7 @@ import org.junit.Test
 
 class FirstBalanceSetupTest {
     @Test fun freshInstallStartsWithBalances() {
-        assertEquals("balance-setup", launchDestination(Snapshot()))
+        assertEquals("onboarding", launchDestination(Snapshot()))
     }
     @Test fun configuredWalletOpensTodayEvenWithoutOldWelcomeFlag() {
         assertEquals("home", launchDestination(Snapshot(walletSources=WalletSources("w","g","2026-10"))))

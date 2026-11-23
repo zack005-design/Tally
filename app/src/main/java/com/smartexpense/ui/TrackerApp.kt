@@ -30,11 +30,6 @@ import com.smartexpense.domain.*
     LaunchedEffect(ui.message) {ui.message?.let {snackbar.showSnackbar(it);model.dismissMessage()}}
     LaunchedEffect(repaymentDraft) {if(repaymentDraft!=null) nav.navigate("repayment/all")}
     LaunchedEffect(route) {model.observeRoute(route?:"home")}
-    LaunchedEffect(route,ui.snapshot.walletSources) {
-        if(route=="balance-setup" && ui.snapshot.walletSources!=null) {
-            nav.navigate("home") {popUpTo("balance-setup") {inclusive=true};launchSingleTop=true}
-        }
-    }
     fun add(kind:Kind=Kind.EXPENSE,shared:Boolean=false) {model.newEntry(kind,shared);nav.navigate("add")}
     fun detail(id:String) {nav.navigate("detail/$id")}
     fun openFavourite(id:String?) {
@@ -90,7 +85,7 @@ import com.smartexpense.domain.*
         Box(Modifier.weight(1f).fillMaxHeight(),contentAlignment=androidx.compose.ui.Alignment.TopCenter) {
         Column(Modifier.widthIn(max=720.dp).fillMaxSize()) {
             if(ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) {CircularProgressIndicator()} else CompositionLocalProvider(LocalNavigationExitGuard provides exitGuard,LocalEditorialBack provides if(route!=null && route !in listOf("home","activity","insights","add","split","search","balance-setup")) ({nav.popBackStack();Unit}) else null) {NavHost(nav,startDestination=remember {launchDestination(ui.snapshot)},modifier=Modifier.weight(1f),
+            if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) {CircularProgressIndicator()} else CompositionLocalProvider(LocalNavigationExitGuard provides exitGuard,LocalEditorialBack provides if(route!=null && route !in listOf("home","activity","insights","add","split","search","onboarding")) ({nav.popBackStack();Unit}) else null) {NavHost(nav,startDestination=remember {launchDestination(ui.snapshot)},modifier=Modifier.weight(1f),
                 // Compose's animation clock respects Android's animator duration scale, including zero.
                 enterTransition = {
                     if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(180))
@@ -100,10 +95,13 @@ import com.smartexpense.domain.*
                 popEnterTransition = { slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 16 } + fadeIn(tween(220)) },
                 popExitTransition = { slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 8 } + fadeOut(tween(180)) }
             ) {
-                composable("balance-setup") {BalanceSetupScreen(ui.snapshot,ui.busy) {wallet,gpay,walletId,gpayId->
-                    model.action("Balances saved") {
-                        model.repository.configureWallet(wallet,walletId,gpayId,gpayOpening=gpay)
-                        nav.navigate("home") {popUpTo("balance-setup") {inclusive=true};launchSingleTop=true}
+                // First run: welcome, how it works, starting balances, reminders and app lock, or a restore.
+                // The onboarding route ends only when the person finishes it, even after a restore.
+                composable("onboarding") {OnboardingScreen(model,ui.snapshot,ui.busy) {balances->
+                    model.action("Welcome to Tally") {
+                        if(balances!=null && model.state.value.snapshot.walletSources==null) model.repository.configureWallet(balances.wallet,balances.walletId,balances.gpayId,gpayOpening=balances.gpay)
+                        model.repository.finishWelcome()
+                        nav.navigate("home") {popUpTo("onboarding") {inclusive=true};launchSingleTop=true}
                     }
                 }}
                 composable("home") {HomeScreen(ui.snapshot,::add,{nav.navigate("accounts")},{nav.navigate("repayment/all")},::detail,openRoute,onRepeat={id->model.repeatExpense(id) {nav.navigate("add")}})}

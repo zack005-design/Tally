@@ -1,7 +1,7 @@
 <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="docs/assets/readme-hero.png" width="100%" alt="Tally: Every rupee, accounted for. The Summary screen in the light and dark themes."></a>
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="https://img.shields.io/github/v/release/zack005-design/Tally?include_prereleases&label=release&color=1E6A50&style=flat-square" alt="Latest release"></a>
+  <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="https://img.shields.io/github/v/release/zack005-design/Tally?include_prereleases&label=release&color=0A66D8&style=flat-square" alt="Latest release"></a>
   <a href="https://github.com/zack005-design/Tally/actions/workflows/android.yml"><img src="https://img.shields.io/github/actions/workflow/status/zack005-design/Tally/android.yml?branch=main&label=checks&style=flat-square" alt="Android checks"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-1C1C1E?logo=android&logoColor=white&style=flat-square" alt="Android 8.0 or later">
   <img src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-1C1C1E?logo=kotlin&logoColor=white&style=flat-square" alt="Kotlin and Jetpack Compose">

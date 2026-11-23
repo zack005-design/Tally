@@ -28,16 +28,18 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
 
-internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray }
+internal enum class ReferenceTone { Blue, Lavender, Peach, Pink, Gray, Wallet }
 
 /** Solid colour icon square with a white glyph, as in iOS Settings. */
 @Composable internal fun ReferenceIcon(icon: Int, tone: ReferenceTone = ReferenceTone.Blue, size: androidx.compose.ui.unit.Dp = 32.dp) {
     val background = when (tone) {
         ReferenceTone.Blue -> CategoryColors.brand
-        ReferenceTone.Lavender -> CategoryColors.groceries
+        // Secondary icons use the lighter system blue instead of the old olive green.
+        ReferenceTone.Lavender -> CategoryColors.transport
         ReferenceTone.Peach -> CategoryColors.food
         ReferenceTone.Pink -> CategoryColors.shopping
         ReferenceTone.Gray -> CategoryColors.gray
+        ReferenceTone.Wallet -> CategoryColors.wallet
     }
     SolidIcon(icon, background, size)
 }
