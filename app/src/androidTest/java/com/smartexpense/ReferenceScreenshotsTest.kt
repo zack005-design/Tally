@@ -3,6 +3,7 @@ package com.smartexpense
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -113,6 +114,16 @@ class ReferenceScreenshotsTest {
         shell("cp ${file.absolutePath} /sdcard/Download/tally-exact-reference/$name.png")
     }
 
+    private val showcase get() = fixture.copy(
+        reportMonth = today.toString().take(7),
+        selectedReport = PeriodReport(842000, 4500000, mapOf("food" to 412000L, "travel" to 170000L, "shopping" to 260000L), emptyMap()),
+        budgets = listOf(Budget("all", today.toString().take(7), null, 1200000)))
+    @Test fun summary() {
+        render { androidx.compose.material3.Scaffold(bottomBar = { LedgerNavigation("home", {}) }) { padding ->
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(padding)) { HomeScreen(showcase, { _, _ -> }, {}, {}, {}, {}) } } }
+        capture("summary")
+    }
+    @Test fun spending() { render { InsightsScreen(showcase, today.toString().take(7), {}, { _, _, _ -> }) }; capture("spending") }
     @Test fun accounts() { render { AccountsScreen(fixture, model, {}) }; capture("accounts") }
     @Test fun accountsLarge() { render(true) { AccountsScreen(fixture, model, {}) }; capture("accounts-320dp-2x") }
     @Test fun groups() {
