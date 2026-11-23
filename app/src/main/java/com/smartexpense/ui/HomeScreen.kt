@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -42,6 +43,7 @@ import java.time.format.DateTimeFormatter
     // The daily limit is fixed at the start of the day so spending today does not move it.
     val dailyLimit = monthBudget?.let { budgetAllowance(it.amount, (monthSpent - s.dashboard.today).coerceAtLeast(0), today).perDay }
     val hidden = "••••••"
+    val lockOn = LocalDeviceLock.current?.view?.enabled == true
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxSize(), contentPadding = PaddingValues(start = Tokens.pageInset, end = Tokens.pageInset, top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item {
@@ -55,7 +57,8 @@ import java.time.format.DateTimeFormatter
                     Text("Summary", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.semantics { heading() })
                 }
             }
-            item {
+            // A brand-new ledger opens on the "You're all set" card instead of an empty balance.
+            if (active.isNotEmpty() || latest.isNotEmpty()) item {
                 GroupedCard {
                     Column(Modifier.padding(start = 18.dp, end = 8.dp, top = 14.dp, bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -131,13 +134,13 @@ import java.time.format.DateTimeFormatter
             if (latest.isEmpty()) item {
                 GroupedCard {
                     Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(painterResource(R.drawable.ic_tally_mark), null, Modifier.size(40.dp), tint = Tokens.muted.copy(alpha = .6f))
-                        Text("Nothing recorded yet", style = MaterialTheme.typography.titleMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                        Text("Add what you spend and Tally keeps the running total for the day and month.", style = MaterialTheme.typography.bodyMedium, color = Tokens.muted, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                        Spacer(Modifier.height(6.dp))
+                        Box(Modifier.padding(top = 4.dp, bottom = 8.dp)) { TallyLogoTile(52.dp) }
+                        Text("You’re all set", style = MaterialTheme.typography.titleMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Text("Add your first expense and Tally starts keeping today’s total.", style = MaterialTheme.typography.bodyMedium, color = Tokens.muted, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Spacer(Modifier.height(8.dp))
                         PillRow(listOf(
-                            PillAction("Add an expense", null, primary = true) { onAdd(Kind.EXPENSE, false) },
-                            PillAction("Scan a bill", null, tonal = true) { onManage("bill-import") }
+                            PillAction("Add expense", R.drawable.ic_add, primary = true) { onAdd(Kind.EXPENSE, false) },
+                            PillAction("Scan a bill", R.drawable.ic_camera_outline) { onManage("bill-import") }
                         ))
                     }
                 }
@@ -151,18 +154,21 @@ import java.time.format.DateTimeFormatter
                     }
                 }
             }
-            if (active.isEmpty() || monthBudget == null) {
-                item { SectionLabel("Set up in a minute") }
+            val setupSteps = listOf(
+                SetupStep("Add your money", "Wallet, GPay or another account", "wallet", active.isNotEmpty()),
+                SetupStep("Set a monthly budget", "Get a warning before you overspend", "budgets", monthBudget != null),
+                SetupStep("Turn on reminders and app lock", "Both optional", "app-lock", lockOn)
+            )
+            val setupDone = setupSteps.count { it.done }
+            if (setupDone < setupSteps.size && (latest.isEmpty() || active.isEmpty() || monthBudget == null)) {
+                item { SectionLabel("Finish setting up · $setupDone of ${setupSteps.size}") }
                 item {
                     GroupedCard {
-                        val steps = listOfNotNull(
-                            if (active.isEmpty()) "Add your wallet or UPI account" to "wallet" else null,
-                            if (monthBudget == null) "Set a monthly budget" to "budgets" else null,
-                            "Add the home-screen widget" to "favourites"
-                        )
-                        steps.forEachIndexed { index, (label, destination) ->
+                        setupSteps.forEachIndexed { index, step ->
                             if (index > 0) GroupedDivider(56.dp)
-                            GroupedRow(label, R.drawable.ic_add, leading = { StepNumber(index + 1) }) { onManage(destination) }
+                            GroupedRow(step.label, R.drawable.ic_add, supporting = step.caption, leading = { StepNumber(index + 1, step.done) }) {
+                                onManage(step.destination)
+                            }
                         }
                     }
                 }
@@ -236,8 +242,12 @@ internal class PillAction(val label: String, val icon: Int?, val primary: Boolea
     }
 }
 
-@Composable private fun StepNumber(number: Int) {
-    Box(Modifier.size(28.dp).border(1.dp, Tokens.border, CircleShape), contentAlignment = Alignment.Center) {
+private class SetupStep(val label: String, val caption: String, val destination: String, val done: Boolean)
+
+@Composable private fun StepNumber(number: Int, done: Boolean = false) {
+    if (done) Box(Modifier.size(28.dp).background(Tokens.accent, CircleShape).semantics { contentDescription = "Done" }, contentAlignment = Alignment.Center) {
+        Icon(painterResource(R.drawable.ic_check), null, Modifier.size(16.dp), tint = Color.White)
+    } else Box(Modifier.size(28.dp).border(1.dp, Tokens.border, CircleShape), contentAlignment = Alignment.Center) {
         Text(number.toString(), style = MaterialTheme.typography.labelMedium, color = Tokens.muted)
     }
 }

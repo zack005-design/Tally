@@ -62,7 +62,7 @@ import androidx.compose.ui.res.painterResource
             item {SectionLabel("Your accounts")}
             item {GroupedCard {primary.forEachIndexed {index,account->
                 if(index>0) GroupedDivider()
-                GroupedRow(account.name,if(account.id==s.walletSources?.walletId) R.drawable.ic_wallet_outline else R.drawable.ic_contactless,value=referenceMoney(account.balance),tone=if(account.id==s.walletSources?.walletId) ReferenceTone.Peach else ReferenceTone.Lavender) {selected=account.id}
+                GroupedRow(account.name,if(account.id==s.walletSources?.walletId) R.drawable.ic_wallet_outline else R.drawable.ic_contactless,value=referenceMoney(account.balance),tone=if(account.id==s.walletSources?.walletId) ReferenceTone.Wallet else ReferenceTone.Blue) {selected=account.id}
             }}}
         }
         if(other.isNotEmpty()) {

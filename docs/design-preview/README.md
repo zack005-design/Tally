@@ -28,14 +28,14 @@ A design preview of Tally with an iOS look, built for the Android app. It covers
 
 - **iOS system look:** light grey background (#F2F2F7), white inset grouped lists, bold large titles, solid colour icon squares, contact-style avatars with a colour per person, and rounded capsule buttons.
 - **One job per colour:**
-  - Pine green (#1E6A50) is the app tint: buttons, links and selection.
+  - Blue (#0A66D8) is the app tint: buttons, links and selection. It replaced the earlier pine green.
   - Green (#1A6E30) is money coming in; switches use the iOS switch green (#34C759).
   - Orange (#C93400) is money you owe friends, and nothing else.
   - Ochre (#946200) is for warnings: near a limit, needs review, never backed up.
   - Red (#D70015) is for deleting and errors.
 - **Categories:** Food orange, Transport blue, Groceries olive, Bills teal, Shopping pink. The Wallet account is brown.
 - **Glass tab bar:** a floating, translucent tab bar and search button, as in iOS. On Android 11 and older, or with "Reduce transparency" on, they become solid.
-- **Dark mode:** iOS dark greys (#1C1C1E background, #2C2C2E cards) rather than pure black. Highlight cards use a dark pine green.
+- **Dark mode:** iOS dark greys (#1C1C1E background, #2C2C2E cards) rather than pure black. Tinted icon tiles and buttons use a dark navy (#0F2A4A), and the tint brightens to #0A84FF.
 - **Type and icons:** Inter and Lucide, because Apple's SF Pro and SF Symbols are licensed for Apple platforms only.
 
 ## How the flows fit together

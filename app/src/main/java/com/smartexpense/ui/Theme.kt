@@ -25,21 +25,21 @@ internal val LocalDarkTheme = staticCompositionLocalOf { false }
 
 /** Soft badge backgrounds and their foregrounds, following the redesign's status colours. */
 internal object Tints {
-    val blueSoft @Composable get() = tint(Color(0xFFE3EFE9), Color(0xFF16352A))
-    val lavenderSoft @Composable get() = tint(Color(0xFFEEF3DD), Color(0xFF263015))
-    val lavender @Composable get() = tint(Color(0xFF5A7800), Color(0xFFB2D45A))
+    val blueSoft @Composable get() = tint(Color(0xFFE4EEFB), Color(0xFF0F2A4A))
+    val lavenderSoft @Composable get() = tint(Color(0xFFE4EEFB), Color(0xFF0F2A4A))
+    val lavender @Composable get() = tint(Color(0xFF0A66D8), Color(0xFF6AACFF))
     val peachSoft @Composable get() = tint(Color(0xFFFFEFE2), Color(0xFF3D2412))
     val peach @Composable get() = tint(Color(0xFFC93400), Color(0xFFFF9F6B))
     val pinkSoft @Composable get() = tint(Color(0xFFFFE6EA), Color(0xFF3D1520))
     val pink @Composable get() = tint(Color(0xFFD70015), Color(0xFFFF7A85))
-    val graySoft @Composable get() = tint(Color(0xFFE9E9EE), Color(0xFF2C2C2E))
+    val graySoft @Composable get() = tint(Color(0xFFE9E9EE), Color(0xFF3A3A3C))
     val warningSoft @Composable get() = tint(Color(0xFFFFF4D6), Color(0xFF3A2C0A))
     val warning @Composable get() = tint(Color(0xFF946200), Color(0xFFF2C04F))
 }
 
 /** Solid icon-square colours from the redesign. Glyphs on them are always white. */
 internal object CategoryColors {
-    val brand @Composable get() = tint(Color(0xFF1E6A50), Color(0xFF2F8A68))
+    val brand @Composable get() = tint(Color(0xFF0A66D8), Color(0xFF0A84FF))
     val food @Composable get() = tint(Color(0xFFFF9500), Color(0xFFFF9F0A))
     val transport @Composable get() = tint(Color(0xFF007AFF), Color(0xFF0A84FF))
     val groceries @Composable get() = tint(Color(0xFF6B8E00), Color(0xFF7FA30A))
@@ -103,8 +103,8 @@ private val appTypography = Typography(
 )
 
 private val lightColors = lightColorScheme(
-    primary = Color(0xFF1E6A50), onPrimary = Color.White,
-    primaryContainer = Color(0xFFE1EEE8), onPrimaryContainer = Color(0xFF1E6A50),
+    primary = Color(0xFF0A66D8), onPrimary = Color.White,
+    primaryContainer = Color(0xFFE4EEFB), onPrimaryContainer = Color(0xFF0A66D8),
     secondary = Color(0xFF6C6C70), onSecondary = Color.White,
     secondaryContainer = Color(0xFFE9E9EE), onSecondaryContainer = Color(0xFF000000),
     tertiary = Color(0xFF1A6E30), onTertiary = Color.White,
@@ -117,26 +117,26 @@ private val lightColors = lightColorScheme(
     surfaceTint = Color.Transparent, outline = Color(0xFF8E8E93), outlineVariant = Color(0xFFD1D1D6),
     error = Color(0xFFD70015), onError = Color.White,
     errorContainer = Color(0xFFFFE5E7), onErrorContainer = Color(0xFF8A000D),
-    inverseSurface = Color(0xFF1C1C1E), inverseOnSurface = Color.White, inversePrimary = Color(0xFF6FCFA6)
+    inverseSurface = Color(0xFF1C1C1E), inverseOnSurface = Color.White, inversePrimary = Color(0xFF4C9BFF)
 )
 
-// Dark follows iOS: a black page, grouped cards one step lighter, and a brighter tint for contrast.
+// Dark follows the redesign: a #1C1C1E page, #2C2C2E grouped cards and a brighter blue tint.
 private val darkColors = darkColorScheme(
-    primary = Color(0xFF63C79F), onPrimary = Color(0xFF00281A),
-    primaryContainer = Color(0xFF17392C), onPrimaryContainer = Color(0xFF8EE0BD),
+    primary = Color(0xFF0A84FF), onPrimary = Color.White,
+    primaryContainer = Color(0xFF0F2A4A), onPrimaryContainer = Color(0xFF6AACFF),
     secondary = Color(0xFF98989F), onSecondary = Color(0xFF1C1C1E),
-    secondaryContainer = Color(0xFF2C2C2E), onSecondaryContainer = Color.White,
+    secondaryContainer = Color(0xFF3A3A3C), onSecondaryContainer = Color.White,
     tertiary = Color(0xFF5FD17A), onTertiary = Color(0xFF00290C),
     tertiaryContainer = Color(0xFF133A1E), onTertiaryContainer = Color(0xFFC4F2CF),
-    background = Color(0xFF000000), onBackground = Color.White,
-    surface = Color(0xFF000000), onSurface = Color.White,
-    surfaceVariant = Color(0xFF2C2C2E), onSurfaceVariant = Color(0xFF98989F),
-    surfaceContainerLowest = Color(0xFF1C1C1E), surfaceContainerLow = Color(0xFF161618),
-    surfaceContainer = Color(0xFF1C1C1E), surfaceContainerHigh = Color(0xFF2C2C2E), surfaceContainerHighest = Color(0xFF3A3A3C),
-    surfaceTint = Color.Transparent, outline = Color(0xFF8E8E93), outlineVariant = Color(0xFF38383A),
+    background = Color(0xFF1C1C1E), onBackground = Color.White,
+    surface = Color(0xFF1C1C1E), onSurface = Color.White,
+    surfaceVariant = Color(0xFF3A3A3C), onSurfaceVariant = Color(0xFF98989F),
+    surfaceContainerLowest = Color(0xFF2C2C2E), surfaceContainerLow = Color(0xFF242426),
+    surfaceContainer = Color(0xFF1C1C1E), surfaceContainerHigh = Color(0xFF3A3A3C), surfaceContainerHighest = Color(0xFF48484A),
+    surfaceTint = Color.Transparent, outline = Color(0xFF8E8E93), outlineVariant = Color(0xFF3A3A3C),
     error = Color(0xFFFF6B70), onError = Color(0xFF4A0006),
     errorContainer = Color(0xFF47141A), onErrorContainer = Color(0xFFFFD9DB),
-    inverseSurface = Color(0xFFF2F2F7), inverseOnSurface = Color(0xFF1C1C1E), inversePrimary = Color(0xFF1E6A50)
+    inverseSurface = Color(0xFFF2F2F7), inverseOnSurface = Color(0xFF1C1C1E), inversePrimary = Color(0xFF0A66D8)
 )
 
 /** Narrowest width the layouts are composed for; smaller phones are scaled to fit it. */
