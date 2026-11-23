@@ -120,7 +120,7 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
     val keyboard=LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value,onChange,label={Text(label,style=MaterialTheme.typography.bodySmall)},
-        modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(10.dp),textStyle=MaterialTheme.typography.bodyLarge,
+        modifier=Modifier.fillMaxWidth(),shape=Tokens.field,textStyle=MaterialTheme.typography.bodyLarge,
         colors=OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor=Tokens.paper, focusedContainerColor=Tokens.paper,
             unfocusedBorderColor=Tokens.border, focusedBorderColor=Tokens.accent

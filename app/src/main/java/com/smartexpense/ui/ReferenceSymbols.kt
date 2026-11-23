@@ -35,7 +35,7 @@ internal fun referenceSymbol(label:String,fallback:Int=R.drawable.ic_food):Int {
 @Composable internal fun ReferenceProgress(progress:Float,modifier:Modifier=Modifier,overLimit:Boolean=false) {
     val value=progress.coerceIn(0f,1f)
     val track=Tokens.border.copy(alpha=.65f)
-    val fill=if(overLimit) listOf(Tokens.negative,Tokens.negative) else listOf(Color(0xFF4594FF),Color(0xFF79B0FF))
+    val fill=if(overLimit) listOf(Tokens.negative,Tokens.negative) else listOf(Tokens.accent,Tokens.accent.copy(alpha=.75f))
     Canvas(modifier.height(10.dp).semantics {progressBarRangeInfo=ProgressBarRangeInfo(value,0f..1f)}) {
         val radius=CornerRadius(size.height/2)
         drawRoundRect(track,cornerRadius=radius)

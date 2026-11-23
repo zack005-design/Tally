@@ -90,8 +90,8 @@ import com.smartexpense.domain.Snapshot
                     Button(
                         onClick = { onContinue(if (walletId == "new") walletAmount!! else 0L, if (gpayId == "new") gpayAmount!! else 0L, walletId.takeUnless { it == "new" }, gpayId.takeUnless { it == "new" }) },
                         enabled = !busy && !invalid && total != null && (walletId == "new" || gpayId == "new" || walletId != gpayId),
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).then(if(!busy && !invalid && total!=null && (walletId=="new" || gpayId=="new" || walletId!=gpayId)) Modifier.background(Brush.verticalGradient(listOf(Color(0xFF0870EA),Color(0xFF0066E8))),RoundedCornerShape(24.dp)) else Modifier), shape = RoundedCornerShape(24.dp),
-                        colors=ButtonDefaults.buttonColors(containerColor=Color.Transparent,contentColor=Color.White),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = Tokens.pill,
+                        colors=ButtonDefaults.buttonColors(containerColor=Tokens.accent,contentColor=MaterialTheme.colorScheme.onPrimary),
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
                     ) {
                         Text("Continue to Tally", textAlign = TextAlign.Center)

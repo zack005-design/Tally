@@ -78,7 +78,7 @@ import java.time.format.DateTimeFormatter
 }
 
 @Composable private fun CalendarPaper(content:@Composable ColumnScope.()->Unit) {
-    Surface(shape=RoundedCornerShape(24.dp),color=Tokens.paper,shadowElevation=1.dp) {
+    Surface(shape=Tokens.card,color=Tokens.paper) {
         Column(Modifier.fillMaxWidth().padding(14.dp),verticalArrangement=Arrangement.spacedBy(10.dp),content=content)
     }
 }

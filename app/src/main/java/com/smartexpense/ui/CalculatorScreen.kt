@@ -39,7 +39,7 @@ import kotlinx.coroutines.withContext
             }
         } }
         if (mode == "Type naturally") {
-            item { OutlinedTextField(input, { changed(); input = it }, label = { Text("What would you like to calculate?") }, modifier = Modifier.fillMaxWidth(), minLines = 2) }
+            item { OutlinedTextField(input, { changed(); input = it }, label = { Text("What would you like to calculate?") }, modifier = Modifier.fillMaxWidth(), minLines = 2, shape = Tokens.field) }
             item { Column {
                 Text("Try an example", style = MaterialTheme.typography.titleSmall)
                 listOf("120 + 85 + 40", "add 5% tax to 450", "split 100 between 3 people", "convert 2.5 km to m", "tip 10% on 500", "average 10, 20, 30").forEach { example ->
@@ -47,8 +47,8 @@ import kotlinx.coroutines.withContext
                 }
             } }
         } else {
-            item { OutlinedTextField(first, { changed(); first = it }, label = { Text(when (mode) { "Split a bill" -> "Bill total in rupees"; "Convert units" -> "Amount and unit, e.g. 2.5 km"; else -> "Percentage, e.g. 15" }) }, modifier = Modifier.fillMaxWidth()) }
-            item { OutlinedTextField(second, { changed(); second = it }, label = { Text(when (mode) { "Split a bill" -> "How many people?"; "Convert units" -> "Target unit, e.g. m"; else -> "Amount, e.g. 200" }) }, modifier = Modifier.fillMaxWidth()) }
+            item { OutlinedTextField(first, { changed(); first = it }, label = { Text(when (mode) { "Split a bill" -> "Bill total in rupees"; "Convert units" -> "Amount and unit, e.g. 2.5 km"; else -> "Percentage, e.g. 15" }) }, modifier = Modifier.fillMaxWidth(), shape = Tokens.field) }
+            item { OutlinedTextField(second, { changed(); second = it }, label = { Text(when (mode) { "Split a bill" -> "How many people?"; "Convert units" -> "Target unit, e.g. m"; else -> "Amount, e.g. 200" }) }, modifier = Modifier.fillMaxWidth(), shape = Tokens.field) }
         }
         item { Button(onClick = {
             request = when (mode) { "Split a bill" -> "split $first between $second people"; "Percentage of an amount" -> "$first% of $second"; "Convert units" -> "convert $first to $second"; else -> input }

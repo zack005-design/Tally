@@ -13,6 +13,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Replace the tab bar with a floating bar for **Summary**, **Activity**, **Spending** and **Split**, plus a round search button. Adding an expense, scanning a bill and transfers now start from the **Summary** card.
 - Rebuild **Summary** with available-to-spend, today against your daily limit, the month's budget, what friends owe and recent entries, plus a short setup list on first launch.
 - Fit every phone width: phones narrower than 360 dp, or set to a large display size, scale the whole layout down to fit instead of cutting content off, while your text-size setting still applies. Tablets and foldables keep a phone-width column.
+- Bring the remaining screens into the new style: balance setup, budget progress bars, the spending trend chart, the calendar and calculator now use the pine-green tint and standard card and field shapes instead of the old blue and purple.
 
 ## [0.2.4](https://github.com/zack005-design/Tally/releases/tag/v0.2.4-20261115)
 

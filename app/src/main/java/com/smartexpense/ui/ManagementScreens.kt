@@ -34,7 +34,7 @@ import androidx.compose.ui.res.painterResource
     Surface(onClick=onClick,modifier=Modifier.fillMaxWidth(),color=Tokens.paper) {
         Row(Modifier.padding(horizontal=14.dp,vertical=10.dp).heightIn(min=40.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             if(symbol==null && icon==null) InitialAvatar(title) else Surface(shape=CircleShape,color=badgeColor,modifier=Modifier.size(36.dp)) {Box(contentAlignment=Alignment.Center) {
-                if(icon!=null) Icon(painterResource(icon),null,Modifier.size(21.dp),tint=if(title.contains("Food",true) || title.contains("Shopping",true)) Color(0xFFD83F72) else Tokens.accent)
+                if(icon!=null) Icon(painterResource(icon),null,Modifier.size(21.dp),tint=if(title.contains("Food",true) || title.contains("Shopping",true)) CategoryColors.shopping else Tokens.accent)
                 else Text(symbol.orEmpty(),style=MaterialTheme.typography.titleLarge,color=Tokens.accent)
             }}
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {

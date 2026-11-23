@@ -38,8 +38,8 @@ private fun trendAxis(paise:Double):String {
     var breakdown by rememberSaveable {mutableStateOf(false)}
     val line=Tokens.accent
     val grid=Tokens.border
-    val fillTop=tint(Color(0xFFB9ACFF).copy(alpha=.55f),Color(0xFF8D7BE0).copy(alpha=.40f))
-    val fillBottom=tint(Color(0xFFE8E4FF).copy(alpha=.15f),Color(0xFF8D7BE0).copy(alpha=.04f))
+    val fillTop=line.copy(alpha=if(LocalDarkTheme.current) .35f else .28f)
+    val fillBottom=line.copy(alpha=.03f)
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Column(Modifier.height(170.dp).widthIn(min=38.dp),verticalArrangement=Arrangement.SpaceBetween) {
