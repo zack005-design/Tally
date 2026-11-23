@@ -44,9 +44,10 @@ jobs:
         if: env.TALLY_DEBUG_KEYSTORE_BASE64 != ''
         run: |
           mkdir -p ~/.android
-          # Pasted secrets can pick up spaces or Windows line breaks; strip them before decoding.
-          printf '%s' "$TALLY_DEBUG_KEYSTORE_BASE64" | tr -d ' \r\n\t' | base64 --decode > ~/.android/debug.keystore || {
-            echo "::error::TALLY_DEBUG_KEYSTORE_BASE64 is not valid base64. Copy it again with Set-Clipboard and replace the secret."; exit 1; }
+          # Pasted secrets can pick up spaces, Windows line breaks or certutil's BEGIN/END lines;
+          # strip them before decoding.
+          printf '%s\n' "$TALLY_DEBUG_KEYSTORE_BASE64" | tr -d '\r' | grep -v -- '-----' | tr -d ' \n\t' | base64 --decode > ~/.android/debug.keystore || {
+            echo "::error::TALLY_DEBUG_KEYSTORE_BASE64 is not valid base64. Replace the secret as described in docs/release-signing.md (Publish development builds from GitHub)."; exit 1; }
           test -s ~/.android/debug.keystore
 
       - name: Run unit tests, Android lint and compile APK

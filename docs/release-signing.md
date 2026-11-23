@@ -75,6 +75,20 @@ Android only installs an update signed with the same key as the installed app. Y
 
 After this, every signed update installs over the previous one and keeps your data.
 
+## Publish development builds from GitHub
+
+The **Android checks** workflow publishes a development prerelease when you run it manually (**Actions → Android checks → Run workflow** on `main`). To keep downloads installable over earlier releases, it signs both APKs with the existing development key, which it reads from the repository secret `TALLY_DEBUG_KEYSTORE_BASE64`.
+
+To create or replace that secret on the Windows computer that holds the key:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\.android\debug.keystore")) | Set-Clipboard
+```
+
+Then open the repository on GitHub, go to **Settings → Secrets and variables → Actions**, edit `TALLY_DEBUG_KEYSTORE_BASE64` (or add it), paste the clipboard as the value and save. Paste only that text: not the file path and not the keystore file itself. Run the workflow again afterwards.
+
+The workflow refuses to publish if the APKs are signed with any other certificate than SHA-256 `7ddc9c94…b8b865`.
+
 ## Related
 
 - [Installation safety](installation-safety.md) explains update and data-safety rules.
