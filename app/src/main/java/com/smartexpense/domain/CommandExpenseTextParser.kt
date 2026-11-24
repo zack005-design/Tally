@@ -27,7 +27,7 @@ class CommandExpenseTextParser(
         val prepared = EnglishCommandInput.prepare(input, clock)
         val text = prepared.text
         val parsed = fallback.parse(text, people)
-        val base = parsed.copy(date = prepared.date ?: parsed.date)
+        val base = parsed.copy(date = prepared.date ?: parsed.date, warnings = listOfNotNull(prepared.note) + parsed.warnings)
         fun incomplete(reason: String, invalidDate: Boolean = false) = base.copy(
             amount = null, fromAccount = null, toAccount = null, contributions = emptyMap(), splitRule = null,
             date = if (invalidDate) null else base.date,

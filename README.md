@@ -52,9 +52,9 @@ Tally is a personal finance app for Android that works entirely on your phone. R
 | --- | --- |
 | **[Accounts and transactions](docs/features/everyday-money.md)** | Bank, cash and UPI balances; expenses, income, refunds and transfers; tags; search by text or amount. |
 | **[Quick entry](docs/features/quick-entry.md)** | Short text commands, recent purchases, favourites and a home-screen widget, always confirmed before saving. |
-| **[On-device suggestions](docs/features/on-device-ai.md)** | In the AI edition, small models on your phone turn commands into editable drafts and suggest categories; Tally also learns your usual category and account. It never saves on its own. |
+| **[On-device suggestions](docs/features/on-device-ai.md)** | In the AI edition, small models on your phone turn commands into editable drafts and suggest categories. Commands can include sums like `chai 3x15 cash`, you can ask `how much did I spend on food this month?`, and Tally learns your usual category and account. It never saves on its own. |
 | **[Reports and backups](docs/features/reports-and-backups.md)** | CSV and PDF reports with accounts and tags, and password-encrypted backups you can restore on any phone. |
-| **[Calculator](docs/features/calculator.md)** | Splits, tax, tips, interest, statistics and unit conversions, kept apart from your records. |
+| **[Calculator](docs/features/calculator.md)** | Splits, GST, tips, interest, loan EMI, statistics and unit conversions, kept apart from your records. |
 | **[Every screen size](docs/phone-compatibility.md)** | Narrow phones scale to fit, landscape uses a side rail, and large text keeps controls usable. |
 
 <p align="center">

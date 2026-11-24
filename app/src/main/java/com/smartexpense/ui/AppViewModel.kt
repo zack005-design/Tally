@@ -176,6 +176,13 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         val requested = form.value
         val people = state.value.snapshot.people.filter { it.id!="self" }.map { PersonRef(it.id,it.name,it.aliases) }
         viewModelScope.launch {
+        // Spending questions are answered from local records instead of becoming a draft.
+        if (SpendingQuestions.isQuestion(requested.text)) {
+            val answer = try { val full = repository.snapshot(); SpendingQuestions.answer(requested.text, full.records, full.categories, java.time.LocalDate.now()) }
+                catch (error: CancellationException) { throw error } catch (error: Exception) { null }
+            if (request != parseRequest || form.value != requested) return@launch
+            if (answer != null) { change(requested.copy(parserNotice = answer.text + " Nothing was saved.")); return@launch }
+        }
         val parsed = try { commandParser?.parse(requested.text, people) ?: kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { CommandExpenseTextParser(null).parse(requested.text, people) } }
         catch (error: CancellationException) { throw error }
         catch (error: Exception) { if (request == parseRequest && form.value == requested) mutable.update { it.copy(message="Could not interpret this entry. Please enter the fields manually.") }; return@launch }

@@ -7,13 +7,14 @@ import java.math.BigInteger
 internal object CalculatorCapabilities {
     private const val number = "([+-]?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+))"
     private val decimal = Regex(number)
-    private val statistics = Regex("(sum|average|mean|median|minimum|maximum|population variance|population standard deviation) (.+)")
+    private val statistics = Regex("(sum|average|mean|median|minimum|maximum|population variance|population standard deviation|sample variance|sample standard deviation) (.+)")
     private val separators = Regex("\\s*;\\s*|,\\s+")
     private val ratio = Regex("simplify ratio ([0-9]+(?:\\s*:\\s*[0-9]+)+)")
     private val ratioSeparator = Regex("\\s*:\\s*")
     private val change = Regex("percentage change from $number to $number")
     private val tip = Regex("tip $number% on ₹?$number")
-    private val reverseTax = Regex("remove $number% tax from ₹?$number")
+    private val reverseTax = Regex("remove $number% (?:tax|gst|vat) from ₹?$number")
+    private val emi = Regex("(?:loan )?emi (?:on|for) (?:a )?(?:loan of )?₹?$number at $number% per (?:year|annum) for $number (years?|months?)")
     private val simpleInterest = Regex("simple interest on ₹?$number at $number% per year for $number years?")
     private val compoundInterest = Regex("compound interest on ₹?$number at $number% per year for $number years? compounded (yearly|quarterly|monthly)")
     private val hundred = BigDecimal(100)
@@ -44,6 +45,7 @@ internal object CalculatorCapabilities {
             val base = divideNumbers(CalcNumber(total), CalcNumber(BigDecimal.ONE + percent.movePointLeft(2)))
             return CalculationOutcome.Answer(decimalText(base.value), "tax-inclusive total ${decimalText(total)} / (1 + ${decimalText(percent)}/100); tax ${decimalText(total - base.value)}", base.approximate)
         }
+        emi.matchEntire(text)?.let { return emi(it) }
         simpleInterest.matchEntire(text)?.let {
             val principal = nonnegative(it.groupValues[1], "principal"); val rate = percentage(it.groupValues[2]); val years = years(it.groupValues[3])
             val interest = bounded((principal * rate * years).movePointLeft(2))
@@ -84,7 +86,8 @@ internal object CalculatorCapabilities {
             text.startsWith("tip") -> problem("Specify the percentage and bill: tip 10% on 500.")
             text.startsWith("remove") && text.contains("tax") -> problem("Specify the tax rate and tax-inclusive total: remove 18% tax from 1180.")
             text.startsWith("percentage change") -> problem("Specify both values: percentage change from 80 to 100.")
-            text.startsWith("sample variance") || text.startsWith("standard deviation") -> problem("Choose an explicitly supported statistic, such as population variance or population standard deviation.")
+            text.startsWith("variance") || text.startsWith("standard deviation") -> problem("Choose population or sample: population variance 2, 4, 6 or sample standard deviation 2, 4, 6.")
+            text.startsWith("emi") || text.startsWith("loan emi") -> problem("Include the loan amount, annual rate and term: emi on 500000 at 9% per year for 5 years.")
         }
         return null
     }
@@ -97,7 +100,8 @@ internal object CalculatorCapabilities {
         val n = values.size.toBigDecimal()
         var total = BigDecimal.ZERO
         var squares = BigDecimal.ZERO
-        val variance = operation.startsWith("population")
+        val variance = operation.startsWith("population") || operation.startsWith("sample")
+        if (operation.startsWith("sample") && values.size < 2) problem("Sample statistics need at least two values.")
         values.forEach { value ->
             total = bounded(total + value)
             if (variance) squares = bounded(squares + bounded(value * value))
@@ -114,12 +118,37 @@ internal object CalculatorCapabilities {
             }
             else -> {
                 // Exact numerator avoids subtracting rounded means for large-offset samples.
-                val v = divideNumbers(CalcNumber(bounded(n * squares - bounded(total * total))), CalcNumber(n * n))
-                if (operation == "population variance") v
+                // Population divides by n²; sample (Bessel's correction) divides by n(n − 1).
+                val denominator = if (operation.startsWith("sample")) n * (n - BigDecimal.ONE) else n * n
+                val v = divideNumbers(CalcNumber(bounded(n * squares - bounded(total * total))), CalcNumber(denominator))
+                if (operation.endsWith("variance")) v
                 else ExpressionCalculator.evaluate("sqrt(${decimalText(v.value)})").let { it.copy(approximate = it.approximate || v.approximate) }
             }
         }
         return CalculationOutcome.Answer(decimalText(result.value), "$operation of ${values.size} values: ${values.joinToString(", ", transform = ::decimalText)}", result.approximate)
+    }
+
+    /** Fixed-rate loan instalment: P·r·(1+r)^n / ((1+r)^n − 1) with r the monthly rate. */
+    private fun emi(m: MatchResult): CalculationOutcome.Answer {
+        val principal = nonnegative(m.groupValues[1], "loan amount"); val rate = percentage(m.groupValues[2])
+        val length = nonnegative(m.groupValues[3], "term")
+        val months = try { (if (m.groupValues[4].startsWith("year")) length * BigDecimal(12) else length).intValueExact() }
+            catch (_: ArithmeticException) { problem("Use a term containing a whole number of months.") }
+        if (months !in 1..1200) problem("Use a loan term from 1 to 1,200 months.")
+        if (principal.signum() == 0) return CalculationOutcome.Answer("0", "no loan amount, so no instalment")
+        val instalment = if (rate.signum() == 0) divideNumbers(CalcNumber(principal), CalcNumber(months.toBigDecimal()))
+        else {
+            val monthly = rate.divide(BigDecimal(1200), calcContext)
+            val growth = (BigDecimal.ONE + monthly).pow(months, calcContext)
+            CalcNumber(bounded(principal.multiply(monthly, calcContext).multiply(growth, calcContext)
+                .divide(growth - BigDecimal.ONE, calcContext)), true)
+        }
+        val paid = bounded(instalment.value.multiply(months.toBigDecimal(), calcContext))
+        val interest = bounded(paid - principal)
+        fun rupees(value: BigDecimal) = decimalText(value.setScale(2, java.math.RoundingMode.HALF_UP))
+        return CalculationOutcome.Answer(decimalText(instalment.value),
+            "monthly instalment ≈ ₹${rupees(instalment.value)} for $months months at ${decimalText(rate)}% a year; total paid ≈ ₹${rupees(paid)}, interest ≈ ₹${rupees(interest)}; fixed rate, no fees; lenders round differently",
+            instalment.approximate)
     }
 
     private fun value(text: String) = bounded(text.toBigDecimal())

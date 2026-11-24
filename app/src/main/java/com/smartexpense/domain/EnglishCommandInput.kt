@@ -11,7 +11,7 @@ import java.util.Locale
 
 /** Bounded English input conveniences; exact money/date code, no generated financial values. */
 internal object EnglishCommandInput {
-    data class Prepared(val text: String, val date: LocalDate? = null, val error: String? = null, val invalidDate: Boolean = false)
+    data class Prepared(val text: String, val date: LocalDate? = null, val error: String? = null, val invalidDate: Boolean = false, val note: String? = null)
     private val options = RegexOption.IGNORE_CASE
     private const val weekdays = "monday|tuesday|wednesday|thursday|friday|saturday|sunday"
     private const val months = "january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec"
@@ -82,9 +82,13 @@ internal object EnglishCommandInput {
             exactAmount(amount, multiplier)
         }
         command = currencySuffix.replace(command) { exactAmount(it, 1L) }
+        // One exact calculation (40 + 25, 3 x 15, 2 chai at 15 each, 450 + 18% gst) becomes a single amount.
+        val arithmetic = CommandArithmetic.apply(command)
+        if (arithmetic.error != null) return Prepared(text, date = date, error = arithmetic.error)
+        command = arithmetic.text
         if (amountError || unknownSuffix.containsMatchIn(command) || unresolvedScale.containsMatchIn(command) || attachedCurrency.findAll(command).any { it.groupValues[1].uppercase(Locale.ROOT) in foreignCurrencies })
             return Prepared(text, date = date, error = "Check the amount. Use plain INR digits or shorthand such as 1.5k or 1.25 lakh, with at most two decimal places before the suffix.")
-        return Prepared(command + accountText, date)
+        return Prepared(command + accountText, date, note = arithmetic.note)
     }
 
     private fun resolveDate(value: String, today: LocalDate): LocalDate? {

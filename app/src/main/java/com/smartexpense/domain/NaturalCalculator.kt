@@ -42,7 +42,7 @@ object NaturalCalculator {
                 text = text.replace("₹", "").replace(Regex("\\b(?:rs|inr)\\b\\.?"), "").trim()
                 val percent = listOf(
                     Regex("(.+?)% of (.+)") to { m: MatchResult -> "(${m.groupValues[1]})/100*(${m.groupValues[2]})" },
-                    Regex("add (.+?)% (?:tax )?to (.+)") to { m: MatchResult -> "(${m.groupValues[2]})*(1+(${m.groupValues[1]})/100)" },
+                    Regex("add (.+?)% (?:(?:tax|gst|vat|service charge) )?to (.+)") to { m: MatchResult -> "(${m.groupValues[2]})*(1+(${m.groupValues[1]})/100)" },
                     Regex("take (.+?)% off (.+)") to { m: MatchResult -> "(${m.groupValues[2]})*(1-(${m.groupValues[1]})/100)" },
                     Regex("(increase|decrease) (.+?) by (.+?)%") to { m: MatchResult -> "(${m.groupValues[2]})*(1${if (m.groupValues[1] == "increase") "+" else "-"}(${m.groupValues[3]})/100)" }
                 ).firstNotNullOfOrNull { (pattern, render) -> pattern.matchEntire(text)?.let(render) }

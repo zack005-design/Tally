@@ -38,7 +38,32 @@ Supported date phrases are `today`, `this morning`, `this afternoon`, `this even
 
 The Indian price notation `/-` after an amount (`₹500/-`, `Rs. 1,250/-`) is read as exactly that amount. Amount shorthand accepts `k`/`thousand` for ×1,000 and `lakh`/`lac` for ×100,000, with at most two decimal places before the suffix: `1.25k` means ₹1,250. `INR1.5k`, `Rs1k`, and `1.5k rupees` are also supported. Arithmetic uses exact integer paise and rejects overflow; grouped/repeated multipliers such as `1,000 thousand` or `1k thousand` require correction. These conveniences work in both editions; learned sentence/description recognition remains an AI-edition feature.
 
-Future or conflicting dates and recognised ambiguous phrases such as `last night`, `in two days`, or `on 10/11/2026` require manual date correction. Negation, foreign currencies and multiple expense amounts still require review. There is no scheduling or automatic saving, and these examples do not imply understanding of every English sentence.
+Future or conflicting dates and recognised ambiguous phrases such as `last night`, `in two days`, or `on 10/11/2026` require manual date correction. Negation, foreign currencies and several separate amounts still require review; write one calculation instead, as described below. There is no scheduling or automatic saving, and these examples do not imply understanding of every English sentence.
+
+## Do the maths in a command
+
+In both editions you can write one calculation where the amount goes. Tally works it out exactly, puts the result in the draft and shows the sum so you can check it.
+
+| Input | Draft amount |
+| --- | --- |
+| `coffee 40 + 25 cash` | ₹65 |
+| `chai 3x15 cash` or `chai 3 x 15 cash` | ₹45 |
+| `2 chai at 15 each cash` | ₹30, description chai |
+| `lunch 450 + 5% gst gpay` | ₹472.50 |
+| `shoes 2000 - 10% cash` | ₹1,800 |
+
+You can add and multiply up to 10 positive amounts, or add or take off one percentage from 0.01% to 100% (optionally followed by `gst`, `tax`, `vat`, `tip`, `service charge`, `discount` or `off`). A result that falls between paise is rounded to the nearest paisa, and the note says so. Use one calculation per expense. Ranges such as `200-250`, division, signed amounts and two separate calculations are never guessed; Tally asks you to enter the amount instead.
+
+## Ask about your spending
+
+Type a spending question in the same box and Tally answers from your own records instead of preparing a draft:
+
+- `how much did I spend on food this month?` (a category)
+- `total spent on chai last week` (words in the description; plurals match)
+- `how much did I spend yesterday`, `… in October`, `… in the last 7 days`, `… this year`
+- `how much did I earn this month`
+
+Totals use your own share of shared bills and subtract refunds, like the reports. Periods are today, yesterday, this or last week (Monday to Sunday), this or last month, this or last year, the last 1–366 days, or a month name (the most recent one that has started). The answer is read-only: nothing is saved or changed. Other questions, such as account balances, are not answered here.
 
 ## Category suggestions
 
@@ -54,7 +79,7 @@ The command extension has **1,002,068 parameters** and a **4,011,202-byte** port
 
 The models select spans from your input; exact decimal code converts the selected amount to integer paise rather than generating a new number. An uncertain new-language command leaves amount/account incomplete and asks for manual confirmation.
 
-This is a specialised expense parser, not a conversational LLM. It does not answer questions about your ledger history. No cloud inference, login, API key, or pretrained model weights are required.
+This is a specialised expense parser, not a conversational LLM. Spending questions are answered by exact code over your records, not by a model. No cloud inference, login, API key, or pretrained model weights are required.
 
 ## Scope and fallback
 

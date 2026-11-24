@@ -24,6 +24,9 @@ Type a request, choose an example, or use the guided percentage, split, and unit
 | Find a median | `median 9, 1, 4, 2` |
 | Population statistics | `population variance 2, 4, 6` |
 | Simplify a ratio | `simplify ratio 12:18:24` |
+| Add or remove GST | `add 18% gst to 1000`, `remove 18% gst from 1180` |
+| Loan EMI | `emi on 500000 at 9% per year for 5 years` |
+| Sample statistics | `sample standard deviation 2, 4, 6` |
 | Simple interest | `simple interest on 1000 at 10% per year for 2 years` |
 | Compound interest | `compound interest on 1000 at 12% per year for 1 year compounded monthly` |
 
@@ -31,7 +34,7 @@ An equal ₹100 split among three people produces ₹33.34, ₹33.33, and ₹33.
 
 Tip results show the total including the tip. Reverse tax divides the tax-inclusive total by `1 + rate/100`; it differs from taking a discount. Interest results show **interest earned**, with the final amount in the explanation. Compound forecasts assume a fixed annual nominal rate, no fees, deposits or withdrawals; choose yearly, quarterly or monthly compounding. These are arithmetic scenarios, not bank quotes.
 
-Statistics also support `sum`, `mean`, `minimum`, `maximum`, and `population standard deviation`. Use up to 100 plain numbers, separated by a comma **and space**, or semicolons. Write `1000`, not `1,000`, in a statistics list. Ratios accept up to 20 nonnegative integer terms. Sample variance is currently unsupported.
+Statistics also support `sum`, `mean`, `minimum`, `maximum`, `population standard deviation`, `sample variance` and `sample standard deviation` (dividing by n − 1; at least two values). Use up to 100 plain numbers, separated by a comma **and space**, or semicolons. Write `1000`, not `1,000`, in a statistics list. Ratios accept up to 20 nonnegative integer terms.
 
 ## How it works
 
@@ -45,6 +48,8 @@ Currency conversion requires a rate you supply; there are no downloaded exchange
 
 Tip, reverse-tax and interest tools accept rates from 0% to 100%. Interest durations are limited to 100 years and 1,200 compounding periods; a compound duration must contain a whole number of periods. Financial tool results are unrounded decimal calculations and are never saved as money entries. Repeating divisions and longer compound forecasts may be approximate.
 
-The calculator cannot read receipts, answer ledger-history questions, solve arbitrary symbolic mathematics, or save transactions. Use expense entry separately to record a purchase.
+Loan EMI uses the standard fixed-rate formula with a monthly rate (annual rate ÷ 12) for 1–1,200 whole months, and shows the total paid and total interest. It is approximate and assumes no fees, prepayments or rate changes; your lender's rounding may differ by a few paise.
+
+The calculator cannot read receipts, solve arbitrary symbolic mathematics, or save transactions. Ask spending questions such as `how much did I spend on food this month?` in expense entry instead. Use expense entry separately to record a purchase.
 
 [Full capabilities](../../ml/tally-command/CALCULATOR.md) · [Recorded verification](../../ml/tally-command/CALCULATOR_VERIFICATION.md) · [Expense suggestions](on-device-ai.md)

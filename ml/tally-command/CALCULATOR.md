@@ -18,6 +18,9 @@ Supported examples:
 - `average 10, 20, 30`, `median 9, 1, 4, 2`, `population variance 2, 4, 6`
 - `simplify ratio 12:18:24`, `percentage change from 80 to 100`
 - `tip 10% on 500` (total including tip), `remove 18% tax from 1180` (pre-tax amount)
+- `add 18% gst to 1000`, `remove 18% gst from 1180`
+- `sample variance 2, 4, 6`, `sample standard deviation 2, 4, 6` (n − 1 denominator, exact numerator)
+- `emi on 500000 at 9% per year for 5 years` (P·r·(1+r)^n / ((1+r)^n − 1), monthly r, 34-digit context, labelled approximate)
 - `simple interest on 1000 at 10% per year for 2 years`
 - `compound interest on 1000 at 12% per year for 1 year compounded monthly`
 
@@ -25,6 +28,6 @@ Extended tools use anchored patterns compiled once, with reused spoken-number vo
 
 The UI shows the interpreted expression and labels approximate results. Decimal arithmetic is exact when representable within resource bounds; repeating division uses 34 significant digits, transcendental functions use floating point with 15 significant output digits. Equation results are conservatively labelled approximate. Nonterminating coefficient division in equations is refused to avoid changing solution sets through rounding.
 
-This is not unrestricted natural-language mathematics. Unsupported wording, missing split participants, incompatible units, missing exchange rates, ambiguous percentage changes, and angle functions without units ask for clarification. It cannot answer ledger-history questions, solve arbitrary symbolic mathematics, or read images or speech.
+This is not unrestricted natural-language mathematics. Unsupported wording, missing split participants, incompatible units, missing exchange rates, ambiguous percentage changes, and angle functions without units ask for clarification. Ledger spending questions are answered separately in expense entry (`SpendingQuestions.kt`). The calculator cannot answer them, solve arbitrary symbolic mathematics, or read images or speech.
 
 Inputs are limited to 1,000 characters, expressions to 256 tokens, nesting to 32 parsing levels, factorials to 100, and integer exponents to magnitude 100. Decimal size checks constrain intermediate work. Equal bill splits use the existing integer-paisa largest-remainder implementation and conserve the original amount.
