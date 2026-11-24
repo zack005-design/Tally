@@ -8,7 +8,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Tidy **Spending**: View transactions, Monthly budgets, Set budget and Spending details now sit together in one list under the chart instead of four separately styled buttons.
 - In **Spending**, each category's icon now matches its colour in the distribution bar, so the list works as the chart's legend. Previously the icons cycled through three unrelated colours.
 
-## [0.2.6](https://github.com/zack005-design/Tally/releases)
+## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 
 - Change the app tint from pine green to blue (#0A66D8) across every screen, and use the redesign's dark greys (#1C1C1E page, #2C2C2E cards) instead of black in the dark theme. Money in and switches stay green.
 - Rebuild first launch: **Welcome to Tally**, **How Tally works**, your starting balances, and an optional step to turn on the daily reminder and app lock. You can also restore a backup straight from the welcome screen. Summary then opens on a **You're all set** card with a three-step setup list.
