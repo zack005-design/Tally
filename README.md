@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="https://img.shields.io/github/v/release/zack005-design/Tally?label=release&color=0A66D8&style=for-the-badge" alt="Latest release"></a>
-  <a href="https://github.com/zack005-design/Tally/actions/workflows/android.yml"><img src="https://img.shields.io/github/actions/workflow/status/zack005-design/Tally/android.yml?branch=main&label=checks&style=for-the-badge" alt="Android checks"></a>
+  <a href="https://github.com/zack005-design/Tally/actions/workflows/android.yml"><img src="https://img.shields.io/github/actions/workflow/status/zack005-design/Tally/android.yml?branch=main&event=push&label=checks&style=for-the-badge" alt="Android checks"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-0B1220?logo=android&logoColor=white&style=for-the-badge" alt="Android 8.0 or later">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0B1220?style=for-the-badge" alt="MIT License"></a>
 </p>

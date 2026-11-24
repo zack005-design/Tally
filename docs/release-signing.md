@@ -89,6 +89,8 @@ Then open the repository on GitHub, go to **Settings → Secrets and variables �
 
 The workflow refuses to publish if the APKs are signed with any other certificate than SHA-256 `7ddc9c94…b8b865`.
 
+Each release is tagged `v<version>-<date>`, so a version can be published once per day. Running the workflow again for a version that already has a release that day stops with an error naming the tag. Bump the version first. The **checks** badge in the README only reports runs from pushes to `main`, so a refused manual release does not mark the checks as failing.
+
 ## Related
 
 - [Installation safety](installation-safety.md) explains update and data-safety rules.

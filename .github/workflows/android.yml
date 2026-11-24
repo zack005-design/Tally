@@ -161,6 +161,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="v$VERSION-$(date -u +%Y%m%d)"
+          # A version can be published once per day. Stop with a clear message instead of
+          # gh's bare "already exists" error when a manual run is repeated.
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "::error::Release $tag already exists. Bump versionName and versionCode in app/build.gradle.kts and add docs/releases/<version>.md before publishing again, or delete $tag first if it must be replaced."
+            exit 1
+          fi
           # The notes use links relative to docs/releases/, which break on the release page.
           # Point them at the published commit instead.
           base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA"
