@@ -29,8 +29,8 @@ android {
         applicationId = "com.smartexpense"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "0.2.5"
+        versionCode = 8
+        versionName = "0.2.6"
         buildConfigField("boolean", "LOCAL_AI_ENABLED", tallyAiEnabled.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
