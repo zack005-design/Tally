@@ -53,6 +53,6 @@ class CommandExpenseTextParser(
     }
 
     private companion object {
-        val newCapability = Regex("\\b(?:maine|kharch|diye|rupaye|gpy|gpaay|wallett|walllet)\\b|\\bgooogle\\s+pay\\b", RegexOption.IGNORE_CASE)
+        val newCapability = Regex("\\b(?:maine|kharch|diye|rupaye|gpy|gpaay|wallett|walllet|upi|phonepe|paytm|gaye|liya|khareeda|bhara)\\b|\\b(?:gooogle\\s+pay|phone\\s+pe)\\b", RegexOption.IGNORE_CASE)
     }
 }

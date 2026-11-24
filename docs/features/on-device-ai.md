@@ -2,7 +2,7 @@
 
 # On-device expense suggestions
 
-The AI edition includes specialised expense-command models trained from random weights. They identify the description, amount, and account in short English and supported Latin-script Hinglish commands, producing editable drafts on your device. The expanded 1M capability described here is in the latest source/build; older release APKs retain their previously bundled model until updated.
+The AI edition includes specialised models trained from random weights on your phone. Two of them identify the description, amount and account in short English and supported Latin-script Hinglish commands; a third suggests a category. They produce editable drafts on your device. The capabilities described here are in the latest source/build; older release APKs keep their previously bundled models until updated.
 
 ## Use an expense command
 
@@ -15,7 +15,9 @@ Amounts also accept Hindi (`४५.५०`), Arabic (`٤٥٫٥٠`) and full-widt
 
 Account hints must match an active account. Interpretation does not create transactions or change balances by itself.
 
-New examples include `Paid 49 for coffee using gpy` and `maine chai ke liye cash se 30 diye`. Account spelling support is an explicit allowlist: `gpy`, `gpaay`, `gooogle pay`, `wallett`, and `walllet`. This does not correct arbitrary spellings. `kal`, negation and planned payments require manual clarification; unfamiliar Hinglish wording may also defer.
+Examples include `Paid 49 for coffee using gpy`, `maine chai ke liye cash se 30 diye`, `momos cash 120`, `sabzi mein 85 gaye cash se` and `Paid 60 for chai using phonepe`.
+
+Accounts are an explicit allowlist. `upi` uses your UPI (GPay) account. `phonepe`, `phone pe` and `paytm` fill the account only if you have an active account with exactly that name, such as **PhonePe**; otherwise choose the account yourself. Spellings `gpy`, `gpaay`, `gooogle pay`, `wallett` and `walllet` are also recognised. Other spellings are not corrected. `kal`, negation and planned payments require manual clarification; unfamiliar Hinglish wording may also defer.
 
 ## English logging shortcuts
 
@@ -48,7 +50,7 @@ In both editions, Tally also looks at your own saved personal expenses with the 
 
 ## What runs locally
 
-The extension has **999,150 parameters** and a **3,998,956-byte** portable bundle (about 3.81 MiB). A **53,142-parameter** compatibility model keeps already-supported English drafts fast and stable. It is checked first; the extension handles its abstentions. Combined learned parameters: **1,052,292**. Both run locally and are omitted from the non-AI APK.
+The command extension has **1,002,068 parameters** and a **4,011,202-byte** portable bundle (about 3.83 MiB). A **53,142-parameter** compatibility model keeps already-supported English drafts fast and stable. It is checked first; the extension handles its abstentions. The category suggester has **40,970 parameters** (164,022 bytes). All three run locally and are omitted from the non-AI APK.
 
 The models select spans from your input; exact decimal code converts the selected amount to integer paise rather than generating a new number. An uncertain new-language command leaves amount/account incomplete and asks for manual confirmation.
 
@@ -64,6 +66,6 @@ If the bundle cannot load, rules remain available. The non-AI edition omits the 
 
 ## Recorded evaluation
 
-The frozen combined system correctly accepted 2,447 of 2,451 supported fresh synthetic examples and all 1,563 supported legacy examples, with no wrong returned drafts in those sets. It handled 11/12 new capability examples (one deferred), while retaining 14/16 supported legacy challenge cases. These assistant-authored checks are not a real-user accuracy guarantee; older suites are regression evidence and the model score is not a calibrated probability.
+The combined command system accepted 2,105 of 2,384 new-phrasing examples, all 1,547 legacy examples and 11 of 12 cases in a frozen new challenge, with no wrong returned drafts and no unsupported command accepted in any set. Compared with the previous version, that is 1,575 more correct drafts on the new phrasing and no loss elsewhere. The category suggester accepted 266 held-out variants of known terms with no wrong category and ignored every unknown test word; for words it has never seen, its guesses are unreliable, so it usually stays silent. These assistant-authored checks are not a real-user accuracy guarantee, and model scores are not calibrated probabilities.
 
-[Current model and verification](../../ml/tally-command/IMPROVED_1M.md) · [Compatibility model](../../ml/tally-command/COMMAND_MODEL.md) · [Offline calculator](calculator.md)
+[Current models and verification](../../ml/tally-command/IMPROVED_V5.md) · [Previous extension](../../ml/tally-command/IMPROVED_1M.md) · [Compatibility model](../../ml/tally-command/COMMAND_MODEL.md) · [Offline calculator](calculator.md)

@@ -28,13 +28,14 @@ if __name__ == '__main__':
     if not validate_artifact_binding(summary, digest, baseline_digest):
         parser.error('Evaluation does not match both model artifacts')
     state = torch.load(args.run_dir / 'model.pt', map_location='cpu', weights_only=True)
-    if state.get('recipe') != 'improved-v4' or state.get('guard_revision') != 'description-boundary-v1':
+    policies = {'improved-v4': ('description-boundary-v1', 'command-v4-1m'), 'improved-v5': ('description-boundary-v2', 'command-v5-1m')}
+    if policies.get(state.get('recipe'), (None,))[0] != state.get('guard_revision'):
         parser.error('Unsupported runtime policy')
     metadata = {'model': 'scratch bidirectional GRU expense-span extension', 'parameters': summary['extension_parameters'],
                 'compatibility_parameters': summary['baseline_parameters'], 'combined_parameters': summary['extension_parameters'] + summary['baseline_parameters'],
                 'embedding': state['embedding'], 'hidden': state['hidden'], 'threshold': state['threshold'],
                 'seed': state['seed'], 'selected_step': state['steps'], 'pretrained_weights': False,
-                'sha256': digest, 'compatibility_sha256': baseline_digest, 'bytes': source.stat().st_size, 'model_version': 'command-v4-1m',
+                'sha256': digest, 'compatibility_sha256': baseline_digest, 'bytes': source.stat().st_size, 'model_version': policies[state['recipe']][1],
                 'guard_revision': state['guard_revision'], 'routing': 'compatibility first, extension on abstention',
                 'evaluation': 'Synthetic templates and regression suites only; not independent real-user accuracy.',
                 'data_provenance': 'Assistant-authored synthetic templates; no private financial records.'}

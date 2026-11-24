@@ -4,6 +4,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Update the on-device command model to v5 (AI edition): more English and Hinglish ways of writing an expense, about 40 more everyday items, and `upi`, `phonepe` and `paytm` as payment accounts. No wrong drafts in any recorded check. [On-device suggestions](docs/features/on-device-ai.md) · [Model report](ml/tally-command/IMPROVED_V5.md)
 - Suggest a category on the phone when the rules cannot tell, from a new 40,970-parameter model trained from scratch on about 460 everyday terms (AI edition). It stays silent when unsure and never picks Other. [On-device suggestions](docs/features/on-device-ai.md#category-suggestions)
 - Fill a missing category and payment account from your own saved entries with the same description, when at least two recent entries agree. Accounts you type always win. [Learns from your own entries](docs/features/on-device-ai.md#learns-from-your-own-entries)
 - Understand more dates and amounts in commands: `this morning`, `tonight`, `earlier today`, `two weeks ago`, `on 21 Oct` without a year, and Indian `₹500/-` prices. [English logging shortcuts](docs/features/on-device-ai.md#english-logging-shortcuts)

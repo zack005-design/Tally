@@ -55,13 +55,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run-dir', type=Path, required=True)
     parser.add_argument('--steps', type=int, default=8000)
-    parser.add_argument('--seed', type=int, default=29173)
+    parser.add_argument('--seed', type=int, default=None)
+    parser.add_argument('--recipe', choices=('improved-v4', 'improved-v5'), default='improved-v4')
     args = parser.parse_args()
+    if args.recipe == 'improved-v5':
+        import command_v5_data as v5
+        corpus, guard, default_seed = v5.make_corpus_v5, v5.GUARD_REVISION, 41017
+    else:
+        corpus, guard, default_seed = make_corpus_v4, 'description-boundary-v1', 29173
+    args.seed = default_seed if args.seed is None else args.seed
     if args.steps < 1000 or args.run_dir.exists():
         parser.error('Use >=1000 steps and a fresh run directory')
     torch.set_num_threads(4); torch.manual_seed(args.seed); random.seed(args.seed)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    train, dev, test = make_corpus_v4(seed=args.seed)
+    train, dev, test = corpus(seed=args.seed)
     dataset = json.dumps({'train': train, 'dev': dev, 'test': test}, ensure_ascii=False)
     args.run_dir.mkdir(parents=True)
     (args.run_dir / 'dataset.json').write_text(dataset, encoding='utf-8')
@@ -101,7 +108,7 @@ def main():
                 best_state = {'state_dict': {k: v.detach().cpu().clone() for k, v in model.state_dict().items()},
                               'vocabulary': vocabulary, 'threshold': threshold, 'seed': args.seed, 'steps': step,
                               'embedding': embedding, 'hidden': hidden, 'expanded': True, 'pretrained_weights': False,
-                              'guard_revision': 'description-boundary-v1', 'recipe': 'improved-v4'}
+                              'guard_revision': guard, 'recipe': args.recipe}
                 torch.save(best_state, args.run_dir / 'model.pt')
     (args.run_dir / 'selection-history.json').write_text(json.dumps(history, indent=2), encoding='utf-8')
     if best_state is None: raise RuntimeError('No checkpoint met the development gate; refusing export')
