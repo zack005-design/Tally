@@ -27,12 +27,24 @@ Type a personal expense with an amount and payment account. For example:
 | `coffee 45 cash two days ago` | Coffee, ₹45, Wallet, two calendar days ago |
 | `coffee 45 cash last Monday` | Coffee, ₹45, Wallet, the previous Monday |
 | `coffee 45 cash on 21 October 2026` | Coffee, ₹45, Wallet, 21 October 2026 |
+| `coffee 45 cash this morning` | Coffee, ₹45, Wallet, today |
+| `coffee 45 cash two weeks ago` | Coffee, ₹45, Wallet, 14 days ago |
+| `coffee 45 cash on 21 Oct` | Coffee, ₹45, Wallet, 21 October this year |
+| `coffee ₹80/- cash` | Coffee, ₹80, Wallet |
 
-Supported date phrases are `today`, `yesterday`, `day before yesterday`, 1–365 `days ago` (or the words one through seven), and `last` followed by a full weekday name. “Last Monday” means the strictly previous Monday, including when today is Monday. Explicit dates accept ISO `2026-10-21`, `on 21 October 2026`, `on 21 Oct 2026`, or `on October 21, 2026`. Relative dates use your device's local calendar day.
+Supported date phrases are `today`, `this morning`, `this afternoon`, `this evening`, `tonight`, `earlier today`, `yesterday`, `day before yesterday`, 1–365 `days ago` and 1–52 `weeks ago` (or `a` and the words one through seven), and `last` followed by a full weekday name. “Last Monday” means the strictly previous Monday, including when today is Monday. Explicit dates accept ISO `2026-10-21`, `on 21 October 2026`, `on 21 Oct 2026`, or `on October 21, 2026`. A day and month without a year, such as `on 21 Oct`, means this calendar year; if that date is still ahead, Tally asks you to correct it rather than guessing last year. Relative dates use your device's local calendar day.
 
-Amount shorthand accepts `k`/`thousand` for ×1,000 and `lakh`/`lac` for ×100,000, with at most two decimal places before the suffix: `1.25k` means ₹1,250. `INR1.5k`, `Rs1k`, and `1.5k rupees` are also supported. Arithmetic uses exact integer paise and rejects overflow; grouped/repeated multipliers such as `1,000 thousand` or `1k thousand` require correction. These conveniences work in both editions; learned sentence/description recognition remains an AI-edition feature.
+The Indian price notation `/-` after an amount (`₹500/-`, `Rs. 1,250/-`) is read as exactly that amount. Amount shorthand accepts `k`/`thousand` for ×1,000 and `lakh`/`lac` for ×100,000, with at most two decimal places before the suffix: `1.25k` means ₹1,250. `INR1.5k`, `Rs1k`, and `1.5k rupees` are also supported. Arithmetic uses exact integer paise and rejects overflow; grouped/repeated multipliers such as `1,000 thousand` or `1k thousand` require correction. These conveniences work in both editions; learned sentence/description recognition remains an AI-edition feature.
 
 Future or conflicting dates and recognised ambiguous phrases such as `last night`, `in two days`, or `on 10/11/2026` require manual date correction. Negation, foreign currencies and multiple expense amounts still require review. There is no scheduling or automatic saving, and these examples do not imply understanding of every English sentence.
+
+## Category suggestions
+
+In the AI edition, when the rules cannot tell the category, a second small model suggests one from the description, for example `netflix` → Subscriptions, `petrol` → Transport or `pani puri` → Food. It knows about 460 everyday terms and recognises them with extra words, plurals and small typos (`extra masala dosa`, `petrol for home`). It suggests only Tally's built-in categories (never Other) and stays silent when it is unsure, including for words it has not learned. A suggested category is marked in the draft so you can change it before saving.
+
+## Learns from your own entries
+
+In both editions, Tally also looks at your own saved personal expenses with the same description. When at least two of your recent entries agree, for example `chai` always filed under Food and paid from Wallet, the draft uses that category, and that account if you did not name one. Accounts you type always win, and mixed or one-off habits produce no guess. This is a lookup on your phone, not a trained model: nothing leaves the device and nothing is saved until you confirm.
 
 ## What runs locally
 

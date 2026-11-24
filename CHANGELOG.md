@@ -4,7 +4,9 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
-Nothing yet.
+- Suggest a category on the phone when the rules cannot tell, from a new 40,970-parameter model trained from scratch on about 460 everyday terms (AI edition). It stays silent when unsure and never picks Other. [On-device suggestions](docs/features/on-device-ai.md#category-suggestions)
+- Fill a missing category and payment account from your own saved entries with the same description, when at least two recent entries agree. Accounts you type always win. [Learns from your own entries](docs/features/on-device-ai.md#learns-from-your-own-entries)
+- Understand more dates and amounts in commands: `this morning`, `tonight`, `earlier today`, `two weeks ago`, `on 21 Oct` without a year, and Indian `₹500/-` prices. [English logging shortcuts](docs/features/on-device-ai.md#english-logging-shortcuts)
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 

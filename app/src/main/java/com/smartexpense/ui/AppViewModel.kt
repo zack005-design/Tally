@@ -187,9 +187,18 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         val snapshot=state.value.snapshot
         val source=resolveParsedAccount(parsed.fromAccount,snapshot.accounts,snapshot.walletSources)
         val destination=resolveParsedAccount(parsed.toAccount,snapshot.accounts,snapshot.walletSources)
-        val missing=parsed.missing-(if(source!=null) setOf("account") else emptySet())-(if(destination!=null) setOf("destination account") else emptySet())
+        // The user's own saved entries take priority for category and fill a missing account; explicit account words win.
+        val personal=if(parsed.kind==Kind.EXPENSE && parsed.contributions.keys.all { it=="self" } && parsed.splitRule==null)
+            personalSuggestion(parsed.description,snapshot.records,snapshot.accounts.filterNot { it.archived }.map { it.id }.toSet(),snapshot.categories.map { it.id }.toSet())
+            else PersonalSuggestion()
+        val personalAccount=if(source==null) personal.accountId else null
+        val accountSource=source?:personalAccount
+        val missing=parsed.missing-(if(accountSource!=null) setOf("account") else emptySet())-(if(destination!=null) setOf("destination account") else emptySet())
+        val history=listOfNotNull(personal.categoryId?.let { "category" },personalAccount?.let { "account" })
+        val warnings=(if(personal.categoryId!=null) parsed.warnings.filterNot { it.startsWith("Category suggested on device") } else parsed.warnings)+
+            (if(history.isEmpty()) emptyList() else listOf("Filled ${history.joinToString(" and ")} from your past entries. Change if needed."))
         if(parsed.kind==Kind.REPAYMENT) {parsedRepayment.value=parsed;change(current.copy(parserNotice=(parsed.warnings+"Repayment draft ready. Review the person, direction, amount and account.").joinToString("\n")));return}
-        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,categoryId=state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=source?:current.accountId,secondAccountId="",secondPayment="",destinationId=destination.orEmpty(),date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(parsed.warnings+"Review all fields. Missing: ${missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
+        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,categoryId=personal.categoryId?:state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=accountSource?:current.accountId,secondAccountId="",secondPayment="",destinationId=destination.orEmpty(),date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(warnings+"Review all fields. Missing: ${missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
     }
 }
 
