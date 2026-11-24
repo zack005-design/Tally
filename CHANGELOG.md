@@ -4,7 +4,9 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
-Nothing yet.
+- Tidy **Tools**: each group page is now split into short, labelled sections (for example Record, Accounts and Plan under **Money & planning**) with its own icon on every row, instead of one long list that repeated the same icon. Favourites and the home-screen widget share one entry instead of three.
+- Tidy **Spending**: View transactions, Monthly budgets, Set budget and Spending details now sit together in one list under the chart instead of four separately styled buttons.
+- In **Spending**, each category's icon now matches its colour in the distribution bar, so the list works as the chart's legend. Previously the icons cycled through three unrelated colours.
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases)
 
@@ -13,7 +15,6 @@ Nothing yet.
 - Fit the narrowest phones: compact phones at their largest display size, and narrow split-screen windows, now scale far enough that no screen is laid out narrower than the 320 dp it is tested at.
 - In landscape, keep content and the side rail clear of the camera cutout or punch-hole.
 - Show the whole week in the date picker on narrow phones instead of hiding the weekend behind a sideways scroll.
-- In **Spending**, each category's icon now matches its colour in the distribution bar, so the list works as the chart's legend. Previously the icons cycled through three unrelated colours.
 
 [Verification and known limits](docs/releases/0.2.6.md)
 
