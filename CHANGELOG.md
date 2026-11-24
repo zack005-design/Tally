@@ -4,7 +4,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
-- Read bill photos taken with the camera at full resolution. Photos larger than 6 MB were rejected before any text was read; photos up to 40 MB now work and are saved as a compact JPEG copy.
+- Read standard 12 MP phone photos at full resolution. They were halved before text recognition, which could leave receipt print too small to recognise and produce wrong items and amounts.
+- Accept bill photos larger than 6 MB. Photos larger than 6 MB were rejected before any text was read; photos up to 40 MB now work and are saved as a compact JPEG copy.
 - Pick up bill amounts written as `50/-` or `50/=`, or followed by a tax-code letter or `*` (such as `56.00 A`). These rows were previously skipped, leaving the item list and total empty.
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)

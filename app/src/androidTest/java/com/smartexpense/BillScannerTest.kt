@@ -46,6 +46,21 @@ class BillScannerTest {
     }
     private fun file(name:String):File {val c=ApplicationProvider.getApplicationContext<Context>();return File(File(c.cacheDir,"bill-camera").apply {mkdirs()},name)}
     private suspend fun scan(file:File):ScannedBill {val c=ApplicationProvider.getApplicationContext<Context>();return BillScanner(c).read(FileProvider.getUriForFile(c,"${c.packageName}.bills",file))}
+    @Test fun standardTwelveMegapixelPhotoKeepsSmallPrintReadable()=runBlocking {
+        // A phone photo of a receipt held at arm's length: small print that halving would blur away.
+        val image=Bitmap.createBitmap(4032,3024,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-12mp-camera.jpg")
+        try {
+            image.eraseColor(Color.WHITE)
+            val canvas=Canvas(image);val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=26f}
+            listOf("Tally Store","Tea 50.00","Cake 100.00","Grand Total 150.00").forEachIndexed {i,line->canvas.drawText(line,1700f,1300f+i*60,paint)}
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,95,it)}
+            val read=scan(file)
+            val bill=BillRecognition.parse(read.text)
+            assertEquals(read.text,listOf(5000L,10000L),bill.items.map {it.amount})
+            assertEquals(read.text,15000L,bill.total)
+        } finally {file.delete();image.recycle()}
+    }
     @Test fun cameraPhotoLargerThanStorageLimitIsReadAndStoredCompactly()=runBlocking {
         // Camera apps often save photos above the 6 MB storage limit. Noise keeps this JPEG large.
         val image=Bitmap.createBitmap(3000,3000,Bitmap.Config.ARGB_8888)

@@ -28,7 +28,9 @@ data class ScannedBill(val bytes:ByteArray,val mime:String,val text:String,val r
 class BillScanner @Inject constructor(@param:ApplicationContext private val context:Context) {
     companion object {const val MAX_BYTES=6*1024*1024;const val MAX_PAGES=5
         /** Camera apps commonly save 8 to 25 MB photos. They are read in full and stored as a compact JPEG. */
-        const val MAX_PHOTO_SOURCE_BYTES=40*1024*1024}
+        const val MAX_PHOTO_SOURCE_BYTES=40*1024*1024
+        private const val MAX_RECOGNITION_WIDTH=4096
+        private const val MAX_RECOGNITION_PIXELS=16_777_216L}
     suspend fun read(uri:Uri):ScannedBill=withContext(Dispatchers.IO) {
         val source=context.contentResolver.openInputStream(uri)?.use {input->
             val output=java.io.ByteArrayOutputStream();val buffer=ByteArray(8192)
@@ -132,7 +134,7 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
         val lines=mutableListOf<ReceiptLine>()
         // Overlap protects letters near a cut. Each line belongs to one core region by position,
         // so identical purchases on different rows are preserved rather than deduplicated by text.
-        // Enhanced crops also allocate pixel buffers; keep each under two megapixels.
+        // Enhanced crops also allocate pixel buffers; keep each near two megapixels.
         val coreHeight=if(enhanced) minOf(1600,(2_000_000/bitmap.width-256).coerceAtLeast(256)) else 1600
         for(coreTop in 0 until bitmap.height step coreHeight) {
             currentCoroutineContext().ensureActive()
@@ -164,9 +166,11 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
         val width=if(orientation in 5..8) bounds.outHeight else bounds.outWidth
         val height=if(orientation in 5..8) bounds.outWidth else bounds.outHeight
         var sample=1
-        // A long receipt must retain its text width. Previews keep their smaller memory budget.
-        while(if(forRecognition) width/sample>2400 || height/sample>16000 ||
-            (width.toLong()/sample)*(height.toLong()/sample)>12_000_000L
+        // Receipt text must keep enough pixels per character for OCR. A standard 12 MP phone photo
+        // (4032 x 3024) is read at full size; halving it left small print too small to recognise.
+        // Larger camera modes are halved until they fit. Previews keep their smaller memory budget.
+        while(if(forRecognition) width/sample>MAX_RECOGNITION_WIDTH || height/sample>16000 ||
+            (width.toLong()/sample)*(height.toLong()/sample)>MAX_RECOGNITION_PIXELS
             else bounds.outWidth/sample>2400 || bounds.outHeight/sample>2400) sample*=2
         val bitmap=BitmapFactory.decodeByteArray(bytes,0,bytes.size,BitmapFactory.Options().apply {inSampleSize=sample})?:throw IllegalArgumentException("Cannot decode this bill image")
         val matrix=Matrix()
