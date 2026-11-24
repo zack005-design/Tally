@@ -26,21 +26,42 @@ data class ScannedBill(val bytes:ByteArray,val mime:String,val text:String,val r
 
 /** Bundled Latin OCR. Sources are copied locally, bounded and never uploaded. */
 class BillScanner @Inject constructor(@param:ApplicationContext private val context:Context) {
-    companion object {const val MAX_BYTES=6*1024*1024;const val MAX_PAGES=5}
+    companion object {const val MAX_BYTES=6*1024*1024;const val MAX_PAGES=5
+        /** Camera apps commonly save 8 to 25 MB photos. They are read in full and stored as a compact JPEG. */
+        const val MAX_PHOTO_SOURCE_BYTES=40*1024*1024}
     suspend fun read(uri:Uri):ScannedBill=withContext(Dispatchers.IO) {
-        val bytes=context.contentResolver.openInputStream(uri)?.use {input->
+        val source=context.contentResolver.openInputStream(uri)?.use {input->
             val output=java.io.ByteArrayOutputStream();val buffer=ByteArray(8192)
-            while(true) {ensureActive();val n=input.read(buffer);if(n<0) break;require(output.size()+n<=MAX_BYTES) {"Choose a bill smaller than 6 MB"};output.write(buffer,0,n)}
+            while(true) {ensureActive();val n=input.read(buffer);if(n<0) break;require(output.size()+n<=MAX_PHOTO_SOURCE_BYTES) {"Choose a bill photo smaller than 40 MB"};output.write(buffer,0,n)}
             output.toByteArray()
         }?:throw IllegalArgumentException("Cannot read this local file")
-        require(bytes.isNotEmpty()) {"The selected bill is empty"}
-        val pdf=bytes.take(5).toByteArray().toString(Charsets.US_ASCII)=="%PDF-"
-        val mime=if(pdf) "application/pdf" else BitmapFactory.Options().apply {inJustDecodeBounds=true;BitmapFactory.decodeByteArray(bytes,0,bytes.size,this)}.outMimeType.orEmpty()
-        require(mime in listOf("application/pdf","image/jpeg","image/png","image/webp")) {"Choose a JPEG, PNG, WebP or PDF bill"}
+        require(source.isNotEmpty()) {"The selected bill is empty"}
+        val pdf=source.take(5).toByteArray().toString(Charsets.US_ASCII)=="%PDF-"
+        require(!pdf || source.size<=MAX_BYTES) {"Choose a PDF bill smaller than 6 MB"}
+        val sourceMime=if(pdf) "application/pdf" else BitmapFactory.Options().apply {inJustDecodeBounds=true;BitmapFactory.decodeByteArray(source,0,source.size,this)}.outMimeType.orEmpty()
+        require(sourceMime in listOf("application/pdf","image/jpeg","image/png","image/webp")) {"Choose a JPEG, PNG, WebP or PDF bill"}
         val warnings=mutableListOf<String>()
-        val text=if(pdf) pdfText(bytes,warnings) else imageText(bytes,warnings)
+        val text=if(pdf) pdfText(source,warnings) else imageText(source,warnings)
         require(text.length<=ReceiptStorage.MAX_TEXT_CHARS) {"Receipt text exceeds 10,000 characters. Import a smaller section or enter the expense manually."}
-        ScannedBill(bytes,mime,text,warnings.distinct())
+        if(source.size<=MAX_BYTES) ScannedBill(source,sourceMime,text,warnings.distinct())
+        else ScannedBill(compactPhoto(source),"image/jpeg",text,warnings.distinct())
+    }
+    /** Stores an upright JPEG copy of an oversized photo. Recognition has already read the source photo. */
+    private suspend fun compactPhoto(source:ByteArray):ByteArray {
+        var bitmap=decode(source,forRecognition=true)
+        try {
+            while(true) {
+                for(quality in intArrayOf(90,80,70)) {
+                    currentCoroutineContext().ensureActive()
+                    val output=java.io.ByteArrayOutputStream()
+                    check(bitmap.compress(Bitmap.CompressFormat.JPEG,quality,output)) {"Cannot store this bill photo"}
+                    if(output.size()<=MAX_BYTES) return output.toByteArray()
+                }
+                require(bitmap.width>200 && bitmap.height>200) {"Cannot store this bill photo"}
+                val smaller=Bitmap.createScaledBitmap(bitmap,bitmap.width*3/4,bitmap.height*3/4,true)
+                if(smaller!==bitmap) {bitmap.recycle();bitmap=smaller}
+            }
+        } finally {bitmap.recycle()}
     }
     private data class ReceiptLine(val text:String,val bounds:Rect?,val confidence:Float,val slope:Double?,val textHeight:Double)
     private suspend fun recognize(bitmap:Bitmap):Text {

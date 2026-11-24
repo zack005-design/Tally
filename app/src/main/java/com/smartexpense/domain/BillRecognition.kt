@@ -7,7 +7,11 @@ import java.time.format.ResolverStyle
 data class BillItem(val name:String,val amount:Long)
 data class BillSuggestion(val merchant:String,val total:Long?,val date:String?,val items:List<BillItem>,val warnings:List<String>)
 object BillRecognition {
-    private val money=Regex("(?<![\\p{L}\\p{N}.,+\\-−])(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?([0-9]{1,3}(?:,[0-9]{2,3})+(?:\\.[0-9]{1,2})?|[0-9]+(?:\\.[0-9]{1,2}|,[0-9]{2})?)\\s*$",RegexOption.IGNORE_CASE)
+    // Printed bills often end a price with "/-" or "/=", and itemised receipts can follow a
+    // paise amount with a single tax-code letter or "*" marker. A bare letter after a whole
+    // number stays excluded so sizes such as "2 L" are not read as prices.
+    private const val amountSuffix="\\s*(?:/\\s*[-=]|\\*|(?<=[.,][0-9]{2})\\s*(?-i:[A-Z]))?\\s*$"
+    private val money=Regex("(?<![\\p{L}\\p{N}.,+\\-−])(?:₹\\s*|INR\\s*|Rs\\.?\\s*)?([0-9]{1,3}(?:,[0-9]{2,3})+(?:\\.[0-9]{1,2})?|[0-9]+(?:\\.[0-9]{1,2}|,[0-9]{2})?)$amountSuffix",RegexOption.IGNORE_CASE)
     private val signedPrefix=Regex("(?:[+\\-−]\\s*(?:₹|INR|Rs\\.?)?|(?:₹|INR|Rs\\.?)\\s*[+\\-−])\\s*$",RegexOption.IGNORE_CASE)
     private fun amountMatch(line:String):MatchResult? {
         val match=money.find(line)?:return null

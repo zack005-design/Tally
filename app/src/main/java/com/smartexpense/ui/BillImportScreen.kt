@@ -140,7 +140,7 @@ internal class ReceiptReviewModel(initialBill:ScannedBill?):ViewModel() {
             GroupedDivider()
             GroupedRow("Choose PDF",R.drawable.ic_document_outline,supporting="Up to 5 pages · 6 MB",tone=ReferenceTone.Peach,onClick={if(!scanning) filePicker.launch(arrayOf("application/pdf"))})
         }}
-        if(bill==null) item {ReferenceInfo("Processed on this device · Up to 5 pages · 6 MB. Latin-script recognition; check every suggestion.")}
+        if(bill==null) item {ReferenceInfo("Processed on this device · Photos up to 40 MB · PDFs up to 5 pages and 6 MB. Latin-script recognition; check every suggestion.")}
         if(scanning || error!=null) item {Panel {
             if(scanning) {LinearProgressIndicator(Modifier.fillMaxWidth());Text("Reading the bill locally…")}
             error?.let {Text(it,color=Tokens.muted)}
