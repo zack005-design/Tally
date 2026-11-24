@@ -46,6 +46,30 @@ class BillScannerTest {
     }
     private fun file(name:String):File {val c=ApplicationProvider.getApplicationContext<Context>();return File(File(c.cacheDir,"bill-camera").apply {mkdirs()},name)}
     private suspend fun scan(file:File):ScannedBill {val c=ApplicationProvider.getApplicationContext<Context>();return BillScanner(c).read(FileProvider.getUriForFile(c,"${c.packageName}.bills",file))}
+    @Test fun sidewaysPhotoWithoutRotationMetadataIsReadUpright()=runBlocking {
+        // Some camera apps save landscape pixels without an orientation tag.
+        val upright=bitmap();val file=file("ocr-sideways.png")
+        val sideways=Bitmap.createBitmap(upright,0,0,upright.width,upright.height,Matrix().apply {setRotate(90f)},true)
+        try {
+            file.outputStream().use {sideways.compress(Bitmap.CompressFormat.PNG,100,it)}
+            val read=scan(file)
+            assertEquals(read.text,15000L,BillRecognition.parse(read.text).total)
+        } finally {file.delete();upright.recycle();sideways.recycle()}
+    }
+    @Test fun lowResolutionForwardedImageIsEnlargedForRecognition()=runBlocking {
+        // Messaging apps shrink photos; small print must still be read.
+        val image=Bitmap.createBitmap(480,400,Bitmap.Config.ARGB_8888);val file=file("ocr-low-res.jpg")
+        try {
+            image.eraseColor(Color.WHITE)
+            val canvas=Canvas(image);val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=22f}
+            listOf("Tally Store","Tea 50.00","Cake 100.00","Total 150.00").forEachIndexed {i,line->canvas.drawText(line,40f,60f+i*50,paint)}
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,85,it)}
+            val read=scan(file)
+            assertEquals(read.text,15000L,BillRecognition.parse(read.text).total)
+            assertEquals("Small originals are kept unchanged","image/jpeg",read.mime)
+            assertEquals(file.length().toInt(),read.bytes.size)
+        } finally {file.delete();image.recycle()}
+    }
     @Test fun standardTwelveMegapixelPhotoKeepsSmallPrintReadable()=runBlocking {
         // A phone photo of a receipt held at arm's length: small print that halving would blur away.
         val image=Bitmap.createBitmap(4032,3024,Bitmap.Config.ARGB_8888)

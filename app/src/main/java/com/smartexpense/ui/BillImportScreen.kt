@@ -136,11 +136,11 @@ internal class ReceiptReviewModel(initialBill:ScannedBill?):ViewModel() {
         if(bill==null) item {GroupedCard {
             GroupedRow("Take photo",R.drawable.ic_camera_outline,supporting="Use your camera",onClick=::takePhoto)
             GroupedDivider()
-            GroupedRow("Choose image",R.drawable.ic_photo_outline,supporting="JPEG, PNG or WebP",tone=ReferenceTone.Lavender,onClick={if(!scanning) filePicker.launch(arrayOf("image/jpeg","image/png","image/webp"))})
+            GroupedRow("Choose image",R.drawable.ic_photo_outline,supporting="Any photo or image format",tone=ReferenceTone.Lavender,onClick={if(!scanning) filePicker.launch(arrayOf("image/*"))})
             GroupedDivider()
             GroupedRow("Choose PDF",R.drawable.ic_document_outline,supporting="Up to 5 pages · 6 MB",tone=ReferenceTone.Peach,onClick={if(!scanning) filePicker.launch(arrayOf("application/pdf"))})
         }}
-        if(bill==null) item {ReferenceInfo("Processed on this device · Photos up to 40 MB · PDFs up to 5 pages and 6 MB. Latin-script recognition; check every suggestion.")}
+        if(bill==null) item {ReferenceInfo("Processed on this device · Any photo format up to 40 MB · PDFs up to 5 pages and 6 MB. Latin-script recognition; check every suggestion.")}
         if(scanning || error!=null) item {Panel {
             if(scanning) {LinearProgressIndicator(Modifier.fillMaxWidth());Text("Reading the bill locally…")}
             error?.let {Text(it,color=Tokens.muted)}
@@ -197,7 +197,7 @@ internal class ReceiptReviewModel(initialBill:ScannedBill?):ViewModel() {
     }
     if(replacing) EditorialActionSheet("Replace receipt",listOf(
         EditorialAction("Retake photo") {replacing=false;takePhoto()},
-        EditorialAction("Choose replacement image") {replacing=false;filePicker.launch(arrayOf("image/jpeg","image/png","image/webp"))},
+        EditorialAction("Choose replacement image") {replacing=false;filePicker.launch(arrayOf("image/*"))},
         EditorialAction("Choose replacement PDF") {replacing=false;filePicker.launch(arrayOf("application/pdf"))}
     ),{replacing=false})
     if(choosingCategory) EditorialBottomSheet("Category",{choosingCategory=false}) {
