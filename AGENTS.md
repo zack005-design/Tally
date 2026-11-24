@@ -13,7 +13,7 @@ The user authorizes each chat working in this repository to commit and push ever
 - Fetch before pushing. Publish to the existing branch according to the user's current branch policy; this repository currently uses `main`. Never force-push, discard someone else's work, or bypass a failing check to finish a chat.
 - Keep README, user guides, and release information consistent with changes that affect them. Link only to releases and assets that actually exist.
 - APKs and plugin ZIPs belong in GitHub Releases, not the source tree. Creating a new release requires completing the applicable verification and preserving the development/pre-release status unless a production release was explicitly requested.
-- Keep this repository and its downloads private unless the user explicitly requests a visibility change.
+- This repository is public. Never commit personal details (names, email addresses, local machine paths, real financial records) and use fictional names in fixtures. Do not change repository visibility unless the user explicitly asks.
 - Never upload the separate LLM workspace under `tools/tally-lm/`, its checkpoints, datasets, caches, or credentials. The app's existing specialised expense-command model under `ml/tally-command/` and its bundled app assets are distinct and may be maintained within the authorized app scope.
 - If publishing fails, preserve the completed local work and report the exact blocker. Finish with the commit or release link and a concise statement of verification and remaining limitations.
 

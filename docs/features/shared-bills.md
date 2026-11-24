@@ -4,7 +4,7 @@
 
 Separate the money you paid from your own share of a group expense. Track multiple payers, each person's share, and the repayments that settle the bill.
 
-<p align="center"><a href="../screenshots/readme/shared-bill.png"><img src="../screenshots/readme/shared-bill.png" width="300" alt="Shared bill payment and settlement review"></a></p>
+<p align="center"><a href="../screenshots/all-screens/shared-review.png"><img src="../screenshots/all-screens/shared-review.png" width="300" alt="Shared bill payment and settlement review"></a></p>
 
 ## Choose a split that fits
 
@@ -40,12 +40,12 @@ In app builds with **Shared refund**, open the original bill and choose **Record
 
 Choose a destination account for any cash you received, then use **Review refund** before **Save refund**. Only your refunded share reduces your spending. Only cash actually received by you increases your account. A refund received by a friend does not add cash to your account.
 
-Current source builds require you to choose the **Cash recipient** or enter each person's received amount. Tally does not assume the refund went to you. If the merchant paid everyone according to their refunded shares, choose **Match refunded shares**, then review the amounts. Changing the total after splitting cash across people requires checking and updating that distribution again.
+Tally requires you to choose the **Cash recipient** or enter each person's received amount. Tally does not assume the refund went to you. If the merchant paid everyone according to their refunded shares, choose **Match refunded shares**, then review the amounts. Changing the total after splitting cash across people requires checking and updating that distribution again.
 
 For a ₹900 bill split equally three ways, a ₹300 refund received entirely by you reduces your spending by ₹100 and increases your account by ₹300. Each friend is entitled to ₹100 of the refund. The original bill and any repayments remain in history; the refund records the balances owed back to participants. Review the net settlement suggestions, or explicitly offset opposite balances using the settlement tools, rather than recording cash that never moved.
 
 Partial and repeated refunds cannot exceed a person's original share. To correct a shared refund, reverse it and record a new distribution. Reverse any repayments against that refund first. Active linked refunds must be reversed before correcting or reversing the original bill.
 
-Full backups containing shared refunds use format 8 and need a build that supports shared refunds when restoring. Earlier personal-refund backups remain supported. The 0.2.3 download predates this feature.
+Full backups containing shared refunds use format 8 and need Tally 0.2.4 or later to restore. Earlier personal-refund backups remain supported.
 
-[View bill review](../screenshots/readme/shared-bill.png) · [Everyday money →](everyday-money.md)
+[View bill review](../screenshots/all-screens/shared-review.png) · [Everyday money →](everyday-money.md)

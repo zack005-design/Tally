@@ -35,4 +35,4 @@ Export a **Transactions CSV** for the month you want to review. In Codex, use yo
 
 The plugins run separately in Codex. Tally does not upload records automatically; only share an export when you want it reviewed.
 
-[View companion export screen](../screenshots/ios-polish/companion-export.png) · [Plugin downloads](https://github.com/zack005-design/Tally/releases/tag/v0.1.0-ios-polish-20261021) · [Quicker daily entry →](quick-entry.md)
+[View companion export screen](../screenshots/all-screens/export.png) · [Plugin downloads](https://github.com/zack005-design/Tally/releases/tag/v0.1.0-ios-polish-20261021) · [Quicker daily entry →](quick-entry.md)

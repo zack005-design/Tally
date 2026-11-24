@@ -13,7 +13,7 @@ Bring a receipt photo or PDF into Tally and review the recognized text before re
 3. Correct missing or misread details, checking the total against the original receipt.
 4. Confirm the payment details and save after reviewing the entry.
 
-In current source builds, use **Enlarge receipt** to inspect the original in a full-screen preview. Pinch to zoom and drag, or use **Zoom in**, **Zoom out**, and **Reset zoom**. PDF page controls are available there too. Screen readers also have actions to move around the enlarged image.
+Use **Enlarge receipt** to inspect the original in a full-screen preview. Pinch to zoom and drag, or use **Zoom in**, **Zoom out**, and **Reset zoom**. PDF page controls are available there too. Screen readers also have actions to move around the enlarged image.
 
 Use **Replace receipt** to retake the photo or choose another image or PDF. The current receipt and its corrections remain available if you cancel or the replacement cannot be read. A successful replacement clears the old item corrections and category selection so you can review the new bill.
 
@@ -36,12 +36,6 @@ Camera photos with faint print or uneven lighting can receive an automatic contr
 Tilted photo columns are aligned using the printed text angle so a price does not drift onto a neighbouring item. Purchase extraction stops at the final printed total; footer numbers such as loyalty points are not purchases, and intermediate subtotals do not discard later pages. Decimal commas in recognised prices retain their paise instead of inflating the amount. Always compare the result with the original, especially when the photo is blurred or has perspective distortion.
 
 ## Share a receipt PDF
-
-These sharing options are available in current source builds; the existing 0.2.3 download predates this update.
-
-See the [receipt verification and broader app audit](../testing/2026-11-11-receipts.md) for tested behavior and remaining limits.
-
-The [audit follow-up verification](../testing/2026-11-11-audit-follow-up.md) covers enlarged previews, replacement safety, import text limits, merchant detection, metadata refreshes, and refund recipients.
 
 Open a saved expense and choose **Share receipt PDF** for a complete receipt: merchant, date and time, category, the account you paid from, every item with its amount, taxes or discounts, the total, who paid, each share and what is still owed. Items come from the lines you reviewed when importing the bill, or from the attached scan. When a receipt photo or PDF is attached, the original pages follow in the same PDF. Long receipts continue onto additional pages. Private notes and account balances are excluded. This expense record is not a merchant tax invoice.
 

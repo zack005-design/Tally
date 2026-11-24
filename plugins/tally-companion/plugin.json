@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "author": {
-    "email": "anirudhj329@gmail.com",
+    "url": "https://github.com/zack005-design",
     "name": "zack"
   },
   "description": "Review Tally spending exports and prepare chat spending history for reviewed import into Tally.",

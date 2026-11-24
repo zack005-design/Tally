@@ -23,7 +23,7 @@ Extension dimensions: vocabulary 207, embedding 128, hidden 342 per direction. T
 
 The app input layer converts Unicode decimal digits (including Hindi, Arabic and full-width forms) to ASCII before rules/model inference. It explicitly maps full-width/Arabic decimal and grouping separators and full-width/small signs, while standardizing whitespace. It does not use broad compatibility normalization: superscripts, fractions and other ambiguous numerals require manual correction. Hidden formatting/control characters and non-INR currency symbols are refused before accepting a transaction amount. The model weights, vocabulary and 999,150-parameter count are unchanged. This is input compatibility, not full Hindi-script language support; frozen model-only scores below do not measure this new layer.
 
-Nine focused JVM regression tests cover digit/space equivalence with rules and both learned models, exact grouped paise, supplementary digits, hidden controls, superscripts, foreign-currency routing, signed amounts and unchanged valid shared contributions. The final isolated AI debug build, 205 JVM tests and Android lint (zero errors; existing warnings remain) passed. The initial publication did not include a device run; subsequent checks are recorded in the [API 36 audit](../../docs/testing/2026-10-25-api36.md). Published APK downloads are unchanged.
+Nine focused JVM regression tests cover digit/space equivalence with rules and both learned models, exact grouped paise, supplementary digits, hidden controls, superscripts, foreign-currency routing, signed amounts and unchanged valid shared contributions. The final isolated AI debug build, 205 JVM tests and Android lint (zero errors; existing warnings remain) passed. The initial publication did not include a device run; subsequent checks ran in a separate API 36 device audit. Published APK downloads are unchanged.
 
 ## English logging update
 
@@ -31,7 +31,7 @@ Nine focused JVM regression tests cover digit/space equivalence with rules and b
 
 Grouped/repeated multiplier expressions, partially matched compound day counts, attached recognised foreign currency codes, unconverted amount suffixes and overflows are refused. English convenience parsing retains explicit review and shared/non-expense routing. The parameter count, portable weights and frozen model-only scores remain unchanged. Whole-app preprocessing improvements are separate from learned-model accuracy.
 
-English-update validation: 18 focused regressions and the full 223-test JVM suite passed, along with AI debug APK assembly and lint (zero errors; existing warnings remain). The source matches the isolated build snapshot. No English-update device run or APK release was performed. Existing app-wide device-suite issues are recorded separately in the [API 36 audit](../../docs/testing/2026-10-25-api36.md).
+English-update validation: 18 focused regressions and the full 223-test JVM suite passed, along with AI debug APK assembly and lint (zero errors; existing warnings remain). The source matches the isolated build snapshot. No English-update device run or APK release was performed. Existing app-wide device-suite issues are recorded separately in an API 36 device audit.
 
 ## Frozen combined-system evaluation
 

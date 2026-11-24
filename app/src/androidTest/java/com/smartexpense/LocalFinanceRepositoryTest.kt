@@ -62,7 +62,7 @@ class LocalFinanceRepositoryTest {
             assertEquals(123000L,repo.snapshot().accounts.single {it.id==sources.gpayId}.balance)
             assertFalse(repo.snapshot().walletSources!!.schedule.enabled)
             repo.saveDiary("2026-10-11","Lunch with friends\nKeep receipts")
-            repo.saveProfile("Aniru","star");repo.finishWelcome()
+            repo.saveProfile("Maya","star");repo.finishWelcome()
             val before=repo.snapshot();assertEquals(323000L,Finance.total(before.accounts.map {it.balance}))
             val backup=BackupService(db);val bytes=backup.exportFixture()
             repo.saveDiary("2026-10-11","");repo.saveProfile("Changed","leaf")

@@ -43,4 +43,4 @@ Use the arrows to move between years. The summary uses the same rules as monthly
 
 Plans and drafts help you organize records. They do not schedule bank payments or move money automatically.
 
-[View budgets](../screenshots/all-screens/budgets.png) · [View calendar](../screenshots/readme/calendar.png) · [Reports and backups →](reports-and-backups.md)
+[View budgets](../screenshots/all-screens/budgets.png) · [View calendar](../screenshots/all-screens/calendar.png) · [Reports and backups →](reports-and-backups.md)

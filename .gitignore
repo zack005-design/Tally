@@ -57,6 +57,11 @@ signing.properties
 /docs/superpowers/
 /docs/implementation/
 /docs/verification/
+/docs/testing/
+/docs/design-preview/
+/docs/unfinished-work.md
+/docs/IMPLEMENTATION.md
+/docs/ui-redesign.html
 /docs/design/
 /docs/wallet-gpay-next-phase.md
 /tools/update-local-snapshot.ps1
@@ -66,11 +71,7 @@ signing.properties
 # Keep only a curated public screenshot set
 /docs/previews/
 /docs/screenshots/*
-!/docs/screenshots/calendar-week.png
-!/docs/screenshots/home.png
 !/docs/screenshots/all-screens/
-!/docs/screenshots/ios-polish/
-!/docs/screenshots/readme/
 
 # Gradle wrapper JAR and Room schema JSON files are required source assets.
 # Do not exclude gradle/wrapper/gradle-wrapper.jar or app/schemas/.

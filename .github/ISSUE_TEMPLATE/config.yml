@@ -6,3 +6,6 @@ contact_links:
   - name: User guides
     url: https://github.com/zack005-design/Tally/blob/main/docs/README.md
     about: Read the feature guides before opening a support issue.
+  - name: Report a security problem
+    url: https://github.com/zack005-design/Tally/security/advisories/new
+    about: Report vulnerabilities privately instead of opening a public issue.

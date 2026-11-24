@@ -35,6 +35,6 @@ Create a [full backup](features/reports-and-backups.md#create-a-restorable-backu
 
 ## Release scope
 
-This is a development APK, not a production store release. INR is the core currency; foreign bills use manually entered exchange rates. Read the [expense-suggestion guide](features/on-device-ai.md) and [calculator guide](features/calculator.md) for capabilities and recorded checks. The [earlier visual-update report](verification/ios-polish-report.md) covers UI testing and device limits.
+This is a development APK, not a production store release. INR is the core currency; foreign bills use manually entered exchange rates. Read the [expense-suggestion guide](features/on-device-ai.md) and [calculator guide](features/calculator.md) for capabilities and recorded checks.
 
 [Everyday money →](features/everyday-money.md) · [All feature guides](README.md)

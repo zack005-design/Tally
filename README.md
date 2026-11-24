@@ -8,6 +8,7 @@
   <img src="https://img.shields.io/badge/Android-8.0%2B-1C1C1E?logo=android&logoColor=white&style=flat-square" alt="Android 8.0 or later">
   <img src="https://img.shields.io/badge/internet%20permission-none-1C1C1E?style=flat-square" alt="No internet permission">
   <img src="https://img.shields.io/badge/account-not%20required-1C1C1E?style=flat-square" alt="No account required">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-1C1C1E?style=flat-square" alt="MIT License"></a>
 </p>
 
 <p align="center">
@@ -186,5 +187,10 @@ The [project structure](docs/project.md) explains how the code is organised, and
 | [Screen gallery](docs/screenshots/all-screens/README.md) | Captures of every screen |
 | [Changelog](CHANGELOG.md) | What changed in each release |
 | [Contributing](CONTRIBUTING.md) | How to propose and test changes |
+| [Security policy](SECURITY.md) | How to report a vulnerability privately |
 
 Found a problem? [Report an issue](https://github.com/zack005-design/Tally/issues/new/choose).
+
+## License
+
+Tally is released under the [MIT License](LICENSE). The Inter typeface is used under the [SIL Open Font License](docs/licenses/Inter-OFL.txt).

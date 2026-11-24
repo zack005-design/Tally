@@ -25,4 +25,8 @@ Keep keys, credentials, real spending exports, personal backups, generated build
 
 The separate LLM workspace is excluded from this repository. The specialised app command model and its research live under [ml/tally-command](ml/tally-command/COMMAND_MODEL.md).
 
+## Security and licence
+
+Report security problems privately as described in the [security policy](SECURITY.md). By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).
+
 [Project structure](docs/project.md) · [Installation and data safety](docs/installation-safety.md) · [Project instructions](AGENTS.md)

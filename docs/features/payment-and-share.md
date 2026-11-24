@@ -51,4 +51,4 @@ Tally calculates amounts in integer paise to avoid floating-point drift. Review 
 
 Check the bill's participants, shares, payments, and outstanding settlements before recording it. Use the repayment flow when someone settles an amount. Tally records these movements; it does not transfer money for you.
 
-[View shared-bill review](../screenshots/readme/shared-bill.png) · [Shared-bill guide](shared-bills.md) · [Account guide](everyday-money.md)
+[View shared-bill review](../screenshots/all-screens/shared-review.png) · [Shared-bill guide](shared-bills.md) · [Account guide](everyday-money.md)
