@@ -11,7 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-${{ github.workflow }}-${{ github.ref }}
+  # Manual release runs get their own group, so check runs on main never replace a queued release.
+  group: android-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && 'release' || 'checks' }}
   # Only replace superseded pull-request runs. Runs on main queue instead, so a push never
   # cancels checks for the previous commit or a release that is being published.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

@@ -6,15 +6,15 @@ The app and plugins are available from public GitHub Releases. Choose a download
 
 ## Android AI edition
 
-[Open Android downloads](https://github.com/zack005-design/Tally/releases/tag/v0.2.5-20261123)
+[Open Android downloads](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 
-[Download AI APK](https://github.com/zack005-design/Tally/releases/download/v0.2.5-20261123/tally-0.2.5-ai-debug.apk), or expand **Assets** and select **tally-0.2.5-ai-debug.apk**. This edition includes the custom on-device expense-command model, calculator, and receipt scanner.
+[Download AI APK](https://github.com/zack005-design/Tally/releases/download/v0.2.6-20261124/tally-0.2.6-ai-debug.apk), or expand **Assets** and select **tally-0.2.6-ai-debug.apk**. This edition includes the custom on-device expense-command model, calculator, and receipt scanner.
 
 ## Android non-AI edition
 
-[Open Android downloads](https://github.com/zack005-design/Tally/releases/tag/v0.2.5-20261123)
+[Open Android downloads](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 
-[Download non-AI APK](https://github.com/zack005-design/Tally/releases/download/v0.2.5-20261123/tally-0.2.5-non-ai-debug.apk), or expand **Assets** and select **tally-0.2.5-non-ai-debug.apk**. This edition uses rule-based expense parsing. It still includes the calculator and existing receipt OCR.
+[Download non-AI APK](https://github.com/zack005-design/Tally/releases/download/v0.2.6-20261124/tally-0.2.6-non-ai-debug.apk), or expand **Assets** and select **tally-0.2.6-non-ai-debug.apk**. This edition uses rule-based expense parsing. It still includes the calculator and existing receipt OCR.
 
 Both APKs require Android 8.0 or later and are development builds. They share an app identity and replace one another. Create a full backup before updating or switching; do not uninstall just to switch editions.
 
