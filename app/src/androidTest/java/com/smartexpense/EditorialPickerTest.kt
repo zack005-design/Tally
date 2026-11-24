@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Density
 import com.smartexpense.ui.*
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -28,6 +31,21 @@ class EditorialPickerTest {
         compose.onNodeWithContentDescription("15 March 2024").performClick()
         compose.onNodeWithText("Use date →").performClick()
         assertEquals("2024-03-15T15:37",value)
+    }
+    @Test fun narrowPhonesSeeTheWholeWeekWithoutScrollingSideways() {
+        var value="2024-02-29T15:37"
+        compose.setContent {
+            // Present the picker as a 280dp-wide phone, narrower than seven 48dp days plus margins.
+            val density=LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(LocalWindowInfo.current.containerSize.width/280f,density.fontScale)) {
+                TrackerTheme {Column {DateTimeField(value) {value=it}}}
+            }
+        }
+        compose.onNodeWithText("29 February 2024").performClick()
+        // 25 February 2024 is a Sunday, the last column of the calendar.
+        compose.onNodeWithContentDescription("25 February 2024").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Use date →").performScrollTo().performClick()
+        assertEquals("2024-02-25T15:37",value)
     }
     @Test fun choiceOffersSearchAndPreservesStableId() {
         var selected="a"

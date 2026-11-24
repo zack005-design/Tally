@@ -1,8 +1,6 @@
 package com.smartexpense.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -28,16 +26,18 @@ import java.time.format.DateTimeFormatter
             TextButton({chooseMonth=true},Modifier.weight(1f)) {Text(month.atDay(1).format(DateTimeFormatter.ofPattern("MMMM yyyy"))+" ⌄")}
             IconButton({shown=month.plusMonths(1).toString()},enabled=month.year<2100 || month.monthValue<12) {Text("›",Modifier.semantics {contentDescription="Next month"},style=MaterialTheme.typography.headlineSmall)}
         }
-        Box(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-            Column(Modifier.width(336.dp)) {
-                Row {listOf("M","T","W","T","F","S","S").forEach {Text(it,Modifier.width(48.dp),textAlign=androidx.compose.ui.text.style.TextAlign.Center,color=Tokens.muted,style=MaterialTheme.typography.labelMedium)}}
+        // Seven 48dp days need 336dp; narrower phones shrink the cells so the whole week stays visible.
+        BoxWithConstraints(Modifier.fillMaxWidth(),contentAlignment=Alignment.TopCenter) {
+            val cell=minOf(48.dp,maxWidth/7)
+            Column(Modifier.width(cell*7)) {
+                Row {listOf("M","T","W","T","F","S","S").forEach {Text(it,Modifier.width(cell),textAlign=androidx.compose.ui.text.style.TextAlign.Center,color=Tokens.muted,style=MaterialTheme.typography.labelMedium)}}
                 val start=month.atDay(1).dayOfWeek.value-1
                 val cells=((start+month.lengthOfMonth()+6)/7)*7
                 (0 until cells).chunked(7).forEach {week->Row {week.forEach {index->
                     val day=index-start+1
-                    if(day !in 1..month.lengthOfMonth()) Spacer(Modifier.size(48.dp)) else {
+                    if(day !in 1..month.lengthOfMonth()) Spacer(Modifier.size(cell)) else {
                         val item=month.atDay(day);val picked=item==date
-                        Surface(onClick={selected=item.toString()},modifier=Modifier.size(48.dp).semantics {contentDescription=item.format(DateTimeFormatter.ofPattern("d MMMM yyyy"));this.selected=picked;role=Role.Button},shape=CircleShape,
+                        Surface(onClick={selected=item.toString()},modifier=Modifier.size(cell).semantics {contentDescription=item.format(DateTimeFormatter.ofPattern("d MMMM yyyy"));this.selected=picked;role=Role.Button},shape=CircleShape,
                             color=if(picked) Tokens.accent else Tokens.background,contentColor=if(picked) MaterialTheme.colorScheme.onPrimary else Tokens.text,
                             border=if(item==LocalDate.now() && !picked) BorderStroke(1.dp,Tokens.muted) else null) {
                             Box(contentAlignment=Alignment.Center) {Text(day.toString(),style=MaterialTheme.typography.bodyMedium)}
