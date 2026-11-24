@@ -256,6 +256,14 @@ class FinanceRepository @Inject constructor(private val db:TrackerDatabase) {
         val records=dao.transactions().map {Record(it.id,Kind.valueOf(it.kind),it.description,it.amount,it.personalAmount,it.categoryId,it.groupId,it.date,it.notes,it.reversed,personIds=shares[it.id].orEmpty().map {share->share.personId})}
         com.smartexpense.domain.monthlyReview(records,dao.entries().map {CashMovement(it.transactionId,it.accountId,it.amount)},java.time.YearMonth.parse(month))
     }}
+    /** Net worth from every account entry and open debt, independent of the on-screen history limit. */
+    suspend fun netWorth(today:java.time.LocalDate=java.time.LocalDate.now()):NetWorth=storage {db.withTransaction {
+        val transactions=dao.transactions().associateBy {it.id}
+        val movements=dao.entries().mapNotNull {e->transactions[e.transactionId]?.let {t->DatedMovement(e.accountId,e.amount,t.date,t.reversed)}}
+        val accounts=dao.balances().map {Account(it.id,it.name,it.type,it.balance,it.archived)}
+        val debts=dao.debts().map {Debt(it.id,it.transactionId,it.fromPerson,it.toPerson,it.amount,it.outstanding,it.date,it.groupId)}
+        NetWorths.build(accounts,movements,debts,today)
+    }}
     /** Loads every record, so it works even when the on-screen history is limited. */
     suspend fun yearSummary(year:Int,today:java.time.LocalDate=java.time.LocalDate.now()):YearSummary=storage {db.withTransaction {
         val zone=java.time.ZoneId.systemDefault()

@@ -4,6 +4,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Add a **Net worth** screen under More → Money & planning: account balances plus what friends owe you, minus what you owe, with each account and a six-month month-end trend. [Net worth](docs/features/spending-and-planning.md#net-worth)
 - Enter several expenses in one line, such as `chai 20 cash, samosa 30 cash; bus 15 upi`. Each becomes its own draft (Expense 1 of 3, …) that you review and save in turn. [Several expenses at once](docs/features/on-device-ai.md#several-expenses-at-once)
 - Convert a foreign amount in a command with your own rate: `lunch 12 usd at 83.5 cash` becomes ₹1,002 with the original amount and rate in the notes. [Foreign currency in a command](docs/features/on-device-ai.md#foreign-currency-in-a-command)
 - Do one calculation inside an expense command: `coffee 40 + 25 cash`, `chai 3x15 cash`, `2 chai at 15 each cash`, `lunch 450 + 5% gst gpay` or `shoes 2000 - 10% cash`. Results are exact to the paisa and shown for checking; ranges, division and signed amounts are still refused. [Do the maths in a command](docs/features/on-device-ai.md#do-the-maths-in-a-command)
