@@ -2,7 +2,7 @@ name: Mark release as latest
 
 # Manual only. Marks an already published development build as the repository's latest
 # release, so the Releases sidebar and releases/latest links point to it, and refreshes its
-# notes from docs/releases/ with full links. The APKs on the release are not changed.
+# title and notes from docs/releases/ with full links. The APKs on the release are not changed.
 
 on:
   workflow_dispatch:
@@ -35,4 +35,6 @@ jobs:
           base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$sha"
           sed -E -e "s#\]\(\.\./\.\./#](${base}/#g" -e "s#\]\(\.\./#](${base}/docs/#g" \
             -e "s#\]\(([^)h#][^)]*)\)#](${base}/docs/releases/\1)#g" "docs/releases/$version.md" > release-notes.md
-          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease=false --latest --notes-file release-notes.md
+          title=$(sed -n 's/^# //p' "docs/releases/$version.md" | head -1)
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease=false --latest \
+            --title "${title:-Tally $version}" --notes-file release-notes.md

@@ -165,5 +165,7 @@ jobs:
           base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA"
           sed -E -e "s#\]\(\.\./\.\./#](${base}/#g" -e "s#\]\(\.\./#](${base}/docs/#g" \
             -e "s#\]\(([^)h#][^)]*)\)#](${base}/docs/releases/\1)#g" "docs/releases/$VERSION.md" > release-notes.md
+          # The release title is the notes' first heading, for example "Tally 0.2.5 — iOS-style redesign".
+          title=$(sed -n 's/^# //p' "docs/releases/$VERSION.md" | head -1)
           gh release create "$tag" out/* --prerelease --target "$GITHUB_SHA" \
-            --title "Tally $VERSION (development build)" --notes-file release-notes.md
+            --title "${title:-Tally $VERSION}" --notes-file release-notes.md
