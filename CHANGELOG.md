@@ -9,6 +9,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Fit the narrowest phones: compact phones at their largest display size, and narrow split-screen windows, now scale far enough that no screen is laid out narrower than the 320 dp it is tested at.
 - In landscape, keep content and the side rail clear of the camera cutout or punch-hole.
 - Show the whole week in the date picker on narrow phones instead of hiding the weekend behind a sideways scroll.
+- In **Spending**, each category's icon now matches its colour in the distribution bar, so the list works as the chart's legend. Previously the icons cycled through three unrelated colours.
 
 ## [0.2.5](https://github.com/zack005-design/Tally/releases/tag/v0.2.5-20261123)
 

@@ -3,7 +3,7 @@
 <h3 align="center">A private expense tracker and bill splitter for Android.<br>Everything stays on your phone.</h3>
 
 <p align="center">
-  <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="https://img.shields.io/github/v/release/zack005-design/Tally?label=release&color=1E6A50&style=flat-square" alt="Latest release"></a>
+  <a href="https://github.com/zack005-design/Tally/releases/latest"><img src="https://img.shields.io/github/v/release/zack005-design/Tally?label=release&color=0A66D8&style=flat-square" alt="Latest release"></a>
   <a href="https://github.com/zack005-design/Tally/actions/workflows/android.yml"><img src="https://img.shields.io/github/actions/workflow/status/zack005-design/Tally/android.yml?branch=main&label=checks&style=flat-square" alt="Android checks"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-1C1C1E?logo=android&logoColor=white&style=flat-square" alt="Android 8.0 or later">
   <img src="https://img.shields.io/badge/internet%20permission-none-1C1C1E?style=flat-square" alt="No internet permission">
