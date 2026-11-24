@@ -7,6 +7,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Read standard 12 MP phone photos at full resolution. They were halved before text recognition, which could leave receipt print too small to recognise and produce wrong items and amounts.
 - Accept bill photos in any format the phone can open, including HEIC/HEIF, AVIF, GIF and BMP, not only JPEG, PNG and WebP.
 - Enlarge small images, such as photos forwarded through messaging apps, before reading them, and read receipts photographed sideways or upside down without rotation information.
+- Sharpen and re-read photos with mild blur from hand shake or soft focus. Tally says when it used the sharpened read.
 - Accept bill photos larger than 6 MB. Photos larger than 6 MB were rejected before any text was read; photos up to 40 MB now work and are saved as a compact JPEG copy.
 - Pick up bill amounts written as `50/-` or `50/=`, or followed by a tax-code letter or `*` (such as `56.00 A`). These rows were previously skipped, leaving the item list and total empty.
 

@@ -46,6 +46,17 @@ class BillScannerTest {
     }
     private fun file(name:String):File {val c=ApplicationProvider.getApplicationContext<Context>();return File(File(c.cacheDir,"bill-camera").apply {mkdirs()},name)}
     private suspend fun scan(file:File):ScannedBill {val c=ApplicationProvider.getApplicationContext<Context>();return BillScanner(c).read(FileProvider.getUriForFile(c,"${c.packageName}.bills",file))}
+    @Test fun mildlyBlurredPhotoStillReadsTheTotal()=runBlocking {
+        // Shrinking and enlarging again softens every edge, like slight hand shake or soft focus.
+        val sharp=bitmap();val file=file("ocr-blurred.jpg")
+        val small=Bitmap.createScaledBitmap(sharp,sharp.width/4,sharp.height/4,true)
+        val blurred=Bitmap.createScaledBitmap(small,sharp.width,sharp.height,true)
+        try {
+            file.outputStream().use {blurred.compress(Bitmap.CompressFormat.JPEG,90,it)}
+            val read=scan(file)
+            assertEquals(read.text,15000L,BillRecognition.parse(read.text).total)
+        } finally {file.delete();sharp.recycle();small.recycle();blurred.recycle()}
+    }
     @Test fun sidewaysPhotoWithoutRotationMetadataIsReadUpright()=runBlocking {
         // Some camera apps save landscape pixels without an orientation tag.
         val upright=bitmap();val file=file("ocr-sideways.png")

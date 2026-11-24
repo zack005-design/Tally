@@ -140,14 +140,14 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
     /** A weak first read is retried at the other right angles, for receipts photographed sideways
      *  or upside down without rotation metadata. The best-scoring orientation is kept. */
     private suspend fun uprightText(bitmap:Bitmap,warnings:MutableList<String>):String {
-        val upright=bitmapLines(bitmap,enhanced=false)
+        val upright=bitmapLines(bitmap,Pass.ORIGINAL)
         if(!weak(upright)) return bitmapText(bitmap,warnings,upright)
         var best=0f;var bestLines=upright;var bestScore=candidateScore(upright)
         for(degrees in floatArrayOf(90f,270f,180f)) {
             currentCoroutineContext().ensureActive()
             val turned=rotate(bitmap,degrees)
             try {
-                val lines=bitmapLines(turned,enhanced=false)
+                val lines=bitmapLines(turned,Pass.ORIGINAL)
                 val score=candidateScore(lines)
                 if(score>bestScore+0.05) {best=degrees;bestLines=lines;bestScore=score}
             } finally {turned.recycle()}
@@ -165,12 +165,12 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
     private fun rotate(bitmap:Bitmap,degrees:Float):Bitmap=
         Bitmap.createBitmap(bitmap,0,0,bitmap.width,bitmap.height,Matrix().apply {setRotate(degrees)},true)
     private suspend fun bitmapText(bitmap:Bitmap,warnings:MutableList<String>,firstRead:List<ReceiptLine>?=null):String {
-        val original=firstRead?:bitmapLines(bitmap,enhanced=false)
+        val original=firstRead?:bitmapLines(bitmap,Pass.ORIGINAL)
         val originalText=receiptText(original)
         val bill=BillRecognition.parse(originalText)
         var selected=original
         if(confidence(original)<0.9 || bill.total==null || bill.items.isEmpty() || ReceiptImageEnhancement.lowContrast(bitmap)) {
-            val recovered=try {bitmapLines(bitmap,enhanced=true)}
+            val recovered=try {bitmapLines(bitmap,Pass.CONTRAST)}
             catch(cancelled:CancellationException) {throw cancelled}
             catch(failure:MlKitException) {
                 warnings+="Contrast recovery could not finish. Check the original recognition or try a clearer photo."
@@ -179,6 +179,17 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
             if(candidateScore(recovered)>candidateScore(original)+0.025) {
                 selected=recovered
                 if(receiptText(recovered)!=originalText) warnings+="Photo contrast was enhanced. Check the recovered item names and amounts against the original."
+            }
+        }
+        // Mild blur from hand shake or soft focus: sharpen and read again. Heavily smeared text
+        // cannot be recovered, so the sharpened read must clearly beat the best read so far.
+        if(weak(selected)) {
+            val sharpened=try {bitmapLines(bitmap,Pass.SHARPEN)}
+            catch(cancelled:CancellationException) {throw cancelled}
+            catch(failure:MlKitException) {emptyList()}
+            if(candidateScore(sharpened)>candidateScore(selected)+0.025) {
+                selected=sharpened
+                warnings+="The photo was sharpened to read blurred text. Check the item names and amounts against the original."
             }
         }
         val text=receiptText(selected)
@@ -191,7 +202,9 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
         }
         return text
     }
-    private suspend fun bitmapLines(bitmap:Bitmap,enhanced:Boolean):List<ReceiptLine> {
+    private enum class Pass {ORIGINAL,CONTRAST,SHARPEN}
+    private suspend fun bitmapLines(bitmap:Bitmap,pass:Pass):List<ReceiptLine> {
+        val enhanced=pass!=Pass.ORIGINAL
         val lines=mutableListOf<ReceiptLine>()
         // Overlap protects letters near a cut. Each line belongs to one core region by position,
         // so identical purchases on different rows are preserved rather than deduplicated by text.
@@ -204,7 +217,11 @@ class BillScanner @Inject constructor(@param:ApplicationContext private val cont
             val cropBottom=minOf(bitmap.height,coreBottom+128)
             val crop=Bitmap.createBitmap(bitmap,0,cropTop,bitmap.width,cropBottom-cropTop)
             try {
-                val input=if(enhanced) ReceiptImageEnhancement.enhance(crop) else crop
+                val input=when(pass) {
+                    Pass.ORIGINAL->crop
+                    Pass.CONTRAST->ReceiptImageEnhancement.enhance(crop)
+                    Pass.SHARPEN->ReceiptImageEnhancement.sharpen(crop)
+                }
                 try {
                     for(line in recognize(input).textBlocks.flatMap {it.lines}) {
                         if(line.text.isBlank()) continue
