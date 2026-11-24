@@ -11,7 +11,7 @@ The AI edition includes specialised models trained from random weights on your p
 3. Review the description, amount, account, category, and date; correct any mistakes.
 4. Explicitly save when the entry is correct.
 
-Amounts also accept Hindi (`४५.५०`), Arabic (`٤٥٫٥٠`) and full-width (`４５．５０`) decimal digits, including supported grouped amounts. Pasted Unicode spaces are standardized before interpretation. Hidden direction/control characters, superscript/fraction numerals and non-INR currency symbols require manual correction rather than a guessed amount. This input layer works in both editions; it does not add Hindi-script language understanding.
+Amounts also accept Hindi (`४५.५०`), Arabic (`٤٥٫٥٠`) and full-width (`４５．５０`) decimal digits, including supported grouped amounts. Pasted Unicode spaces are standardized before interpretation. Hidden direction/control characters, superscript/fraction numerals and foreign currencies without your own rate require manual correction rather than a guessed amount. This input layer works in both editions; it does not add Hindi-script language understanding.
 
 Account hints must match an active account. Interpretation does not create transactions or change balances by itself.
 
@@ -38,7 +38,7 @@ Supported date phrases are `today`, `this morning`, `this afternoon`, `this even
 
 The Indian price notation `/-` after an amount (`₹500/-`, `Rs. 1,250/-`) is read as exactly that amount. Amount shorthand accepts `k`/`thousand` for ×1,000 and `lakh`/`lac` for ×100,000, with at most two decimal places before the suffix: `1.25k` means ₹1,250. `INR1.5k`, `Rs1k`, and `1.5k rupees` are also supported. Arithmetic uses exact integer paise and rejects overflow; grouped/repeated multipliers such as `1,000 thousand` or `1k thousand` require correction. These conveniences work in both editions; learned sentence/description recognition remains an AI-edition feature.
 
-Future or conflicting dates and recognised ambiguous phrases such as `last night`, `in two days`, or `on 10/11/2026` require manual date correction. Negation, foreign currencies and several separate amounts still require review; write one calculation instead, as described below. There is no scheduling or automatic saving, and these examples do not imply understanding of every English sentence.
+Future or conflicting dates and recognised ambiguous phrases such as `last night`, `in two days`, or `on 10/11/2026` require manual date correction. Negation, foreign currencies without a rate, and several amounts that are not a list of expenses still require review; see the calculation, list and currency sections below. There is no scheduling or automatic saving, and these examples do not imply understanding of every English sentence.
 
 ## Do the maths in a command
 
@@ -53,6 +53,26 @@ In both editions you can write one calculation where the amount goes. Tally work
 | `shoes 2000 - 10% cash` | ₹1,800 |
 
 You can add and multiply up to 10 positive amounts, or add or take off one percentage from 0.01% to 100% (optionally followed by `gst`, `tax`, `vat`, `tip`, `service charge`, `discount` or `off`). A result that falls between paise is rounded to the nearest paisa, and the note says so. Use one calculation per expense. Ranges such as `200-250`, division, signed amounts and two separate calculations are never guessed; Tally asks you to enter the amount instead.
+
+## Several expenses at once
+
+Separate expenses with a comma, semicolon, new line or `and` (in both editions):
+
+`chai 20 cash, samosa 30 cash; bus 15 upi`
+
+Tally prepares the first draft and says **Expense 1 of 3**. When you save it, the next one opens for review, and so on. Nothing is saved without your Save. A line is treated as a list only when every part, on its own, is a personal expense with a description and an amount (up to 10 parts). `and` only separates parts that each have an amount, so `bread and eggs 60 cash` stays one expense, and shared bills such as `I paid 1000, Rahul paid 500` keep their usual handling. Starting a new entry or interpreting new text drops the rest of the list.
+
+## Foreign currency in a command
+
+Add the rate you were charged, in rupees per unit:
+
+| Input | Draft amount | Note added |
+| --- | --- | --- |
+| `lunch 12 usd at 83.5 cash` | ₹1,002 | Original: USD 12 · INR per unit 83.5 |
+| `coffee $4.50 @ ₹83.25 cash` | ₹374.63 (rounded) | Original: USD 4.5 · INR per unit 83.25 |
+| `taxi 35 aed at 22.7345 per aed upi` | ₹795.71 (rounded) | Original: AED 35 · INR per unit 22.7345 |
+
+Supported: `$`, `€`, `£` and the codes USD, EUR, GBP, AED, SAR, QAR, KWD, OMR, BHD, SGD, MYR, THB, JPY, CNY, HKD, KRW, AUD, NZD, CAD, CHF, SEK, NOK, DKK, LKR, NPR, BDT, ZAR, IDR and VND. Tally never downloads rates. Without `at <rate>` it asks you to convert, and only one foreign amount is allowed per expense. Card fees and markups are not added; include them in your rate. For a whole receipt in another currency, use **More → Bills & categories → Foreign bill to INR**.
 
 ## Ask about your spending
 

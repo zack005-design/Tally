@@ -11,7 +11,7 @@ import java.util.Locale
 
 /** Bounded English input conveniences; exact money/date code, no generated financial values. */
 internal object EnglishCommandInput {
-    data class Prepared(val text: String, val date: LocalDate? = null, val error: String? = null, val invalidDate: Boolean = false, val note: String? = null)
+    data class Prepared(val text: String, val date: LocalDate? = null, val error: String? = null, val invalidDate: Boolean = false, val note: String? = null, val notes: String? = null)
     private val options = RegexOption.IGNORE_CASE
     private const val weekdays = "monday|tuesday|wednesday|thursday|friday|saturday|sunday"
     private const val months = "january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec"
@@ -67,6 +67,10 @@ internal object EnglishCommandInput {
         val accountRange = if (transferKind.containsMatchIn(command)) transferAccounts.find(command) else null
         val accountText = accountRange?.value.orEmpty()
         if (accountRange != null) command = command.substring(0, accountRange.range.first)
+        // A foreign amount with the user's own rate ("12 usd at 83.5") becomes exact INR first.
+        val foreign = ForeignAmount.apply(command)
+        if (foreign.error != null) return Prepared(text, date = date, error = foreign.error)
+        command = foreign.text
         command = currencyPrefix.replace(command, "₹ ")
         var amountError = false
         fun exactAmount(amount: MatchResult, multiplier: Long): String =
@@ -88,7 +92,7 @@ internal object EnglishCommandInput {
         command = arithmetic.text
         if (amountError || unknownSuffix.containsMatchIn(command) || unresolvedScale.containsMatchIn(command) || attachedCurrency.findAll(command).any { it.groupValues[1].uppercase(Locale.ROOT) in foreignCurrencies })
             return Prepared(text, date = date, error = "Check the amount. Use plain INR digits or shorthand such as 1.5k or 1.25 lakh, with at most two decimal places before the suffix.")
-        return Prepared(command + accountText, date, note = arithmetic.note)
+        return Prepared(command + accountText, date, note = listOfNotNull(foreign.note, arithmetic.note).joinToString(" ").ifBlank { null }, notes = foreign.notes)
     }
 
     private fun resolveDate(value: String, today: LocalDate): LocalDate? {

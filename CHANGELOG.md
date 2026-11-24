@@ -4,6 +4,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Enter several expenses in one line, such as `chai 20 cash, samosa 30 cash; bus 15 upi`. Each becomes its own draft (Expense 1 of 3, …) that you review and save in turn. [Several expenses at once](docs/features/on-device-ai.md#several-expenses-at-once)
+- Convert a foreign amount in a command with your own rate: `lunch 12 usd at 83.5 cash` becomes ₹1,002 with the original amount and rate in the notes. [Foreign currency in a command](docs/features/on-device-ai.md#foreign-currency-in-a-command)
 - Do one calculation inside an expense command: `coffee 40 + 25 cash`, `chai 3x15 cash`, `2 chai at 15 each cash`, `lunch 450 + 5% gst gpay` or `shoes 2000 - 10% cash`. Results are exact to the paisa and shown for checking; ranges, division and signed amounts are still refused. [Do the maths in a command](docs/features/on-device-ai.md#do-the-maths-in-a-command)
 - Ask spending questions in expense entry, such as `how much did I spend on food this month?` or `total spent on chai last week`, answered from your own records without saving anything. [Ask about your spending](docs/features/on-device-ai.md#ask-about-your-spending)
 - Calculator: add or remove GST, loan EMI with total interest, and sample variance and standard deviation. [Calculator](docs/features/calculator.md)
