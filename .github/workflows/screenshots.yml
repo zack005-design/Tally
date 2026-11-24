@@ -1,0 +1,77 @@
+name: Capture screenshots
+
+# Manual only. Renders every reference screen with fictional fixture data on an Android
+# emulator, in the light and dark themes, and publishes the captures to the
+# `readme-screenshots` branch for building README and documentation graphics.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit to capture
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: jetbrains
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Capture light and dark screens
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          script: |
+            mkdir -p shots
+            ./gradlew -I tools/data-safety-build.init.gradle :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smartexpense.ReferenceScreenshotsTest --no-daemon --console=plain --max-workers=2 || echo "::warning::Some light-theme screens failed"
+            adb pull /sdcard/Download/tally-exact-reference shots/light
+            adb shell rm -rf /sdcard/Download/tally-exact-reference
+            ./gradlew -I tools/data-safety-build.init.gradle :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smartexpense.ReferenceScreenshotsTest -Pandroid.testInstrumentationRunnerArguments.tallyDark=true --no-daemon --console=plain --max-workers=2 || echo "::warning::Some dark-theme screens failed"
+            adb pull /sdcard/Download/tally-exact-reference shots/dark
+      - name: Check captures
+        run: |
+          ls shots/light shots/dark
+          test "$(ls shots/light/*.png | wc -l)" -gt 10
+          test "$(ls shots/dark/*.png | wc -l)" -gt 10
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: shots
+          retention-days: 14
+      - name: Publish to the readme-screenshots branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ inputs.ref }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          cd shots
+          git init -q -b readme-screenshots
+          git add .
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Screenshots of $REF ($sha)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:readme-screenshots
