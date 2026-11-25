@@ -9,25 +9,49 @@ import kotlin.math.tanh
 /**
  * Kotlin inference for Tally's tiny decoder-only transformer (trained from random weights).
  * It only writes a short step program; [AssistantPlanner] runs the steps with exact code.
+ * Format 2 stores float weights; format 3 stores each weight matrix as int8 rows with one scale per row,
+ * used directly (never expanded) to keep memory close to the file size.
  */
 class TinyLanguageModel private constructor(
-    val vocabulary: List<String>, /** Ordinary question words kept literal by the anonymiser. */ val words: Set<String>, private val d: Int, private val layers: Int, private val heads: Int,
-    private val ff: Int, private val maxLength: Int, val threshold: Float,
+    val vocabulary: List<String>, /** Ordinary question words kept literal by the anonymiser. */ val words: Set<String>,
+    private val d: Int, private val layers: Int, private val heads: Int, private val ff: Int, private val maxLength: Int,
+    val threshold: Float,
     /** Per first-step answer thresholds chosen on development data; missing steps are never answered. */
-    val headThresholds: Map<String, Float>, private val tensors: List<FloatArray>
+    val headThresholds: Map<String, Float>, private val tensors: List<Tensor>
 ) {
     private val index = vocabulary.withIndex().associate { it.value to it.index }
+    /** True when the model was trained with a previous-turn context (`<ctx>`), so follow-ups are supported. */
+    val supportsContext: Boolean = "<ctx>" in index
+
+    /** A weight tensor: plain floats, or int8 rows with one float scale per row. */
+    private sealed interface Tensor {
+        fun row(r: Int, input: FloatArray): Float
+        fun at(r: Int, c: Int): Float
+    }
+    private class Dense(val values: FloatArray, val cols: Int) : Tensor {
+        override fun row(r: Int, input: FloatArray): Float { var s = 0f; val o = r * cols; for (c in 0 until cols) s += values[o + c] * input[c]; return s }
+        override fun at(r: Int, c: Int) = values[r * cols + c]
+    }
+    private class Quantized(val values: ByteArray, val scales: FloatArray, val cols: Int) : Tensor {
+        override fun row(r: Int, input: FloatArray): Float { var s = 0f; val o = r * cols; for (c in 0 until cols) s += values[o + c] * input[c]; return s * scales[r] }
+        override fun at(r: Int, c: Int) = values[r * cols + c] * scales[r]
+    }
 
     /** Greedy decoding; returns the program tokens and the lowest chosen-token probability. */
-    fun generate(source: List<String>, limit: Int = 40): Pair<List<String>, Float> {
+    fun generate(source: List<String>, limit: Int = 40, context: List<String>? = null): Pair<List<String>, Float> {
         val prompt = mutableListOf(index.getValue("<bos>"))
+        if (supportsContext) {
+            context.orEmpty().forEach { prompt += index[it] ?: index.getValue("<unk>") }
+            prompt += index.getValue("<ctx>")
+        }
         source.forEach { prompt += index[it] ?: index.getValue("<unk>") }
         prompt += index.getValue("<sep>")
+        if (prompt.size >= maxLength) return emptyList<String>() to 0f
         val cache = Cache()
         var logits = FloatArray(0)
         for (token in prompt) logits = step(token, cache)
         val out = mutableListOf<String>(); var confidence = 1f
-        while (out.size < limit && cache.length < maxLength) {
+        while (out.size < limit) {
             val probabilities = softmax(logits)
             val choice = probabilities.indices.maxBy { probabilities[it] }
             confidence = minOf(confidence, probabilities[choice])
@@ -49,13 +73,12 @@ class TinyLanguageModel private constructor(
     /** Processes one token at the next position and returns next-token logits. */
     private fun step(token: Int, cache: Cache): FloatArray {
         val position = cache.length
-        require(position < maxLength)
         val embed = tensors[0]; val positions = tensors[1]
-        var x = FloatArray(d) { j -> embed[token * d + j] + positions[position * d + j] }
+        var x = FloatArray(d) { j -> embed.at(token, j) + positions.at(position, j) }
         val headSize = d / heads; val scale = 1f / sqrt(headSize.toFloat())
         for (layer in 0 until layers) {
             val w = 2 + layer * 12
-            val qkv = linear(layerNorm(x, tensors[w], tensors[w + 1]), tensors[w + 2], tensors[w + 3], 3 * d)
+            val qkv = linear(layerNorm(x, w), tensors[w + 2], tensors[w + 3], 3 * d)
             cache.keys[layer] += qkv.copyOfRange(d, 2 * d)
             cache.values[layer] += qkv.copyOfRange(2 * d, 3 * d)
             val keys = cache.keys[layer]; val values = cache.values[layer]
@@ -72,22 +95,20 @@ class TinyLanguageModel private constructor(
             }
             val projected = linear(attended, tensors[w + 4], tensors[w + 5], d)
             x = FloatArray(d) { x[it] + projected[it] }
-            val up = linear(layerNorm(x, tensors[w + 6], tensors[w + 7]), tensors[w + 8], tensors[w + 9], ff)
+            val up = linear(layerNorm(x, w + 6), tensors[w + 8], tensors[w + 9], ff)
             for (k in up.indices) up[k] = gelu(up[k])
             val down = linear(up, tensors[w + 10], tensors[w + 11], d)
             x = FloatArray(d) { x[it] + down[it] }
         }
-        val final = layerNorm(x, tensors[2 + layers * 12], tensors[3 + layers * 12])
-        return FloatArray(vocabulary.size) { v -> var s = 0f; for (j in 0 until d) s += final[j] * embed[v * d + j]; s }
+        val final = layerNorm(x, 2 + layers * 12)
+        return FloatArray(vocabulary.size) { v -> embed.row(v, final) }
     }
 
-    private fun linear(input: FloatArray, weight: FloatArray, bias: FloatArray, rows: Int) = FloatArray(rows) { r ->
-        var s = bias[r]; val offset = r * input.size
-        for (c in input.indices) s += weight[offset + c] * input[c]
-        s
-    }
+    private fun linear(input: FloatArray, weight: Tensor, bias: Tensor, rows: Int) =
+        FloatArray(rows) { r -> weight.row(r, input) + (bias as Dense).values[r] }
 
-    private fun layerNorm(input: FloatArray, gain: FloatArray, bias: FloatArray): FloatArray {
+    private fun layerNorm(input: FloatArray, at: Int): FloatArray {
+        val gain = (tensors[at] as Dense).values; val bias = (tensors[at + 1] as Dense).values
         val mean = input.average().toFloat()
         var variance = 0f; for (v in input) variance += (v - mean) * (v - mean)
         val inv = 1f / sqrt(variance / input.size + 1e-5f)
@@ -104,15 +125,16 @@ class TinyLanguageModel private constructor(
     companion object {
         private const val MAGIC = 0x544C4D41
 
-        /** Bounded loader: at most 12 layers, width 512, 8M parameters; every tensor size is checked. */
+        /** Bounded loader for formats 2 and 3: at most 16 layers, width 768, 40M parameters; every tensor is checked. */
         fun load(stream: InputStream): TinyLanguageModel {
             try {
                 val input = DataInputStream(stream)
-                require(input.readInt() == MAGIC && input.readInt() == 2) { "Unsupported assistant model" }
+                require(input.readInt() == MAGIC) { "Unsupported assistant model" }
+                val version = input.readInt(); require(version == 2 || version == 3) { "Unsupported assistant model" }
                 val size = input.readInt(); val d = input.readInt(); val layers = input.readInt(); val heads = input.readInt(); val ff = input.readInt()
                 val threshold = input.readFloat(); val maxLength = input.readInt()
-                require(size in 8..4096 && d in 8..512 && layers in 1..12 && heads in 1..16 && d % heads == 0 && ff in 8..4096 && maxLength in 8..256)
-                require(threshold.isFinite() && threshold in 0f..1f)
+                require(size in 8..4096 && d in 8..768 && layers in 1..16 && heads in 1..16 && d % heads == 0 && ff in 8..4096 && maxLength in 8..256)
+                require(threshold.isFinite() && threshold in 0f..1.1f)
                 val vocabulary = List(size) {
                     val length = input.readInt(); require(length in 1..64)
                     ByteArray(length).also(input::readFully).toString(Charsets.UTF_8)
@@ -122,13 +144,21 @@ class TinyLanguageModel private constructor(
                 val words = List(wordCount) { input.readInt().also { require(it in 0 until size) } }.map { vocabulary[it] }.toSet()
                 val headCount = input.readInt(); require(headCount in 0..64)
                 val headLimits = (0 until headCount).associate { input.readInt().also { require(it in 0 until size) }.let(vocabulary::get) to input.readFloat().also { require(it.isFinite()) } }
-                val expected = mutableListOf(size * d, maxLength * d)
-                repeat(layers) { expected += listOf(d, d, 3 * d * d, 3 * d, d * d, d, d, d, ff * d, ff, d * ff, d) }
-                expected += listOf(d, d)
-                require(expected.sumOf { it.toLong() } <= 8_000_000L) { "Assistant model exceeds parameter budget" }
-                val tensors = expected.map { count ->
-                    require(input.readInt() == count) { "Tensor size mismatch" }
-                    FloatArray(count) { input.readFloat().also { v -> require(v.isFinite()) } }
+                // (rows, cols) per tensor in file order; cols == 0 marks a vector.
+                val shapes = mutableListOf(size to d, maxLength to d)
+                repeat(layers) { shapes += listOf(d to 0, d to 0, 3 * d to d, 3 * d to 0, d to d, d to 0, d to 0, d to 0, ff to d, ff to 0, d to ff, d to 0) }
+                shapes += listOf(d to 0, d to 0)
+                require(shapes.sumOf { (r, c) -> r.toLong() * maxOf(c, 1) } <= 40_000_000L) { "Assistant model exceeds parameter budget" }
+                val tensors = shapes.map { (rows, cols) ->
+                    val count = input.readInt()
+                    if (count == -1) {
+                        require(version == 3 && cols > 0 && input.readInt() == rows && input.readInt() == cols) { "Tensor size mismatch" }
+                        val scales = FloatArray(rows) { input.readFloat().also { v -> require(v.isFinite() && v >= 0f) } }
+                        Quantized(ByteArray(rows * cols).also(input::readFully), scales, cols)
+                    } else {
+                        require(count == rows * maxOf(cols, 1)) { "Tensor size mismatch" }
+                        Dense(FloatArray(count) { input.readFloat().also { v -> require(v.isFinite()) } }, maxOf(cols, 1))
+                    }
                 }
                 require(input.read() == -1) { "Trailing assistant model data" }
                 return TinyLanguageModel(vocabulary, words, d, layers, heads, ff, maxLength, threshold, headLimits, tensors)

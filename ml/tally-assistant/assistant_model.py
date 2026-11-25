@@ -5,13 +5,13 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-SPECIALS = ['<pad>', '<bos>', '<sep>', '<eos>', '<unk>']
+SPECIALS = ['<pad>', '<bos>', '<sep>', '<eos>', '<unk>', '<ctx>']
 PLACEHOLDERS = [f'{kind}{i}' for kind in ('CAT', 'ACC', 'NUM', 'WORD') for i in range(1, 5)] + ['$1', '$2']
 PROGRAM = ['spend', 'income', 'count', 'average', 'top', 'largest', 'compare', 'share', 'budget', 'forecast', 'saveplan',
            'savetime', 'whatif', 'help', 'unknown', 'answer', ';', 'cat', 'acc', 'text', 'n', 'months', 'per', 'cut', 'all',
            'today', 'yesterday', 'this_week', 'last_week', 'this_month', 'last_month', 'this_year', 'last_year', 'month',
            'last_days', 'add', 'split', 'backup', 'export', 'lock', 'receipt', 'privacy', '?', '%']
-MAX_LEN = 96
+MAX_LEN = 128
 MAGIC = 0x544C4D41  # 'TLMA'
 
 
@@ -43,12 +43,13 @@ class Block(nn.Module):
 
 
 class TinyLM(nn.Module):
-    def __init__(self, vocab_size, d=256, layers=6, heads=8, ff=1024):
+    def __init__(self, vocab_size, d=256, layers=6, heads=8, ff=1024, max_len=MAX_LEN, dropout=0.1):
         super().__init__()
-        self.embed = nn.Embedding(vocab_size, d); self.position = nn.Embedding(MAX_LEN, d)
-        self.blocks = nn.ModuleList(Block(d, heads, ff) for _ in range(layers))
+        self.embed = nn.Embedding(vocab_size, d); self.position = nn.Embedding(max_len, d)
+        self.blocks = nn.ModuleList(Block(d, heads, ff, dropout) for _ in range(layers))
         self.ln = nn.LayerNorm(d)
-        self.register_buffer('mask', torch.tril(torch.ones(MAX_LEN, MAX_LEN)), persistent=False)
+        self.max_len = max_len
+        self.register_buffer('mask', torch.tril(torch.ones(max_len, max_len)), persistent=False)
         self.d, self.layers, self.heads, self.ff = d, layers, heads, ff
         self.apply(self._init)
 
@@ -67,20 +68,28 @@ class TinyLM(nn.Module):
         return self.ln(x) @ self.embed.weight.T  # tied output projection
 
 
-def encode(row, index):
-    source = [index.get(t, index['<unk>']) for t in row['source']]
-    program = [index[t] for t in row['program']]
-    tokens = [index['<bos>']] + source + [index['<sep>']] + program + [index['<eos>']]
-    return tokens[:MAX_LEN], len(source) + 2
+def prompt(index, source, context=None):
+    """v1 prompts are `<bos> question <sep>`; v2 adds the previous program: `<bos> previous <ctx> question <sep>`."""
+    tokens = [index['<bos>']]
+    if context is not None:
+        tokens += [index.get(t, index['<unk>']) for t in context] + [index['<ctx>']]
+    return tokens + [index.get(t, index['<unk>']) for t in source] + [index['<sep>']]
+
+
+def encode(row, index, with_context=False):
+    head = prompt(index, row['source'], row.get('context', []) if with_context else None)
+    tokens = head + [index[t] for t in row['program']] + [index['<eos>']]
+    return tokens[:MAX_LEN], len(head)
 
 
 @torch.inference_mode()
-def generate(model, vocab, index, source_tokens, limit=40):
+def generate(model, vocab, index, source_tokens, limit=40, context=None):
     """Greedy decoding. Returns (program tokens, minimum chosen-token probability)."""
-    tokens = [index['<bos>']] + [index.get(t, index['<unk>']) for t in source_tokens] + [index['<sep>']]
+    tokens = prompt(index, source_tokens, context)
+    device = next(model.parameters()).device
     out, confidence = [], 1.0
-    while len(out) < limit and len(tokens) < MAX_LEN:
-        probabilities = model(torch.tensor([tokens]))[0, -1].softmax(-1)
+    while len(out) < limit and len(tokens) < model.max_len:
+        probabilities = model(torch.tensor([tokens], device=device))[0, -1].float().softmax(-1)
         p, choice = probabilities.max(-1)
         confidence = min(confidence, float(p))
         if int(choice) == index['<eos>']:
@@ -89,11 +98,31 @@ def generate(model, vocab, index, source_tokens, limit=40):
     return out, confidence
 
 
-def export(model, vocab, threshold, stream, language_words=None, head_thresholds=None):
-    """Version 2 also stores which vocabulary entries are ordinary question words (kept literal when anonymising)."""
-    version = 1 if language_words is None else 2
+def matrices(model):
+    """Tensors in file order; True marks weight matrices that version 3 stores as int8 rows."""
+    out = [(model.embed.weight, True), (model.position.weight, False)]
+    for block in model.blocks:
+        out += [(block.ln1.weight, False), (block.ln1.bias, False), (block.qkv.weight, True), (block.qkv.bias, False),
+                (block.proj.weight, True), (block.proj.bias, False), (block.ln2.weight, False), (block.ln2.bias, False),
+                (block.up.weight, True), (block.up.bias, False), (block.down.weight, True), (block.down.bias, False)]
+    return out + [(model.ln.weight, False), (model.ln.bias, False)]
+
+
+@torch.no_grad()
+def quantise_(model):
+    """Rounds every weight matrix to symmetric per-row int8 in place, exactly as version 3 stores it."""
+    for tensor, int8 in matrices(model):
+        if int8:
+            scale = tensor.abs().amax(dim=1, keepdim=True).clamp(min=1e-12) / 127
+            tensor.copy_((tensor / scale).round().clamp(-127, 127) * scale)
+    return model
+
+
+def export(model, vocab, threshold, stream, language_words=None, head_thresholds=None, int8=False):
+    """v2 adds question words and per-step thresholds; v3 also stores weight matrices as int8 rows with scales."""
+    version = 1 if language_words is None else 3 if int8 else 2
     stream.write(struct.pack('>iiiiiiif', MAGIC, version, len(vocab), model.d, model.layers, model.heads, model.ff, threshold))
-    stream.write(struct.pack('>i', MAX_LEN))
+    stream.write(struct.pack('>i', model.max_len))
     for token in vocab:
         data = token.encode('utf-8'); stream.write(struct.pack('>i', len(data)) + data)
     if language_words is not None:
@@ -103,37 +132,44 @@ def export(model, vocab, threshold, stream, language_words=None, head_thresholds
         stream.write(struct.pack('>i', len(heads)))
         for head, value in heads:
             stream.write(struct.pack('>if', vocab.index(head), value))
-    tensors = [model.embed.weight, model.position.weight]
-    for block in model.blocks:
-        tensors += [block.ln1.weight, block.ln1.bias, block.qkv.weight, block.qkv.bias, block.proj.weight, block.proj.bias,
-                    block.ln2.weight, block.ln2.bias, block.up.weight, block.up.bias, block.down.weight, block.down.bias]
-    tensors += [model.ln.weight, model.ln.bias]
-    for tensor in tensors:
-        values = tensor.detach().cpu().flatten().tolist()
-        stream.write(struct.pack('>i', len(values)))
-        stream.write(struct.pack('>%df' % len(values), *values))
+    for tensor, quantised in matrices(model):
+        t = tensor.detach().cpu().float()
+        if int8 and quantised:
+            scale = t.abs().amax(dim=1).clamp(min=1e-12) / 127
+            q = (t / scale[:, None]).round().clamp(-127, 127).to(torch.int8)
+            stream.write(struct.pack('>iii', -1, t.shape[0], t.shape[1]))
+            stream.write(struct.pack('>%df' % t.shape[0], *scale.tolist()))
+            values = q.flatten().tolist()
+            stream.write(struct.pack('>%db' % len(values), *values))
+        else:
+            values = t.flatten().tolist()
+            stream.write(struct.pack('>i', len(values)))
+            stream.write(struct.pack('>%df' % len(values), *values))
 
 
 def load(stream):
     magic, version, size, d, layers, heads, ff, threshold = struct.unpack('>iiiiiiif', stream.read(32))
-    if magic != MAGIC or version not in (1, 2):
+    if magic != MAGIC or version not in (1, 2, 3):
         raise ValueError('Unsupported assistant model')
     (max_len,) = struct.unpack('>i', stream.read(4))
     vocab = []
     for _ in range(size):
         (length,) = struct.unpack('>i', stream.read(4)); vocab.append(stream.read(length).decode('utf-8'))
-    if version == 2:
+    if version >= 2:
         (count,) = struct.unpack('>i', stream.read(4)); stream.read(4 * count)
         (count,) = struct.unpack('>i', stream.read(4)); stream.read(8 * count)
-    model = TinyLM(size, d, layers, heads, ff)
-    tensors = [model.embed.weight, model.position.weight]
-    for block in model.blocks:
-        tensors += [block.ln1.weight, block.ln1.bias, block.qkv.weight, block.qkv.bias, block.proj.weight, block.proj.bias,
-                    block.ln2.weight, block.ln2.bias, block.up.weight, block.up.bias, block.down.weight, block.down.bias]
-    tensors += [model.ln.weight, model.ln.bias]
+    model = TinyLM(size, d, layers, heads, ff, max_len)
     with torch.no_grad():
-        for tensor in tensors:
+        for tensor, _ in matrices(model):
             (count,) = struct.unpack('>i', stream.read(4))
+            if count == -1:
+                rows, cols = struct.unpack('>ii', stream.read(8))
+                if (rows, cols) != tuple(tensor.shape):
+                    raise ValueError('Tensor size mismatch')
+                scale = torch.tensor(struct.unpack('>%df' % rows, stream.read(4 * rows)))
+                q = torch.frombuffer(bytearray(stream.read(rows * cols)), dtype=torch.int8).float().view(rows, cols)
+                tensor.copy_(q * scale[:, None])
+                continue
             if count != tensor.numel():
                 raise ValueError('Tensor size mismatch')
             tensor.copy_(torch.tensor(struct.unpack('>%df' % count, stream.read(4 * count))).view_as(tensor))

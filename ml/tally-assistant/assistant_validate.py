@@ -17,15 +17,15 @@ SIMPLE = {'today', 'yesterday', 'this_week', 'last_week', 'this_month', 'last_mo
 FILTERED = {'spend', 'income', 'count', 'average', 'top', 'largest'}
 TOPICS = {'add', 'split', 'backup', 'budget', 'export', 'lock', 'receipt', 'privacy'}
 TOPIC_CUES = {'add': {'add', 'record', 'log', 'enter', 'expense', 'purchase'}, 'split': {'split', 'share', 'shared', 'friends'},
-              'backup': {'backup', 'back', 'restore', 'move', 'phone', 'backed'}, 'budget': {'budget', 'budgets'},
+              'backup': {'backup', 'back', 'restore', 'move', 'phone', 'backed'}, 'budget': {'budget', 'budgets', 'limit'},
               'export': {'export', 'csv', 'download', 'report', 'transactions'}, 'lock': {'lock', 'pin', 'fingerprint', 'protect'},
               'receipt': {'receipt', 'bill', 'scan', 'import', 'read'},
-              'privacy': {'private', 'privacy', 'upload', 'internet', 'see', 'who'}}
+              'privacy': {'private', 'privacy', 'upload', 'internet', 'see', 'who', 'send'}}
 # A topic's own name counts double, so "split a bill" is about splitting and "add a receipt" about receipts.
 STRONG_CUES = {'split': {'split'}, 'receipt': {'receipt', 'scan'}, 'budget': {'budget', 'budgets'}, 'lock': {'lock'},
                'backup': {'backup', 'restore'}, 'export': {'export', 'csv'}, 'privacy': {'privacy', 'private'}}
 PERCENT_CUES = {'percent', 'percentage', '%', 'share', 'part'}
-COMPARE_CUES = {'compare', 'compared', 'vs', 'versus', 'than', 'or', 'higher'}
+COMPARE_CUES = {'compare', 'compared', 'vs', 'versus', 'than', 'or', 'higher', 'ya'}
 
 
 def placeholder(token, kinds=('CAT', 'ACC', 'NUM', 'WORD')):
@@ -109,7 +109,26 @@ def statement_ok(s, spends_before):
     return False, None
 
 
-def valid(source, program):
+def program_periods(program):
+    """Periods used by a program's filtered steps (used for a follow-up's previous turn)."""
+    found, i = set(), 0
+    while i < len(program):
+        t = program[i]
+        if t in SIMPLE:
+            found.add((t,))
+        elif t in ('month', 'last_days') and i + 1 < len(program):
+            found.add((t, program[i + 1])); i += 1
+        i += 1
+    return found
+
+
+def valid(source, program, context=()):
+    """`context` is the previous turn's program for follow-ups (empty for a first question).
+
+    With context, the plan may also use the previous turn's placeholders and periods; everything named in the
+    new question must still be used, and nothing outside the question and the previous turn may appear.
+    """
+    context = list(context)
     statements = parse(program)
     if statements is None:
         return False
@@ -142,10 +161,14 @@ def valid(source, program):
             return False
     used = {t for t in program if placeholder(t)}
     mentioned = {t for t in source if placeholder(t)}
+    carried = {t for t in context if placeholder(t)}
     if heads[0] in ('help', 'unknown'):
         return not used
-    if used != mentioned:
+    if not mentioned <= used or not used <= mentioned | carried:
         return False
-    if periods and periods != question_periods(source):
+    asked = question_periods(source)
+    if periods and not (asked <= periods <= asked | program_periods(context)):
+        return False
+    if periods and not asked and not context:
         return False
     return True

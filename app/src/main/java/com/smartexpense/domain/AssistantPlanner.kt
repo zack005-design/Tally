@@ -19,7 +19,8 @@ import java.util.Locale
  * figures, never from the model. Invalid or low-confidence programs produce no answer.
  */
 object AssistantPlanner {
-    data class Answer(val text: String, val steps: List<String>, val program: List<String>, val confidence: Float) {
+    data class Answer(val text: String, val steps: List<String>, val program: List<String>, val confidence: Float,
+                      /** Placeholder values of this turn, carried into a follow-up question. */ val slots: Map<String, String> = emptyMap()) {
         fun display(): String = if (steps.isEmpty()) text else text + "\n\nHow I worked it out:\n" + steps.withIndex().joinToString("\n") { "${it.index + 1}. ${it.value}" }
     }
     data class Data(val records: List<Record>, val categories: List<Category>, val accounts: List<Account>,
@@ -30,17 +31,32 @@ object AssistantPlanner {
     private val numberPattern = Regex("([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*(k|lakh|lakhs|lac|thousand)?")
     private val cues = Regex("^\\s*(?:how|what|which|where|when|did|do|does|am|is|are|was|were|can|could|should|compare|if|plan|predict|tell|show|count|cutting|budget|my|total|average|daily|top|biggest|largest|kitna|sabse|month|hey|please|i want|to reach|saving)\\b|\\?\\s*$", RegexOption.IGNORE_CASE)
 
+    private val followUp = Regex("^\\s*(?:and|what about|how about|same for|now|try|aur|vs|versus|compare (?:that|it|with)|is that|and compared)\\b", RegexOption.IGNORE_CASE)
+
+    /** Short follow-ups to the previous answer ("and last month?", "what about travel"), never expense commands. */
+    fun looksLikeFollowUp(text: String): Boolean = (text.length in 2..80 && followUp.containsMatchIn(text)) || (text.trim().endsWith("?") && text.length < 40)
+
     /** A cheap check before running the model: questions and planning requests, not expense commands. */
     fun looksLikeQuestion(text: String): Boolean = text.length in 3..200 && cues.containsMatchIn(text)
 
     fun tokenize(text: String): List<String> = token.findAll(text.lowercase(Locale.ROOT)).map { it.value }.filter { it !in drop }.toList()
 
-    /** Mirrors assistant_data.anonymise: longest names first, a trailing plural "s" allowed, same value same placeholder. */
-    fun anonymise(text: String, categories: List<String>, accounts: List<String>, vocabulary: Set<String>): Pair<List<String>, Map<String, String>>? {
+    /**
+     * Mirrors assistant_data_v2.anonymise: longest names first, a trailing plural "s" allowed, same value same
+     * placeholder. [carried] holds the previous turn's placeholders, reused here; new ones continue the numbering.
+     */
+    fun anonymise(text: String, categories: List<String>, accounts: List<String>, vocabulary: Set<String>,
+                  carried: Map<String, String> = emptyMap()): Pair<List<String>, Map<String, String>>? {
         val tokens = tokenize(text)
         val names = (categories.map { it to "CAT" } + accounts.map { it to "ACC" }).sortedByDescending { tokenize(it.first).size }
-        val slots = linkedMapOf<String, String>(); val seen = hashMapOf<Pair<String, String>, String>()
+        val slots = linkedMapOf<String, String>().apply { putAll(carried) }
+        val seen = hashMapOf<Pair<String, String>, String>()
+        carried.forEach { (label, value) -> seen.putIfAbsent(label.trimEnd { it.isDigit() } to value, label) }
         val counters = hashMapOf("CAT" to 0, "ACC" to 0, "NUM" to 0, "WORD" to 0)
+        carried.keys.forEach { label ->
+            val kind = label.trimEnd { it.isDigit() }; val n = label.substring(kind.length).toIntOrNull()
+            if (kind in counters && n != null) counters[kind] = maxOf(counters.getValue(kind), n)
+        }
         fun label(kind: String, value: String): String = seen.getOrPut(kind to value) {
             counters[kind] = counters.getValue(kind) + 1
             "$kind${counters.getValue(kind)}".also { slots[it] = value }
@@ -65,15 +81,19 @@ object AssistantPlanner {
         return out to slots
     }
 
-    fun answer(question: String, model: TinyLanguageModel, data: Data): Answer? {
+    /** [previous] is the last answered turn, used for follow-ups such as "and last month?" when the model supports it. */
+    fun answer(question: String, model: TinyLanguageModel, data: Data, previous: Answer? = null): Answer? {
         val active = data.categories.filterNot { it.archived }
-        val (source, slots) = anonymise(question, active.map { it.name }, data.accounts.filterNot { it.archived }.map { it.name }, model.words) ?: return null
-        val (program, confidence) = model.generate(source)
+        val context = previous?.takeIf { model.supportsContext }
+        val (source, slots) = anonymise(question, active.map { it.name }, data.accounts.filterNot { it.archived }.map { it.name }, model.words,
+            context?.slots.orEmpty()) ?: return null
+        val (program, confidence) = model.generate(source, context = context?.program)
         // Answer only a structurally valid plan whose first step clears its development-chosen threshold.
         // "unknown" is a refusal: return null so exact rules or manual entry can take over.
         val head = program.firstOrNull() ?: return null
-        if (head == "unknown" || !AssistantValidator.valid(source, program) || confidence < (model.headThresholds[head] ?: return null)) return null
-        return runCatching { Executor(data, slots).run(program) }.getOrNull()?.copy(program = program, confidence = confidence)
+        if (head == "unknown" || !AssistantValidator.valid(source, program, context?.program.orEmpty()) ||
+            confidence < (model.headThresholds[head] ?: return null)) return null
+        return runCatching { Executor(data, slots).run(program) }.getOrNull()?.copy(program = program, confidence = confidence, slots = slots)
     }
 
     /** Runs a step program with exact code; throws on any invalid step. Exposed for tests. */

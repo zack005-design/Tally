@@ -10,13 +10,13 @@ internal object AssistantValidator {
     private val simple = setOf("today", "yesterday", "this_week", "last_week", "this_month", "last_month", "this_year", "last_year")
     private val filtered = setOf("spend", "income", "count", "average", "top", "largest")
     private val topicCues = mapOf("add" to setOf("add", "record", "log", "enter", "expense", "purchase"), "split" to setOf("split", "share", "shared", "friends"),
-        "backup" to setOf("backup", "back", "restore", "move", "phone", "backed"), "budget" to setOf("budget", "budgets"),
+        "backup" to setOf("backup", "back", "restore", "move", "phone", "backed"), "budget" to setOf("budget", "budgets", "limit"),
         "export" to setOf("export", "csv", "download", "report", "transactions"), "lock" to setOf("lock", "pin", "fingerprint", "protect"),
-        "receipt" to setOf("receipt", "bill", "scan", "import", "read"), "privacy" to setOf("private", "privacy", "upload", "internet", "see", "who"))
+        "receipt" to setOf("receipt", "bill", "scan", "import", "read"), "privacy" to setOf("private", "privacy", "upload", "internet", "see", "who", "send"))
     private val strongCues = mapOf("split" to setOf("split"), "receipt" to setOf("receipt", "scan"), "budget" to setOf("budget", "budgets"),
         "lock" to setOf("lock"), "backup" to setOf("backup", "restore"), "export" to setOf("export", "csv"), "privacy" to setOf("privacy", "private"))
     private val percentCues = setOf("percent", "percentage", "%", "share", "part")
-    private val compareCues = setOf("compare", "compared", "vs", "versus", "than", "or", "higher")
+    private val compareCues = setOf("compare", "compared", "vs", "versus", "than", "or", "higher", "ya")
 
     fun placeholder(token: String, kinds: List<String> = listOf("CAT", "ACC", "NUM", "WORD")) =
         kinds.any { token.startsWith(it) && token.length > it.length && token.substring(it.length).all(Char::isDigit) }
@@ -80,7 +80,20 @@ internal object AssistantValidator {
         }
     }
 
-    fun valid(source: List<String>, program: List<String>): Boolean {
+    /** Periods used by a program's filtered steps (the previous turn of a follow-up). */
+    fun programPeriods(program: List<String>): Set<List<String>> {
+        val found = mutableSetOf<List<String>>(); var i = 0
+        while (i < program.size) {
+            val t = program[i]
+            if (t in simple) found += listOf(t)
+            else if (t in setOf("month", "last_days") && i + 1 < program.size) { found += listOf(t, program[i + 1]); i++ }
+            i++
+        }
+        return found
+    }
+
+    /** [context] is the previous turn's program for a follow-up, empty for a first question. */
+    fun valid(source: List<String>, program: List<String>, context: List<String> = emptyList()): Boolean {
         val statements = parse(program) ?: return false
         val used = mutableSetOf<List<String>>(); var spends = 0
         statements.forEachIndexed { i, s ->
@@ -104,9 +117,12 @@ internal object AssistantValidator {
         }
         val placeholders = program.filter { placeholder(it) }.toSet()
         val mentioned = source.filter { placeholder(it) }.toSet()
+        val carried = context.filter { placeholder(it) }.toSet()
         if (heads[0] in setOf("help", "unknown")) return placeholders.isEmpty()
-        if (placeholders != mentioned) return false
-        if (used.isNotEmpty() && used != questionPeriods(source)) return false
+        if (!placeholders.containsAll(mentioned) || !(mentioned + carried).containsAll(placeholders)) return false
+        val asked = questionPeriods(source)
+        if (used.isNotEmpty() && !(used.containsAll(asked) && (asked + programPeriods(context)).containsAll(used))) return false
+        if (used.isNotEmpty() && asked.isEmpty() && context.isEmpty()) return false
         return true
     }
 }

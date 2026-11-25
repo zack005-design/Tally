@@ -48,3 +48,33 @@ class AssistantModelTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class AssistantV2Tests(unittest.TestCase):
+    def test_v2_gold_programs_pass_the_validator_and_follow_ups_carry_names(self):
+        import assistant_data_v2 as v2
+        from assistant_validate import valid
+        train, dev, test, _ = v2.make_corpus(4000, 400, 400, seed=3)
+        for row in train + dev + test:
+            self.assertTrue(valid(row['source'], row['program'], row.get('context', ())), row['text'])
+        follow = [r for r in train if r['intent'].startswith('followup')]
+        self.assertTrue(follow)
+        self.assertTrue(any(t in r['context'] for r in follow for t in r['program'] if t.startswith('CAT')))
+
+    def test_carried_placeholders_continue_numbering(self):
+        import assistant_data_v2 as v2
+        words = v2.language_vocabulary()
+        tokens, slots = v2.anonymise('and travel?', ['Food', 'Travel'], [], words, {'CAT1': 'Food'})
+        self.assertEqual(tokens, ['and', 'CAT2', '?'])
+        self.assertEqual(slots, {'CAT1': 'Food', 'CAT2': 'Travel'})
+
+    def test_int8_export_round_trip_is_exact(self):
+        import assistant_data_v2 as v2
+        from assistant_model import quantise_
+        torch.manual_seed(1)
+        words = v2.language_vocabulary(); vocab = build_vocabulary(words); index = {t: i for i, t in enumerate(vocab)}
+        model = quantise_(TinyLM(len(vocab), d=32, layers=2, heads=4, ff=64).eval())
+        buffer = io.BytesIO(); export(model, vocab, .5, buffer, words, {'spend': .5}, int8=True)
+        reloaded, _, _ = load(io.BytesIO(buffer.getvalue()))
+        source = ['how', 'much', 'did', 'i', 'spend']
+        self.assertEqual(generate(model, vocab, index, source, 6, context=[]), generate(reloaded, vocab, index, source, 6, context=[]))

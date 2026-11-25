@@ -61,8 +61,8 @@ class LocalCommandParser @Inject constructor(@param:ApplicationContext private v
         }
     }
 
-    suspend fun assist(question: String, data: AssistantPlanner.Data): AssistantPlanner.Answer? =
-        withContext(Dispatchers.Default) { assistant?.let { AssistantPlanner.answer(question, it, data) } }
+    suspend fun assist(question: String, data: AssistantPlanner.Data, previous: AssistantPlanner.Answer? = null): AssistantPlanner.Answer? =
+        withContext(Dispatchers.Default) { assistant?.let { AssistantPlanner.answer(question, it, data, previous) } }
 
     suspend fun parse(text: String, people: List<PersonRef>): ParsedDraft =
         withContext(Dispatchers.Default) { parser.parse(text, people) }

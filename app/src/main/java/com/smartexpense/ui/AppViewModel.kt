@@ -183,6 +183,8 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         change(EntryUiState(kind=d.kind,amount=Money.input(d.amount),description=d.description,accountId=d.accountId,destinationId=d.destinationAccountId.orEmpty(),categoryId=d.categoryId,groupId=d.groupId,shared=d.participants!=listOf("self"),participants=d.participants,paid=d.contributions.mapValues { Money.input(it.value) },method=if(d.participants!=listOf("self")) "Fixed" else "Equal",values=(d.splitRule as? SplitRule.Fixed)?.amounts?.mapValues { Money.input(it.value) }.orEmpty(),date=java.time.Instant.ofEpochMilli(d.date).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString(),notes=d.notes,replaces=if(duplicate) null else id,refundOf=d.refundOf,secondAccountId=d.selfPayments.keys.firstOrNull {it!=d.accountId}.orEmpty(),originalMovements=original,originalDate=if(duplicate) null else d.date,secondPayment=d.selfPayments.entries.firstOrNull {it.key!=d.accountId}?.value?.let(Money::input).orEmpty()));onReady()
     }
     private var parseRequest = 0L
+    /** The last answered question, kept for 10 minutes so follow-ups such as "and last month?" can build on it. */
+    private var lastAssistantTurn: Pair<AssistantPlanner.Answer,Long>? = null
     /** Personal category model trained on this phone from saved entries; rebuilt when the records change. */
     private var personalCategories: Pair<Int,PersonalCategoryModel?>? = null
     private suspend fun refreshPersonalCategories() {
@@ -198,13 +200,16 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         val people = state.value.snapshot.people.filter { it.id!="self" }.map { PersonRef(it.id,it.name,it.aliases) }
         viewModelScope.launch {
         // In the AI edition, the tiny reasoning model plans an answer; exact code runs every step.
-        if (commandParser != null && AssistantPlanner.looksLikeQuestion(requested.text)) {
+        val previousTurn = lastAssistantTurn?.takeIf { System.currentTimeMillis() - it.second < 10 * 60_000L }?.first
+        if (commandParser != null && (AssistantPlanner.looksLikeQuestion(requested.text) || (previousTurn != null && AssistantPlanner.looksLikeFollowUp(requested.text)))) {
             val answer = try {
                 val full = repository.snapshot()
-                commandParser.assist(requested.text, AssistantPlanner.Data(full.records, full.categories, full.accounts, full.budgets, java.time.LocalDate.now()))
+                commandParser.assist(requested.text, AssistantPlanner.Data(full.records, full.categories, full.accounts, full.budgets, java.time.LocalDate.now()), previousTurn)
             } catch (error: CancellationException) { throw error } catch (error: Exception) { null }
             if (request != parseRequest || form.value != requested) return@launch
-            if (answer != null) { change(requested.copy(parserNotice = answer.display() + "\n\nAnswered on this phone by Tally's tiny reasoning model; every number comes from your records. Nothing was saved.")); return@launch }
+            if (answer != null) {
+                lastAssistantTurn = answer to System.currentTimeMillis()
+                change(requested.copy(parserNotice = answer.display() + "\n\nAnswered on this phone by Tally's tiny reasoning model; every number comes from your records. Nothing was saved.")); return@launch }
         }
         // Spending questions are answered from local records instead of becoming a draft.
         if (SpendingQuestions.isQuestion(requested.text)) {

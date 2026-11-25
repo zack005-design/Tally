@@ -68,3 +68,41 @@ python write_validate_fixture.py runs/assistant-v1
 ```
 
 Runs, checkpoints and generated datasets stay in the ignored `runs/` folder. This folder is separate from the excluded `tools/tally-lm/` workspace.
+
+## Version 2: bigger model, follow-ups and GPU training
+
+`assistant_data_v2.py` keeps every v1 template and adds about 80 more phrasings (including Hinglish). It also provides development and test phrasings for every step family, and **follow-up turns**: "and last month?", "what about travel", "compare that with October". The model sees `<bos> previous-plan <ctx> question <sep>`, and names from the previous turn keep their placeholders. `train_assistant_v2.py` trains, selects, quantises to **int8** (file format 3, one scale per weight row), gates the int8 model exactly as shipped, and with `--export` writes the model and all parity fixtures into the app. The gate rules are the same as v1, plus follow-ups are checked against their previous turn.
+
+| `--size` | Parameters | int8 file | Where to train |
+| --- | ---: | ---: | --- |
+| `small` | ~4.9M | ~5 MB | CPU, about an hour |
+| `medium` | ~14M | ~14 MB | GPU |
+| `large` | ~25M | ~25 MB | GPU (6 GB is enough) |
+
+### Train on your own GPU (Windows, PowerShell)
+
+From the repository root, on the branch with this code:
+
+```powershell
+git fetch origin claude/clever-wozniak-uhomqg
+git checkout claude/clever-wozniak-uhomqg
+py -3.12 -m venv ml\tally-assistant\.venv
+ml\tally-assistant\.venv\Scripts\python.exe -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu126
+cd ml\tally-assistant
+.venv\Scripts\python.exe -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+.venv\Scripts\python.exe -m unittest test_assistant
+.venv\Scripts\python.exe train_assistant_v2.py --run-dir runs\assistant-v2-large --size large --export
+```
+
+The first line it prints should show your GPU. On a 6 GB laptop card, 30,000 steps take very roughly 1–2 hours. If you run out of GPU memory, add `--batch 64`. When it finishes, it prints the gate. `--export` only writes into the app when the held-out test has **zero wrong answers**. Then check the app and publish:
+
+```powershell
+cd ..\..
+.\gradlew.bat -PtallyAi=true :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+.\gradlew.bat -PtallyAi=false :app:testDebugUnitTest :app:assembleDebug
+git add app/src/localAi/assets/tally-assistant.bin app/src/localAi/assets/tally-assistant.json app/src/test/resources/assistant-*.tsv
+git commit -m "Ship the large assistant model trained on GPU"
+git push
+```
+
+Keep `ml\tally-assistant\runs\` out of Git; it is ignored, and the large `dataset.json` and checkpoints stay local.
