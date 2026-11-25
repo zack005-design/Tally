@@ -118,7 +118,7 @@ import com.smartexpense.domain.*
                 composable("more") {SettingsOverviewScreen(ui.snapshot.localSettings) {nav.navigate(it)}}
                 composable("tools/{section}") {entry->
                     if(entry.arguments?.getString("section")=="settings") SettingsOverviewScreen(ui.snapshot.localSettings) {nav.navigate(it)}
-                    else MoreScreen(entry.arguments?.getString("section")) {when(it) {"income"->add(Kind.INCOME);"transfer"->add(Kind.TRANSFER);else->nav.navigate(it)}}
+                    else MoreScreen(entry.arguments?.getString("section")) {when(it) {"income"->add(Kind.INCOME);"transfer"->add(Kind.TRANSFER);else->openRoute(it)}}
                 }
                 composable("profile") {ProfileScreen(ui.snapshot.localSettings,ui.busy,{name,avatar,finished->model.action("Profile saved") {model.repository.saveProfile(name,avatar);finished()}},{nav.navigate("welcome")},{nav.navigate("wallet")})}
                 composable("default-splits") {GroupDefaultsScreen(ui.snapshot,ui.busy,{value->model.action("Group default saved") {model.repository.saveGroupDefault(value)}},{nav.navigate("groups")})}
