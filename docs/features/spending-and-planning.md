@@ -24,6 +24,19 @@ Open **Tools → History & reports → Yearly summary** to see a whole year at o
 
 Use the arrows to move between years. The summary uses the same rules as monthly reports: only your share of a shared bill counts, refunds reduce spending, and transfers and repayments are not spending. It is built only from the records you entered.
 
+## Smart insights
+
+Open **More → Money & planning → Smart insights** for analysis worked out on your phone from your own entries:
+
+- **Month-end forecast**: what you have spent so far plus your average daily spending over the last 28 days for the days left, compared with your overall monthly budget if you set one. It appears after two weeks of records.
+- **Worth a look**: a category at least 1.5 times and ₹500 above its usual level by this date (needs spending in two of the last three months), an entry of ₹1,000 or more that is at least three times your typical entry in that category over 90 days, and possible duplicates (same description and amount on the same day in the last 30 days).
+- **Repeating payments**: the same description at least three times, at a steady interval from a week to a year and an amount within 10%, with the next expected date and the approximate monthly cost. Shared bills are left out.
+- **Suggested budgets**: for categories without a budget this month, your middle month of the last three, rounded up to ₹100. Tap **Use** to save it as this month's budget.
+
+When you interpret a command that matches something you already saved that day with the same amount, the draft warns you before you save a duplicate.
+
+These are plain statistics over your records, not a trained model or financial advice. Nothing is saved or changed unless you tap **Use** or save an entry yourself.
+
 ## Net worth
 
 Open **More → Money & planning → Net worth** to see what you have minus what you owe:

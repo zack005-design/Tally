@@ -130,6 +130,7 @@ import com.smartexpense.domain.*
                 composable("history-import") {ChatHistoryImportScreen(model.repository,ui.snapshot) {nav.popBackStack()}}
                 composable("app-lock") {AppLockSettingsScreen()}
                 composable("appearance") {AppearanceScreen()}
+                composable("smart-insights") {SmartInsightsScreen(ui.snapshot,ui.busy) {month,category,amount->model.action("Budget saved") {model.repository.saveBudget(month,category,amount)}}}
                 composable("net-worth") {NetWorthScreen(ui.snapshot) {model.repository.netWorth()}}
                 composable("year-summary") {YearSummaryScreen(ui.snapshot) {year->model.repository.yearSummary(year)}}
                 composable("reminders") {RemindersScreen(model)}
