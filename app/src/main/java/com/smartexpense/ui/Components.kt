@@ -306,6 +306,9 @@ fun personLabel(person:com.smartexpense.domain.Person,people:List<com.smartexpen
     val height=with(density) {androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp()}*0.88f
     val state=rememberModalBottomSheetState(skipPartiallyExpanded=true)
     ModalBottomSheet(onDismissRequest=onDismiss,sheetState=state,containerColor=Tokens.paper,contentColor=Tokens.text,shape=Tokens.card) {
+        // Buttons inside a sheet remove it at once, so its window supplies the closing animation.
+        val window=(androidx.compose.ui.platform.LocalView.current.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+        SideEffect {window?.setWindowAnimations(com.smartexpense.R.style.SheetWindowAnimation)}
         CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides density) {
         Column(Modifier.fillMaxWidth().heightIn(max=height).imePadding().navigationBarsPadding()) {
             Column(Modifier.fillMaxWidth().padding(horizontal=24.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {

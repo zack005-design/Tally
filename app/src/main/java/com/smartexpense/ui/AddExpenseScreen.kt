@@ -82,11 +82,11 @@ internal fun keypadDisplay(raw: String): String {
                 }
                 GroupedRow(if (details) "Hide details" else "Date, payment and notes", R.drawable.ic_calendar, tone = ReferenceTone.Gray) { details = !details }
             } }
-            if (details || s.secondAccountId.isNotBlank()) item { Panel {
+            if (details || s.secondAccountId.isNotBlank()) item(key = "details") { Box(Modifier.animateItem()) { Panel {
                 PaymentSourcePicker(s, accounts, onChange, walletSources)
                 EditorialDateRow(s.date) { onChange(s.copy(date = it)) }
                 Field("Notes (optional)", s.notes, { onChange(s.copy(notes = it)) })
-            } }
+            } } }
             if (s.replaces != null) item { ReferenceInfo("This correction keeps the original record in history.") }
         }
     } }

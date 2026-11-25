@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sheets open with Compose's slide; closing one from a button fades its window out. -->
+    <style name="SheetWindowAnimation" parent="">
+        <item name="android:windowExitAnimation">@anim/sheet_close</item>
+    </style>
+</resources>

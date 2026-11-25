@@ -67,6 +67,9 @@ import com.smartexpense.domain.*
     val windowHeight=with(androidx.compose.ui.platform.LocalDensity.current) {androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp()}
     val useRail=windowHeight<480.dp
     val showNavigation=route in mainTabs && WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current)==0
+    // The bar keeps its selected tab while it animates away.
+    var shownTab by remember {mutableStateOf<String?>(null)}
+    if(route in mainTabs && shownTab!=route) shownTab=route
     val onTab:(String)->Unit={destination->exitGuard.navigate {
         when(destination) {
             "add"->add()
@@ -78,7 +81,9 @@ import com.smartexpense.domain.*
     val openRoute:(String)->Unit={destination->if(destination in mainTabs) onTab(destination) else nav.navigate(destination)}
     // Landscape phones with a camera cutout or punch-hole keep content clear of it on the side.
     Scaffold(snackbarHost={SnackbarHost(snackbar)},contentWindowInsets=ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)),bottomBar={
-        if(showNavigation && !useRail) LedgerNavigation(route,onTab)
+        AnimatedVisibility(showNavigation && !useRail,enter=expandVertically(tween(260,easing=FastOutSlowInEasing),expandFrom=androidx.compose.ui.Alignment.Top)+fadeIn(tween(200)),exit=shrinkVertically(tween(220,easing=FastOutSlowInEasing),shrinkTowards=androidx.compose.ui.Alignment.Top)+fadeOut(tween(140))) {
+            LedgerNavigation(shownTab,onTab)
+        }
     }) {padding ->
         Row(Modifier.fillMaxSize().padding(padding)) {
         if(showNavigation && useRail) EditorialNavigationRail(route,onTab)
@@ -88,13 +93,23 @@ import com.smartexpense.domain.*
             if(ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) {CircularProgressIndicator()} else CompositionLocalProvider(LocalNavigationExitGuard provides exitGuard,LocalEditorialBack provides if(route!=null && route !in listOf("home","activity","insights","add","split","search","onboarding")) ({nav.popBackStack();Unit}) else null) {NavHost(nav,startDestination=remember {launchDestination(ui.snapshot)},modifier=Modifier.weight(1f),
                 // Compose's animation clock respects Android's animator duration scale, including zero.
+                // Tabs crossfade; other screens move in from the right and leave the same way.
                 enterTransition = {
                     if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(180))
-                    else slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { it / 8 } + fadeIn(tween(240))
+                    else slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 6 } + fadeIn(tween(220, delayMillis = 60))
                 },
-                exitTransition = { fadeOut(tween(140)) },
-                popEnterTransition = { slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 16 } + fadeIn(tween(220)) },
-                popExitTransition = { slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 8 } + fadeOut(tween(180)) }
+                exitTransition = {
+                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeOut(tween(180))
+                    else slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 12 } + fadeOut(tween(160))
+                },
+                popEnterTransition = {
+                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(180))
+                    else slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 12 } + fadeIn(tween(220, delayMillis = 60))
+                },
+                popExitTransition = {
+                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeOut(tween(180))
+                    else slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 6 } + fadeOut(tween(160))
+                }
             ) {
                 // First run: welcome, how it works, starting balances, reminders and app lock, or a restore.
                 // The onboarding route ends only when the person finishes it, even after a restore.
