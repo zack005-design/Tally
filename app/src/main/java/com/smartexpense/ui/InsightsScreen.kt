@@ -21,9 +21,6 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CancellationException
 
 @Composable fun InsightsScreen(s:Snapshot,selected:String,onMonth:(String)->Unit,onBudget:(String,String?,Long)->Unit,onPlanner:()->Unit={},onBudgetSave:((String,String?,Long,()->Unit)->Unit)?=null,busy:Boolean=false,onTransactions:()->Unit={},onPeriodReport:(suspend (LocalDate,LocalDate)->PeriodReport)?=null) {
-    var budgetAmount by rememberSaveable {mutableStateOf("")}
-    var category by rememberSaveable {mutableStateOf<String?>(null)}
-    var editing by rememberSaveable {mutableStateOf(false)}
     var monthPicker by rememberSaveable {mutableStateOf(false)}
     var budgetsOpen by rememberSaveable {mutableStateOf(false)}
     var details by rememberSaveable {mutableStateOf(false)}
@@ -72,10 +69,11 @@ import kotlinx.coroutines.CancellationException
             item {TrendChart(report.daily,month,start,end)}
             item {Text("By category",style=MaterialTheme.typography.titleMedium)}
             item {if(report.categories.isEmpty()) EmptyLedger("No expenses this ${period.lowercase()}","Record an expense to see your category breakdown.") else CategoryDistribution(report.categories,s.categories)}
-            item {TextButton(onTransactions,Modifier.fillMaxWidth()) {Text("View transactions →")}}
-            item {ReferenceAction("Monthly budgets",R.drawable.ic_insights) {budgetsOpen=true}}
-            item {TextButton({editing=true},Modifier.fillMaxWidth()) {Text("Set budget")}}
-            item {TextButton({details=!details},Modifier.fillMaxWidth()) {Text(if(details) "Hide spending details" else "Spending details")}}
+            item {GroupedCard {
+                GroupedRow("Budgets",R.drawable.ic_insights) {budgetsOpen=true}
+                GroupedDivider()
+                GroupedRow("Spending details",R.drawable.ic_activity,value=if(details) "Hide" else "Show",showChevron=false) {details=!details}
+            }}
             if(details) {
                 item {Text("Monthly details · ${month.format(DateTimeFormatter.ofPattern("MMMM yyyy"))}",style=MaterialTheme.typography.titleMedium)}
                 if(s.reportMonth==selected) item {EverydayInsights(s)}
@@ -95,20 +93,6 @@ import kotlinx.coroutines.CancellationException
     if(monthPicker) EditorialMonthPicker(month,{monthPicker=false}) {
         weekAnchor=(if(it==YearMonth.now()) LocalDate.now() else it.atEndOfMonth()).with(DayOfWeek.MONDAY).toString()
         onMonth(it.toString());monthPicker=false
-    }
-    if(editing) EditorialBottomSheet("Set monthly budget",{if(!busy) editing=false}) {
-        Text(month.atDay(1).format(DateTimeFormatter.ofPattern("MMMM yyyy")),color=Tokens.muted)
-        Choice("Budget category",category?:"all",listOf("all" to "Overall")+s.categories.filterNot {it.archived}.map {it.id to it.name}) {category=if(it=="all") null else it}
-        Field("Budget amount (₹)",budgetAmount,{budgetAmount=it},true)
-        val entered=runCatching {Money.parse(budgetAmount)}.getOrNull()
-        val spent=if(category==null) s.selectedReport.spending else s.selectedReport.categories[category]?:0L
-        val ready=s.reportMonth==selected
-        if(ready && entered!=null && entered>0) {AmountRow("Already spent",spent);runCatching {Math.subtractExact(entered,spent)}.getOrNull()?.let {AmountRow("Remaining",it)}}
-        if(!ready) Text("Loading this month's report…",color=Tokens.muted)
-        EditorialPrimaryButton("Save budget",ready && entered!=null && entered>0 && !busy) {
-            val finished={budgetAmount="";editing=false}
-            if(onBudgetSave!=null) onBudgetSave(selected,category,entered!!,finished) else {onBudget(selected,category,entered!!);finished()}
-        }
     }
 }
 @Composable private fun CategoryDistribution(amounts:Map<String?,Long>,categories:List<Category>) {
