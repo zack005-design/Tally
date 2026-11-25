@@ -85,7 +85,7 @@ class EditorialExtensionUiTest {
         compose.onNodeWithText("Done").performClick()
         compose.runOnIdle {focus.clearFocus()}
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("You can plan about"))
-        compose.onNodeWithText("${Money.format(700000L / (LocalDate.now().lengthOfMonth()-LocalDate.now().dayOfMonth+1))} / day").assertExists()
+        compose.onNodeWithText("${referenceMoney(700000L / (LocalDate.now().lengthOfMonth()-LocalDate.now().dayOfMonth+1))} / day").assertExists()
         capture("money-planner")
     }
     @Test fun transactionDetailsPreview() {

@@ -57,7 +57,8 @@ class SecondaryLayoutAuditTest {
         }
         compose.onNodeWithText("Your name").performTextInput("Alex")
         finishTyping()
-        compose.onNodeWithText("Save profile").performScrollTo().assertIsDisplayed().assertIsEnabled()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Save profile"))
+        compose.onNodeWithText("Save profile").assertIsDisplayed().assertIsEnabled()
         compose.runOnIdle { stage.intValue = 1 }
         compose.onNodeWithText("Daily note").performTextInput("A note for the day")
         finishTyping()

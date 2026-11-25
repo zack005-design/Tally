@@ -40,18 +40,23 @@ class FirstBalanceNavigationTest {
         val current=mutableStateOf(first)
         compose.setContent {key(current.value) {TrackerTheme {TrackerApp(current.value)}}}
         compose.waitUntil(10000) {!first.state.value.loading}
-        compose.onNodeWithText("Your\nstarting point.").assertIsDisplayed()
+        compose.onNodeWithText("Welcome to Tally").assertIsDisplayed()
+        compose.onNodeWithText("Continue").performClick()
+        compose.onNodeWithContentDescription("Step 2 of 4").assertIsDisplayed()
+        compose.onNodeWithText("Continue").performClick()
+        compose.onNodeWithText("Your starting balances").assertIsDisplayed()
         capture("setup")
-        compose.onNodeWithContentDescription("Wallet balance (₹)").performTextInput("250")
-        compose.onNodeWithContentDescription("GPay balance (₹)").performScrollTo().performTextInput("1000")
-        compose.onNodeWithContentDescription("GPay balance (₹)").performImeAction()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Continue to Tally"))
-        compose.onNodeWithText("Continue to Tally").performClick()
+        compose.onNodeWithContentDescription("Wallet balance in rupees").performScrollTo().performTextInput("250")
+        compose.onNodeWithContentDescription("GPay balance in rupees").performScrollTo().performTextInput("1000")
+        compose.onNodeWithContentDescription("GPay balance in rupees").performImeAction()
+        compose.onNodeWithText("Continue").performClick()
+        compose.onNodeWithText("Start using Tally").performClick()
         compose.waitUntil(10000) {compose.onAllNodesWithText("Available to spend").fetchSemanticsNodes().isNotEmpty()}
         compose.onNode(hasText("Summary") and isSelectable()).assertIsSelected()
         compose.onNodeWithText("₹1,250").assertExists()
         capture("today")
-        compose.onNodeWithText("Add money").performScrollTo().performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Add money"))
+        compose.onNodeWithText("Add money").performClick()
         compose.onNodeWithText("Destination").performClick()
         compose.onAllNodesWithText("GPay").onLast().performClick()
         compose.onNodeWithContentDescription("Amount to add (₹)").performTextInput("100")
@@ -65,7 +70,7 @@ class FirstBalanceNavigationTest {
         }
         compose.waitUntil(10000) {!current.value.state.value.loading}
         compose.onNode(hasText("Summary") and isSelectable()).assertIsSelected()
-        compose.onNodeWithText("Your\nstarting point.").assertDoesNotExist()
+        compose.onNodeWithText("Welcome to Tally").assertDoesNotExist()
         compose.onNodeWithText("₹1,350").assertExists()
     }
 }

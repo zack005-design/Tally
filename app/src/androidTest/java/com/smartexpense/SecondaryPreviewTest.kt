@@ -139,6 +139,7 @@ class SecondaryPreviewTest {
         lateinit var model:AppViewModel
         compose.runOnIdle {model=createModel()}
         render(large=true) {AccountsScreen(fixture,model,{})}
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Add account"))
         compose.onNodeWithText("Add account").performClick()
         compose.onNodeWithText("Cancel").assertIsDisplayed()
         compose.onNodeWithText("Account name",useUnmergedTree=true).assertHeightIsAtLeast(24.dp)
