@@ -4,6 +4,12 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+Nothing yet.
+
+## [0.2.7](https://github.com/zack005-design/Tally/releases)
+
+- Publish one APK, the AI edition, instead of separate AI and non-AI downloads. It includes everything the non-AI edition had, and falls back to the same rules if a model cannot load. It installs over either earlier edition and keeps your records.
+- New app logo: a **T** whose stem turns into a tick, on the blue tile. Choose from ten home-screen icons in **Settings → Appearance → App icon**, including the original tally marks as **Classic**. Each has a themed-icon version for Android 13 and later. [Choose an app icon](docs/features/appearance.md#choose-an-app-icon)
 - Add **Ask Tally**, a 4.9M-parameter reasoning model trained from scratch that runs on the phone (AI edition, about 5 MB). It plans the steps for questions like `how much did I spend on food this month?`, `what was my biggest expense this week`, `average daily spending last month` or `what if I cut food by 20%`, follows up on `what about last month`, and Tally's exact code carries them out and shows how it worked it out. It never invents numbers and declines when unsure; comparisons, shares and savings plans are often declined for now. [Ask Tally](docs/features/on-device-ai.md#ask-tally-tiny-reasoning-model) · [Model report](ml/tally-assistant/README.md)
 - Train a personal category model on the phone from your own entries, including categories you created, so variants like `evening chai` follow your usual choice. It stays in memory, needs a few entries per category and stays silent when unsure. [Learns from your own entries](docs/features/on-device-ai.md#learns-from-your-own-entries)
 - Search transactions in plain words: `coffee over 100 last month`, `food in october by gpay`, `refunds under 500`. Tally shows what it understood. [Find a transaction](docs/features/everyday-money.md#find-a-transaction)
@@ -30,6 +36,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 - In **Spending**, each category's icon now matches its colour in the distribution bar, so the list works as the chart's legend. Previously the icons cycled through three unrelated colours.
 - Tapping your avatar on **Summary** now opens **Settings** instead of the long Tools list. Settings groups your profile, appearance, app lock, reminders, accounts, categories, merchant rules, favourites, calculator, backup, export and chat import. [Appearance guide](docs/features/appearance.md)
 - **Spending** now lists View transactions, Budgets, Smart insights, Savings goals, Recurring, Money planner, Calendar & diary, Monthly review and Year in review in one grouped list, with Spending details to show or hide the monthly breakdown, replacing the stacked buttons. Set budgets from **Budgets → Edit budgets**. [Spending and planning](docs/features/spending-and-planning.md)
+
+[Verification and known limits](docs/releases/0.2.7.md)
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 

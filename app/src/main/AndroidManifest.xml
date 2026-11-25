@@ -28,9 +28,47 @@
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.bills" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/bill_paths"/>
         </provider>
-        <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
+        <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize"/>
+        <!-- Home-screen icons the user can choose in Appearance (AppIcons.kt). Exactly one is enabled. -->
+        <activity-alias android:name=".icon.Tally" android:targetActivity=".MainActivity" android:exported="true" android:enabled="true" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher">
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias android:name=".icon.LetterT" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_lettert" android:roundIcon="@mipmap/ic_launcher_lettert">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Wallet" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_wallet" android:roundIcon="@mipmap/ic_launcher_wallet">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Rupee" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_rupee" android:roundIcon="@mipmap/ic_launcher_rupee">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Coins" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_coins" android:roundIcon="@mipmap/ic_launcher_coins">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Ledger" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_ledger" android:roundIcon="@mipmap/ic_launcher_ledger">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Split" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_split" android:roundIcon="@mipmap/ic_launcher_split">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Ask" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_ask" android:roundIcon="@mipmap/ic_launcher_ask">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Receipt" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_receipt" android:roundIcon="@mipmap/ic_launcher_receipt">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".icon.Classic" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_classic" android:roundIcon="@mipmap/ic_launcher_classic">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/expense_shortcuts"/>
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
     </application>
 </manifest>

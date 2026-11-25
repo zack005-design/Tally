@@ -159,14 +159,14 @@ private enum class OnboardingStep { Welcome, HowItWorks, Balances, Reminders, Re
     }
 }
 
-/** The app icon: a blue gradient tile with the white tally mark and a soft glow. */
+/** The app icon: a blue gradient tile with the white Tally mark and a soft glow. */
 @Composable internal fun TallyLogoTile(size: Dp) {
     val shape = RoundedCornerShape(size * .24f)
     val glow = Color(0xFF0A66D8)
     Box(Modifier.size(size).shadow(size * .3f, shape, ambientColor = glow, spotColor = glow)
         .background(Brush.linearGradient(listOf(Color(0xFF4C9BFF), Color(0xFF0A66D8), Color(0xFF0552B5))), shape),
         contentAlignment = Alignment.Center) {
-        Icon(painterResource(R.drawable.ic_tally_mark), null, Modifier.size(size * .55f), tint = Color.White)
+        Icon(painterResource(R.drawable.ic_tally_logo), null, Modifier.size(size * .6f), tint = Color.White)
     }
 }
 
