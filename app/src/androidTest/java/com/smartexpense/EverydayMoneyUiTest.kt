@@ -13,7 +13,7 @@ class EverydayMoneyUiTest {
     @Test fun todayActionsOpenExistingTools() {
         var destination=""
         var kind:Kind?=null
-        compose.setContent {TrackerTheme {HomeScreen(Snapshot(),{k,_->kind=k},{},{},{},{destination=it})}}
+        compose.setContent {TrackerTheme {HomeScreen(Snapshot(accounts=listOf(com.smartexpense.domain.Account("w","Wallet","Cash",5000,false))),{k,_->kind=k},{},{},{},{destination=it})}}
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Record income"))
         compose.onNodeWithText("Record income").performClick()
         compose.runOnIdle {assertEquals(Kind.INCOME,kind)}

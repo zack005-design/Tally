@@ -44,12 +44,14 @@ class UiPolishTest {
                 Box(Modifier.padding(padding)) {HomeScreen(sample(),{_,_->},{},{},{},{destination=it})}
             }
         }}
-        compose.onNodeWithText("Expense").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Add money").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Add").performScrollTo().assertIsDisplayed()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Add money"))
+        compose.onNodeWithText("Add money").assertIsDisplayed()
         capture(if(dark) "today-dark" else "today-light")
         compose.onNodeWithText("Add money").performClick()
         assertEquals("wallet",destination)
-        compose.onNodeWithContentDescription("Hide balance").performScrollTo().performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Hide balance"))
+        compose.onNodeWithContentDescription("Hide balance").performClick()
         compose.onNodeWithText("₹6,200").assertDoesNotExist()
         compose.onNodeWithText("₹1,200").assertDoesNotExist()
         compose.onNodeWithText("₹5,000").assertDoesNotExist()
@@ -118,12 +120,14 @@ class UiPolishTest {
         compose.setContent {TrackerTheme {Surface(color=Tokens.background) {
             SplitScreen(sample(),{},{management="friends"},{management="groups"},{_,_->},{},{_,_,_,_->})
         }}}
-        compose.onNodeWithText("Start a shared bill").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("●  You're owed ₹135").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("●  You owe ₹50").assertIsDisplayed()
+        compose.onNodeWithText("New bill").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("You're owed ₹135").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("You owe ₹50").assertIsDisplayed()
         capture("friends-light")
-        compose.onNodeWithText("Settlement history").performScrollTo().performClick()
-        compose.onNodeWithText("Manage friends").performScrollTo().performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Settlement history"))
+        compose.onNodeWithText("Settlement history").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Manage friends"))
+        compose.onNodeWithText("Manage friends").performClick()
         assertEquals("friends",management)
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Original bill obligations"))
         compose.onNodeWithText("Original bill obligations").assertExists()

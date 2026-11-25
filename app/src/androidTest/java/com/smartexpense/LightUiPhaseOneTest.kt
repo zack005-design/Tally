@@ -56,8 +56,8 @@ class LightUiPhaseOneTest {
         var background = Color.Unspecified
         var primary = Color.Unspecified
         compose.setContent { TrackerTheme(darkTheme = dark) { background = MaterialTheme.colorScheme.background; primary = MaterialTheme.colorScheme.primary } }
-        compose.runOnIdle { assertEquals(Color(0xFFF6F7F9), background); assertEquals(Color(0xFF0066FF), primary); dark = true }
-        compose.runOnIdle { assertEquals(Color(0xFF0E1116), background); assertEquals(Color(0xFF8DB2FF), primary) }
+        compose.runOnIdle { assertEquals(Color(0xFFF2F2F7), background); assertEquals(Color(0xFF0A66D8), primary); dark = true }
+        compose.runOnIdle { assertEquals(Color.Black, background); assertEquals(Color(0xFF4C9AFF), primary) }
     }
 
     @Test fun navigationIncludesSpendingAndFreshComposeAction() {
@@ -163,9 +163,11 @@ class LightUiPhaseOneTest {
         compose.onNodeWithContentDescription("Hide balance").performClick()
         listOf("₹6,200", "₹1,200", "₹5,000").forEach { compose.onNodeWithText(it).assertDoesNotExist() }
         compose.onNodeWithContentDescription("Show balance").performClick()
-        compose.onNodeWithText("Add money").performScrollTo().performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Add money"))
+        compose.onNodeWithText("Add money").performClick()
         assertEquals("wallet/add-money", route)
-        compose.onNodeWithContentDescription("Settings").performScrollTo().performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Settings"))
+        compose.onNodeWithContentDescription("Settings").performClick()
         assertEquals("more", route)
     }
 

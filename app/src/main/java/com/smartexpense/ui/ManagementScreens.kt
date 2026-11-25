@@ -52,14 +52,15 @@ import androidx.compose.ui.res.painterResource
     var creating by rememberSaveable {mutableStateOf(false)}
     val primaryIds=listOfNotNull(s.walletSources?.walletId,s.walletSources?.gpayId)
     val primary=s.accounts.filter {it.id in primaryIds && !it.archived}
-    val other=s.accounts.filter {it.id !in primaryIds || it.archived}
+    val other=s.accounts.filter {it.id !in primaryIds && !it.archived}
+    val archived=s.accounts.filter {it.archived}
     Page("Accounts",largeTitle=true,actions={TextButton({creating=true},Modifier.semantics {contentDescription="Add account"}) {Text("+",style=MaterialTheme.typography.headlineMedium,color=Tokens.accent)}}) {
-        item {Surface(shape=Tokens.card,color=Tokens.secondarySurface) {Column(Modifier.fillMaxWidth().padding(20.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+        item {Surface(shape=Tokens.card,color=Tokens.paper) {Column(Modifier.fillMaxWidth().padding(20.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
             Text("Total balance",color=Tokens.muted,style=MaterialTheme.typography.bodyMedium)
             Text(runCatching {referenceMoney(Finance.total(s.accounts.filterNot {it.archived}.map {it.balance}))}.getOrDefault("Amount unavailable"),style=MaterialTheme.typography.displaySmall)
         }}}
         if(primary.isNotEmpty()) {
-            item {SectionLabel("Your accounts")}
+            item {SectionLabel("Spending accounts")}
             item {GroupedCard {primary.forEachIndexed {index,account->
                 if(index>0) GroupedDivider()
                 GroupedRow(account.name,if(account.id==s.walletSources?.walletId) R.drawable.ic_wallet_outline else R.drawable.ic_contactless,value=referenceMoney(account.balance),tone=if(account.id==s.walletSources?.walletId) ReferenceTone.Wallet else ReferenceTone.Blue) {selected=account.id}
@@ -69,7 +70,14 @@ import androidx.compose.ui.res.painterResource
             item {SectionLabel(if(primary.isEmpty()) "Your accounts" else "Other accounts")}
             item {GroupedCard {other.forEachIndexed {index,account->
                 if(index>0) GroupedDivider()
-                GroupedRow(account.name,if(account.type in listOf("Cash","Wallet")) R.drawable.ic_wallet_outline else R.drawable.ic_account,supporting=if(account.archived) "Archived" else null,value=referenceMoney(account.balance)) {selected=account.id}
+                GroupedRow(account.name,if(account.type in listOf("Cash","Wallet")) R.drawable.ic_wallet_outline else R.drawable.ic_account,supporting=account.type,value=referenceMoney(account.balance)) {selected=account.id}
+            }}}
+        }
+        if(archived.isNotEmpty()) {
+            item {SectionLabel("Archived")}
+            item {GroupedCard {archived.forEachIndexed {index,account->
+                if(index>0) GroupedDivider()
+                GroupedRow(account.name,R.drawable.ic_account,supporting="Archived",value=referenceMoney(account.balance),tone=ReferenceTone.Gray) {selected=account.id}
             }}}
         }
         if(s.accounts.isEmpty()) item {EmptyLedger("Your accounts","Create an account to record balances and payments.")}

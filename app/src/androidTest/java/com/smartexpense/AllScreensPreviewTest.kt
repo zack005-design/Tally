@@ -64,11 +64,7 @@ class AllScreensPreviewTest {
             var entry by remember { mutableStateOf(EntryUiState(amount = "180", description = "Lunch", accountId = "w", categoryId = "food")) }
             EntryScreen(entry, snapshot.accounts, emptyList(), snapshot.categories, emptyList(), { entry = it }, {}, {}, walletSources = snapshot.walletSources)
         }
-        compose.onNodeWithText("Continue to payments").performClick()
-        capture("expense-payment")
-        compose.onNodeWithText("Review bill").performClick()
-        capture("expense-review")
-        compose.onNodeWithText("Save transaction").assertIsDisplayed().assertIsEnabled()
+        compose.onNodeWithText("Save expense").assertIsDisplayed().assertIsEnabled()
     }
 
     @Test fun calendarWeek() {

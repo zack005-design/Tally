@@ -213,7 +213,7 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
 @Composable fun EditorialPrimaryButton(label:String,enabled:Boolean=true,onClick:()->Unit) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Button(lightHapticAction(onClick),Modifier.fillMaxWidth().heightIn(min=50.dp).softPress(interaction),interactionSource=interaction,enabled=enabled,shape=Tokens.pill,
-        colors=ButtonDefaults.buttonColors(containerColor=Tokens.accent,contentColor=MaterialTheme.colorScheme.onPrimary,
+        colors=ButtonDefaults.buttonColors(containerColor=Tokens.accentFill,contentColor=Color.White,
             disabledContainerColor=MaterialTheme.colorScheme.surfaceContainerHighest,disabledContentColor=Tokens.muted),
         contentPadding=PaddingValues(horizontal=20.dp,vertical=12.dp)) {
         Text(label,textAlign=androidx.compose.ui.text.style.TextAlign.Center,style=MaterialTheme.typography.labelLarge)
