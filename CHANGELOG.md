@@ -25,11 +25,11 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Sharpen and re-read photos with mild blur from hand shake or soft focus. Tally says when it used the sharpened read.
 - Accept bill photos larger than 6 MB. Photos larger than 6 MB were rejected before any text was read; photos up to 40 MB now work and are saved as a compact JPEG copy.
 - Pick up bill amounts written as `50/-` or `50/=`, or followed by a tax-code letter or `*` (such as `56.00 A`). These rows were previously skipped, leaving the item list and total empty.
+- Begin the UI redesign: refreshed colour, shape and dark-mode tokens, a reworked **Summary**, updated **Split**, **Budgets** and **Accounts** screens, and a one-page keypad for adding a personal expense.
 - Tidy **Tools**: each group page is now split into short, labelled sections (for example Record, Accounts and Plan under **Money & planning**) with its own icon on every row, instead of one long list that repeated the same icon. Favourites and the home-screen widget share one entry instead of three.
-- Tidy **Spending**: View transactions, Monthly budgets, Set budget and Spending details now sit together in one list under the chart instead of four separately styled buttons.
 - In **Spending**, each category's icon now matches its colour in the distribution bar, so the list works as the chart's legend. Previously the icons cycled through three unrelated colours.
 - Tapping your avatar on **Summary** now opens **Settings** instead of the long Tools list. Settings groups your profile, appearance, app lock, reminders, accounts, categories, merchant rules, favourites, calculator, backup, export and chat import. [Appearance guide](docs/features/appearance.md)
-- **Spending** now lists Budgets, Savings goals, Recurring, Money planner, Calendar & diary, Monthly review and Year in review in one grouped list, replacing the stacked buttons. Set budgets from **Budgets → Edit budgets**. [Spending and planning](docs/features/spending-and-planning.md)
+- **Spending** now lists View transactions, Budgets, Smart insights, Savings goals, Recurring, Money planner, Calendar & diary, Monthly review and Year in review in one grouped list, replacing the stacked buttons. Set budgets from **Budgets → Edit budgets**. [Spending and planning](docs/features/spending-and-planning.md)
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 
