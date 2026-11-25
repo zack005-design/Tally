@@ -183,6 +183,15 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         change(EntryUiState(kind=d.kind,amount=Money.input(d.amount),description=d.description,accountId=d.accountId,destinationId=d.destinationAccountId.orEmpty(),categoryId=d.categoryId,groupId=d.groupId,shared=d.participants!=listOf("self"),participants=d.participants,paid=d.contributions.mapValues { Money.input(it.value) },method=if(d.participants!=listOf("self")) "Fixed" else "Equal",values=(d.splitRule as? SplitRule.Fixed)?.amounts?.mapValues { Money.input(it.value) }.orEmpty(),date=java.time.Instant.ofEpochMilli(d.date).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString(),notes=d.notes,replaces=if(duplicate) null else id,refundOf=d.refundOf,secondAccountId=d.selfPayments.keys.firstOrNull {it!=d.accountId}.orEmpty(),originalMovements=original,originalDate=if(duplicate) null else d.date,secondPayment=d.selfPayments.entries.firstOrNull {it.key!=d.accountId}?.value?.let(Money::input).orEmpty()));onReady()
     }
     private var parseRequest = 0L
+    /** Personal category model trained on this phone from saved entries; rebuilt when the records change. */
+    private var personalCategories: Pair<Int,PersonalCategoryModel?>? = null
+    private suspend fun refreshPersonalCategories() {
+        val snapshot=state.value.snapshot
+        val key=java.util.Objects.hash(snapshot.records.size,snapshot.records.firstOrNull()?.id,snapshot.transactionCount,snapshot.categories.map {it.id to it.archived})
+        if(personalCategories?.first==key) return
+        val active=snapshot.categories.filterNot {it.archived}.map {it.id}.toSet()
+        personalCategories=key to kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { PersonalCategoryModel.train(snapshot.records,active) }
+    }
     fun parseText() {
         val request = ++parseRequest
         val requested = form.value
@@ -196,6 +205,7 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
             if (answer != null) { change(requested.copy(parserNotice = answer.text + " Nothing was saved.")); return@launch }
         }
         queuedDrafts.clear();continuingQueue=false
+        try { refreshPersonalCategories() } catch (error: CancellationException) { throw error } catch (error: Exception) { personalCategories=null }
         suspend fun interpret(text:String)=commandParser?.parse(text, people) ?: kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { CommandExpenseTextParser(null).parse(text, people) }
         // Several complete personal expenses on one line become drafts reviewed and saved one by one.
         val segments=MultiExpense.segments(requested.text)
@@ -224,15 +234,18 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         val personal=if(parsed.kind==Kind.EXPENSE && parsed.contributions.keys.all { it=="self" } && parsed.splitRule==null)
             personalSuggestion(parsed.description,snapshot.records,snapshot.accounts.filterNot { it.archived }.map { it.id }.toSet(),snapshot.categories.map { it.id }.toSet())
             else PersonalSuggestion()
+        val learned=if(personal.categoryId==null && parsed.kind==Kind.EXPENSE && parsed.contributions.keys.all { it=="self" } && parsed.splitRule==null)
+            personalCategories?.second?.suggest(parsed.description)?.categoryId?.takeIf { id -> snapshot.categories.any { it.id==id && !it.archived } } else null
         val personalAccount=if(source==null) personal.accountId else null
         val accountSource=source?:personalAccount
         val missing=parsed.missing-(if(accountSource!=null) setOf("account") else emptySet())-(if(destination!=null) setOf("destination account") else emptySet())
         val history=listOfNotNull(personal.categoryId?.let { "category" },personalAccount?.let { "account" })
-        val warnings=(if(personal.categoryId!=null) parsed.warnings.filterNot { it.startsWith("Category suggested on device") } else parsed.warnings)+
+        val warnings=(if(personal.categoryId!=null || learned!=null) parsed.warnings.filterNot { it.startsWith("Category suggested on device") } else parsed.warnings)+
+            listOfNotNull(learned?.let { "Category picked by your personal model, trained on this phone from your entries. Change it if it does not fit." })+
             (if(history.isEmpty()) emptyList() else listOf("Filled ${history.joinToString(" and ")} from your past entries. Change if needed."))+
             listOfNotNull(SmartInsights.possibleDuplicate(parsed.description,parsed.amount,parsed.date?:java.time.LocalDate.now(),snapshot.records)?.let { "You already saved ${it.description} for ${Money.format(it.amount)} that day. Check this is not a duplicate." })
         if(parsed.kind==Kind.REPAYMENT) {parsedRepayment.value=parsed;change(current.copy(parserNotice=(parsed.warnings+"Repayment draft ready. Review the person, direction, amount and account.").joinToString("\n")));return}
-        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,notes=parsed.notes?.let { (current.notes+"\n"+it).trim() }?:current.notes,categoryId=personal.categoryId?:state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=accountSource?:current.accountId,secondAccountId="",secondPayment="",destinationId=destination.orEmpty(),date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(warnings+"Review all fields. Missing: ${missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
+        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,notes=parsed.notes?.let { (current.notes+"\n"+it).trim() }?:current.notes,categoryId=personal.categoryId?:learned?:state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=accountSource?:current.accountId,secondAccountId="",secondPayment="",destinationId=destination.orEmpty(),date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(warnings+"Review all fields. Missing: ${missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
     }
 }
 

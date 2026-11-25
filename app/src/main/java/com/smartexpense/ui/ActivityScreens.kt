@@ -48,7 +48,8 @@ import java.time.format.DateTimeFormatter
     val categoryNames=remember(s.categories) {s.categories.associate {it.id to it.name}}
     val accountNames=remember(s.accounts) {s.accounts.associate {it.id to it.name}}
     val personNames=remember(s.people) {s.people.associate {it.id to it.name}}
-    val filtered=remember(s.records,categoryNames,accountNames,personNames,query,monthText,kind,category,account,person,group,tag,start,end,minimum,maximum,zone) {
+    val smart=remember(query,s.categories,s.accounts) {SmartSearch.understand(query,s.categories,s.accounts,LocalDate.now(zone))}
+    val filtered=remember(s.records,categoryNames,accountNames,personNames,smart,query,monthText,kind,category,account,person,group,tag,start,end,minimum,maximum,zone) {
         val selectedMonth=monthText.takeIf {it.isNotEmpty()}?.let(YearMonth::parse)
         val from=runCatching {start.takeIf {it.isNotBlank()}?.let {LocalDate.parse(it).atStartOfDay(zone).toInstant().toEpochMilli()}}.getOrNull()
         val through=runCatching {end.takeIf {it.isNotBlank()}?.let {LocalDate.parse(it).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()}}.getOrNull()
@@ -56,7 +57,9 @@ import java.time.format.DateTimeFormatter
         val max=runCatching {maximum.takeIf {it.isNotBlank()}?.let(Money::parse)}.getOrNull()
         if((start.isNotBlank() && from==null) || (end.isNotBlank() && through==null) ||
             (minimum.isNotBlank() && min==null) || (maximum.isNotBlank() && max==null)) return@remember emptyList<Record>()
-        val search=query.trim()
+        val search=smart.text
+        val smartFrom=smart.start?.atStartOfDay(zone)?.toInstant()?.toEpochMilli()
+        val smartUntil=smart.end?.plusDays(1)?.atStartOfDay(zone)?.toInstant()?.toEpochMilli()
         val searchAmount=TransactionSearch.amount(search)
         s.records.filter {r->
             (selectedMonth==null || YearMonth.from(Instant.ofEpochMilli(r.date).atZone(zone))==selectedMonth) &&
@@ -64,6 +67,10 @@ import java.time.format.DateTimeFormatter
                 (account=="all" || account in r.accountIds) && (person=="all" || person in r.personIds) &&
                 (group=="all" || r.groupId==group) && (tag.isEmpty() || Tags.has(r,tag)) && (from==null || r.date>=from) &&
                 (through==null || r.date<through) && (min==null || r.amount>=min) && (max==null || r.amount<=max) &&
+                (smartFrom==null || r.date>=smartFrom) && (smartUntil==null || r.date<smartUntil) &&
+                (smart.minimum==null || r.amount>=smart.minimum) && (smart.maximum==null || r.amount<=smart.maximum) &&
+                (smart.categoryId==null || r.categoryId==smart.categoryId) && (smart.accountId==null || smart.accountId in r.accountIds) &&
+                (smart.kind==null || r.kind==smart.kind) &&
                 (search.isEmpty() || (searchAmount!=null && TransactionSearch.matchesAmount(r,searchAmount)) ||
                     r.description.contains(search,true) || r.notes.contains(search,true) ||
                     r.tags.any {it.contains(search.removePrefix("#"),true)} ||
@@ -81,7 +88,11 @@ import java.time.format.DateTimeFormatter
         Spacer(Modifier.width(8.dp))
         StudioSettingsButton(onSettings)
     }) {
-        item(key="search") {Box(Modifier.padding(vertical=16.dp)) {SearchPill("Search transactions",query,{query=it})}}
+        item(key="search") {Column(Modifier.padding(vertical=16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+            SearchPill("Search transactions",query,{query=it})
+            if(smart.structured) Text("Understood: "+(smart.labels+listOfNotNull(smart.text.takeIf {it.isNotEmpty()}?.let {"“$it”"})).joinToString(" · "),
+                color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
+        }}
         item(key="filters") {Row(Modifier.fillMaxWidth().padding(bottom=8.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             OutlinedButton({monthPicker=true}) {Text((if(monthText.isEmpty()) "All dates" else YearMonth.parse(monthText).format(DateTimeFormatter.ofPattern("MMMM yyyy")))+" ⌄")}
             val count=listOf(kind,category,account,person,group).count {it!="all"}+listOf(start,end,minimum,maximum).count {it.isNotBlank()}

@@ -4,6 +4,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Train a personal category model on the phone from your own entries, including categories you created, so variants like `evening chai` follow your usual choice. It stays in memory, needs a few entries per category and stays silent when unsure. [Learns from your own entries](docs/features/on-device-ai.md#learns-from-your-own-entries)
+- Search transactions in plain words: `coffee over 100 last month`, `food in october by gpay`, `refunds under 500`. Tally shows what it understood. [Find a transaction](docs/features/everyday-money.md#find-a-transaction)
 - Add **Smart insights** under More → Money & planning: a month-end spending forecast, alerts for unusually high categories and large entries, detected repeating payments with next dates and monthly cost, one-tap budget suggestions from your history, and duplicate warnings, all worked out on the phone. [Smart insights](docs/features/spending-and-planning.md#smart-insights)
 - Add a **Net worth** screen under More → Money & planning: account balances plus what friends owe you, minus what you owe, with each account and a six-month month-end trend. [Net worth](docs/features/spending-and-planning.md#net-worth)
 - Enter several expenses in one line, such as `chai 20 cash, samosa 30 cash; bus 15 upi`. Each becomes its own draft (Expense 1 of 3, …) that you review and save in turn. [Several expenses at once](docs/features/on-device-ai.md#several-expenses-at-once)

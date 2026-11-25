@@ -25,6 +25,17 @@ Keep a clear record of what you have, what you spend, and how money moves betwee
 
 In **Transactions**, type in the search box to match descriptions, notes, tags, categories, accounts and people. Type an amount such as `80`, `₹1,250` or `20.50` to also find transactions whose total or your share is exactly that amount. Use **Filter** for dates, types and amount ranges.
 
+You can also search in plain words, and Tally turns the phrases it recognises into filters and shows what it understood under the box:
+
+| Search | Finds |
+| --- | --- |
+| `coffee over 100 last month` | "coffee" entries above ₹100 last month |
+| `food in october by gpay` | Food category, October, paid with GPay |
+| `refunds under 500` | Refunds below ₹500 |
+| `between 100 and 1000 in the last 7 days` | Amounts in that range this past week |
+
+Recognised phrases: `over`/`above`/`more than`, `under`/`below`/`less than`, `between … and …`, today, yesterday, this or last week/month/year, the last N days, a month name, a category or account name, and `expenses`, `income`, `refunds`, `transfers` or `repayments`. Amount phrases compare the transaction total. Anything else is matched as text, and a search with no recognised phrase works exactly as before.
+
 ## Tag transactions
 
 Tags are your own labels, such as `Goa trip` or `work`, that group transactions across categories.

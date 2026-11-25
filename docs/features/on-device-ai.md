@@ -93,6 +93,8 @@ In the AI edition, when the rules cannot tell the category, a second small model
 
 In both editions, Tally also looks at your own saved personal expenses with the same description. When at least two of your recent entries agree, for example `chai` always filed under Food and paid from Wallet, the draft uses that category, and that account if you did not name one. Accounts you type always win, and mixed or one-off habits produce no guess. This is a lookup on your phone, not a trained model: nothing leaves the device and nothing is saved until you confirm.
 
+When there is no exact match, a **personal category model** takes over in both editions. Tally trains it on your phone from up to 3,000 of your recent personal expenses, including categories you created yourself, each time you interpret a command after your records change. It uses the same word and letter-pattern features as the bundled category model, so after a few `chai` entries under Food, `evening chai` also goes to Food. It needs at least two categories with three or more entries each, suggests a category only when its score is at least 0.45 and 1.5 times the next best, and stays silent otherwise. The model lives only in memory and is never saved or shared. Your exact past entries come first, then this personal model, then the built-in rules and model.
+
 ## What runs locally
 
 The command extension has **1,002,068 parameters** and a **4,011,202-byte** portable bundle (about 3.83 MiB). A **53,142-parameter** compatibility model keeps already-supported English drafts fast and stable. It is checked first; the extension handles its abstentions. The category suggester has **40,970 parameters** (164,022 bytes). All three run locally and are omitted from the non-AI APK.
