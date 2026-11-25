@@ -72,10 +72,17 @@ import kotlinx.coroutines.CancellationException
             item {TrendChart(report.daily,month,start,end)}
             item {Text("By category",style=MaterialTheme.typography.titleMedium)}
             item {if(report.categories.isEmpty()) EmptyLedger("No expenses this ${period.lowercase()}","Record an expense to see your category breakdown.") else CategoryDistribution(report.categories,s.categories)}
-            item {TextButton(onTransactions,Modifier.fillMaxWidth()) {Text("View transactions →")}}
-            item {ReferenceAction("Monthly budgets",R.drawable.ic_insights) {budgetsOpen=true}}
-            item {TextButton({editing=true},Modifier.fillMaxWidth()) {Text("Set budget")}}
-            item {TextButton({details=!details},Modifier.fillMaxWidth()) {Text(if(details) "Hide spending details" else "Spending details")}}
+            // One grouped list instead of four stacked buttons in different styles.
+            item {SectionLabel("MORE")}
+            item {GroupedCard {
+                GroupedRow("View transactions",R.drawable.ic_activity,onClick=onTransactions)
+                GroupedDivider()
+                GroupedRow("Monthly budgets",R.drawable.ic_target_outline,tone=ReferenceTone.Lavender) {budgetsOpen=true}
+                GroupedDivider()
+                GroupedRow("Set budget",R.drawable.ic_add,tone=ReferenceTone.Lavender) {editing=true}
+                GroupedDivider()
+                GroupedRow(if(details) "Hide spending details" else "Spending details",R.drawable.ic_info,tone=ReferenceTone.Gray,showChevron=false) {details=!details}
+            }}
             if(details) {
                 item {Text("Monthly details · ${month.format(DateTimeFormatter.ofPattern("MMMM yyyy"))}",style=MaterialTheme.typography.titleMedium)}
                 if(s.reportMonth==selected) item {EverydayInsights(s)}
@@ -130,7 +137,8 @@ import kotlinx.coroutines.CancellationException
             val percent=if(positiveTotal>0 && entry.value>=0) "${kotlin.math.round(entry.value/positiveTotal*100).toInt()}%" else if(entry.value<0) "Net refund" else "0%"
             val large=LocalDensity.current.fontScale>1.3f || referenceMoney(entry.value).length>14
             Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                ReferenceIcon(icon,when(index%3) {0->ReferenceTone.Peach;1->ReferenceTone.Lavender;else->ReferenceTone.Blue})
+                // Same colour as this row's bar segment, so the list doubles as the chart legend.
+                SolidIcon(icon,if(entry.value>0) tones[index%tones.size] else CategoryColors.gray)
                 Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     Text(category?.name?:"Uncategorised",style=MaterialTheme.typography.bodyLarge)
                     if(large) {Text(referenceMoney(entry.value),style=MaterialTheme.typography.titleSmall);Text(percent,color=Tokens.muted,style=MaterialTheme.typography.bodySmall)}
