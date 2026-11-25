@@ -37,7 +37,7 @@ import org.junit.runner.RunWith
     @Test fun settingsLinksToAppearance() {
         var destination=""
         compose.setContent {TrackerTheme(darkTheme=true) {SettingsOverviewScreen(com.smartexpense.domain.LocalSettings()) {destination=it}}}
-        compose.onNodeWithText("Theme").performScrollTo().performClick()
+        compose.onNodeWithText("Appearance").performScrollTo().performClick()
         assertEquals("appearance",destination)
     }
 }

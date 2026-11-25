@@ -5,7 +5,7 @@ Use **Tally Companion 0.2.0 or newer** with the updated Android app. This is a f
 1. Open the chat holding your spending history and select Tally Companion.
 2. Ask: **“Prepare my spending history for Tally. Preserve corrections and legitimate repeat purchases, and flag missing details.”**
 3. Review the coverage and unresolved counts. Download the generated `tally-history.json`. If older messages are unavailable, provide those records before requesting a complete export.
-4. In Tally, open **Tools → History & reports → Import from ChatGPT**, then choose the file.
+4. In Tally, open **Settings → Import from ChatGPT** (tap your avatar on **Summary**), then choose the file.
 5. Map source account/category labels to existing active accounts/categories. Choose Uncategorised explicitly if appropriate. Correct missing source labels in the file by asking the plugin to regenerate it using the same IDs.
 6. Inspect every entry and possible duplicate. Select the supported records, then tap **Preview balance effects**. Review the actual account balances and excluded count. Nothing is saved by this preview.
 7. Acknowledge the review and tap **Confirm import**. The result reports added, already recorded and excluded entries. If accounts/history changed, preview again first.

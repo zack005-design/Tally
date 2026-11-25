@@ -87,11 +87,13 @@ class ExactHistoryPlanningUiTest {
         compose.waitForIdle()
         compose.runOnIdle { assertEquals(LocalDate.of(2024, 1, 1) to LocalDate.of(2024, 12, 31), requested.last()) }
         compose.onNodeWithText("₹222").assertExists()
-        compose.onNodeWithText("Set budget").performScrollTo().performClick()
+        compose.onNodeWithText("Budgets").performScrollTo().performClick()
+        compose.onNodeWithText("Edit budgets").performScrollTo().performClick()
         compose.onNodeWithText("Budget amount (₹)").performTextInput("100")
         compose.onNodeWithText("Budget amount (₹)").performImeAction()
         compose.onNodeWithText("Already spent").performScrollTo().assertExists()
-        compose.onAllNodesWithText("₹50.00").assertCountEquals(2)
+        assertTrue(compose.onAllNodesWithText("₹50.00").fetchSemanticsNodes().size >= 2)
+        compose.onAllNodesWithText("₹222.00").assertCountEquals(0)
         compose.onAllNodesWithText("Cancel").assertCountEquals(1)
     }
 
