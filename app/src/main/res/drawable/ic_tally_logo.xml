@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp" android:height="32dp" android:viewportWidth="56" android:viewportHeight="56">
+    <!-- The Tally mark: a T whose stem turns into a tick. Same shape as the default launcher icon. -->
+    <group android:translateX="-28" android:translateY="-27">
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="9" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M34,37 H72"/>
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="9" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M51,37 V62 Q51,73 61,67 L78,52"/>
+    </group>
+</vector>

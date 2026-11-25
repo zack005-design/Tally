@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The mark stays inside the adaptive icon safe zone. -->
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.74" android:scaleY="0.74" android:translateX="-1.5">
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="9" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M34,37 H72"/>
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="9" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M51,37 V62 Q51,73 61,67 L78,52"/>
+    </group>
+</vector>

@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Single-colour outline for themed icons; only the alpha is used. -->
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.7" android:scaleY="0.7" android:translateX="0">
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M37,34 H71 Q82,34 82,45 V65 Q82,76 71,76 H37 Q26,76 26,65 V45 Q26,34 37,34 Z"/>
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M68,47 H74 Q82,47 82,55 V55 Q82,63 74,63 H68 Q60,63 60,55 V55 Q60,47 68,47 Z"/>
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="5.5" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M35,55 L42,62 L53,47"/>
+    </group>
+</vector>
