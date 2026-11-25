@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.*
+import androidx.navigation.compose.composable as navComposable
+import androidx.compose.foundation.background
 import androidx.navigation.navArgument
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -81,7 +83,7 @@ import com.smartexpense.domain.*
     val openRoute:(String)->Unit={destination->if(destination in mainTabs) onTab(destination) else nav.navigate(destination)}
     // Landscape phones with a camera cutout or punch-hole keep content clear of it on the side.
     Scaffold(snackbarHost={SnackbarHost(snackbar)},contentWindowInsets=ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)),bottomBar={
-        AnimatedVisibility(showNavigation && !useRail,enter=expandVertically(tween(260,easing=FastOutSlowInEasing),expandFrom=androidx.compose.ui.Alignment.Top)+fadeIn(tween(200)),exit=shrinkVertically(tween(220,easing=FastOutSlowInEasing),shrinkTowards=androidx.compose.ui.Alignment.Top)+fadeOut(tween(140))) {
+        AnimatedVisibility(showNavigation && !useRail,enter=slideInVertically(tween(260,easing=FastOutSlowInEasing)) {it}+fadeIn(tween(200)),exit=ExitTransition.None) {
             LedgerNavigation(shownTab,onTab)
         }
     }) {padding ->
@@ -93,22 +95,23 @@ import com.smartexpense.domain.*
             if(ui.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) {CircularProgressIndicator()} else CompositionLocalProvider(LocalNavigationExitGuard provides exitGuard,LocalEditorialBack provides if(route!=null && route !in listOf("home","activity","insights","add","split","search","onboarding")) ({nav.popBackStack();Unit}) else null) {NavHost(nav,startDestination=remember {launchDestination(ui.snapshot)},modifier=Modifier.weight(1f),
                 // Compose's animation clock respects Android's animator duration scale, including zero.
-                // Tabs crossfade; other screens move in from the right and leave the same way.
+                // iOS-style push: the page slides the full width over the previous one, which follows at a third
+                // of the distance. Swiping back drags the same motion, so nothing fades.
                 enterTransition = {
-                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(180))
-                    else slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 6 } + fadeIn(tween(220, delayMillis = 60))
+                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(150))
+                    else slideInHorizontally(pushMotion) { it }
                 },
                 exitTransition = {
-                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeOut(tween(180))
-                    else slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 12 } + fadeOut(tween(160))
+                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeOut(tween(150))
+                    else slideOutHorizontally(pushMotion) { -it / 3 }
                 },
                 popEnterTransition = {
-                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(180))
-                    else slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 12 } + fadeIn(tween(220, delayMillis = 60))
+                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeIn(tween(150))
+                    else slideInHorizontally(pushMotion) { -it / 3 }
                 },
                 popExitTransition = {
-                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeOut(tween(180))
-                    else slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 6 } + fadeOut(tween(160))
+                    if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeOut(tween(150))
+                    else slideOutHorizontally(pushMotion) { it }
                 }
             ) {
                 // First run: welcome, how it works, starting balances, reminders and app lock, or a restore.
@@ -200,3 +203,9 @@ import com.smartexpense.domain.*
 @Composable fun LedgerNavigation(route:String?,onNavigate:(String)->Unit) = EditorialBottomNavigation(route,onNavigate)
 
 private val mainTabs = setOf("home", "activity", "insights", "split")
+
+private val pushMotion = tween<androidx.compose.ui.unit.IntOffset>(380, easing = androidx.compose.animation.core.CubicBezierEasing(.2f, .8f, .2f, 1f))
+
+/** Every page is opaque, so the one underneath never shows through while it slides or is swiped back. */
+private fun androidx.navigation.NavGraphBuilder.composable(route: String, arguments: List<androidx.navigation.NamedNavArgument> = emptyList(), content: @Composable (androidx.navigation.NavBackStackEntry) -> Unit) =
+    navComposable(route, arguments) { entry -> Box(Modifier.fillMaxSize().background(Tokens.background)) { content(entry) } }
