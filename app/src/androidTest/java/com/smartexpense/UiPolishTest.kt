@@ -44,12 +44,14 @@ class UiPolishTest {
                 Box(Modifier.padding(padding)) {HomeScreen(sample(),{_,_->},{},{},{},{destination=it})}
             }
         }}
-        compose.onNodeWithText("Expense").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Add money").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Add").performScrollTo().assertIsDisplayed()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Add money"))
+        compose.onNodeWithText("Add money").assertIsDisplayed()
         capture(if(dark) "today-dark" else "today-light")
         compose.onNodeWithText("Add money").performClick()
         assertEquals("wallet",destination)
-        compose.onNodeWithContentDescription("Hide balance").performScrollTo().performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Hide balance"))
+        compose.onNodeWithContentDescription("Hide balance").performClick()
         compose.onNodeWithText("₹6,200").assertDoesNotExist()
         compose.onNodeWithText("₹1,200").assertDoesNotExist()
         compose.onNodeWithText("₹5,000").assertDoesNotExist()

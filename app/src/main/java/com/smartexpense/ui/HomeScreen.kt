@@ -43,6 +43,8 @@ import java.time.format.DateTimeFormatter
     // The daily limit is fixed at the start of the day so spending today does not move it.
     val dailyLimit = monthBudget?.let { budgetAllowance(it.amount, (monthSpent - s.dashboard.today).coerceAtLeast(0), today).perDay }
     val hidden = "••••••"
+    val upcoming = remember(s.templates, s.records, s.walletSources, today) { comingUp(s, today) }
+    val week = remember(s.records, s.dashboard, today) { lastSevenDays(s, today) }
     val lockOn = LocalDeviceLock.current?.view?.enabled == true
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxSize(), contentPadding = PaddingValues(start = Tokens.pageInset, end = Tokens.pageInset, top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -69,67 +71,73 @@ import java.time.format.DateTimeFormatter
                         }
                         Text(if (!visible) hidden else total?.let(::referenceMoney) ?: "Total unavailable", Modifier.padding(end = 10.dp),
                             style = MaterialTheme.typography.displaySmall, color = if (active.isEmpty()) Tokens.muted else Tokens.text)
-                        Text(when {
-                            active.isEmpty() -> "Add an account to see your balance here"
-                            !visible -> spendable.take(2).joinToString(" · ") { it.name }
-                            else -> spendable.take(2).joinToString(" · ") { "${it.name} ${referenceMoney(it.balance)}" }
-                        }, Modifier.padding(end = 10.dp), style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
+                        if (active.isEmpty()) Text("Add an account to see your balance here", Modifier.padding(end = 10.dp), style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
+                        else Box(Modifier.padding(top = 8.dp, end = 10.dp)) { AccountChips(spendable.take(2), if (visible) null else hidden, sources, onAccounts) }
                         Spacer(Modifier.height(10.dp))
                         Box(Modifier.padding(end = 10.dp)) {
                             if (active.isEmpty()) EditorialPrimaryButton("Set up Wallet & GPay") { onManage("wallet") }
-                            else PillRow(listOf(
-                                PillAction("Expense", R.drawable.ic_add, primary = true) { onAdd(Kind.EXPENSE, false) },
-                                PillAction("Scan", null) { onManage("bill-import") },
-                                PillAction("Transfer", null) { onAdd(Kind.TRANSFER, false) }
+                            else QuickActions(listOf(
+                                PillAction("Add", R.drawable.ic_add, primary = true) { onAdd(Kind.EXPENSE, false) },
+                                PillAction("Scan", R.drawable.ic_camera_outline) { onManage("bill-import") },
+                                PillAction("Transfer", R.drawable.ic_transfer) { onAdd(Kind.TRANSFER, false) },
+                                PillAction("Income", R.drawable.ic_arrow_in) { onAdd(Kind.INCOME, false) }
                             ))
                         }
                     }
                 }
             }
             if (active.isNotEmpty()) item {
-                GroupedCard {
-                    Surface(onClick = { onManage("calendar") }, color = Tokens.paper, modifier = Modifier.fillMaxWidth()) {
-                        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            ProgressRing(if (dailyLimit != null && dailyLimit > 0) s.dashboard.today.toFloat() / dailyLimit else 0f, CategoryColors.food, 52.dp)
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text("Today", style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
-                                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(referenceMoney(s.dashboard.today), style = MaterialTheme.typography.headlineSmall)
-                                    if (dailyLimit != null) Text("of ${referenceMoney(dailyLimit)}", Modifier.padding(bottom = 3.dp), style = MaterialTheme.typography.bodyMedium, color = Tokens.muted)
-                                }
-                                Text(when {
-                                    dailyLimit == null -> "Spent today · open the calendar"
-                                    s.dashboard.today <= dailyLimit -> "Daily limit · ${referenceMoney(dailyLimit - s.dashboard.today)} left"
-                                    else -> "Daily limit · ${referenceMoney(s.dashboard.today - dailyLimit)} over"
-                                }, style = MaterialTheme.typography.bodySmall, color = if (dailyLimit != null && s.dashboard.today > dailyLimit) Tokens.owed else Tokens.muted)
-                            }
-                        }
-                    }
-                }
-            }
-            if (active.isNotEmpty()) item {
                 AdaptivePair(equalCards = true, first = {
+                    SummaryTile({ onManage("calendar") }) {
+                        val over = dailyLimit != null && s.dashboard.today > dailyLimit
+                        Text("Today", style = MaterialTheme.typography.titleSmall)
+                        Text(referenceMoney(s.dashboard.today), style = MaterialTheme.typography.headlineSmall)
+                        Text(when {
+                            dailyLimit == null -> "Spent today"
+                            over -> "${referenceMoney(s.dashboard.today - dailyLimit)} over daily limit"
+                            else -> "of ${referenceMoney(dailyLimit)} daily limit"
+                        }, style = MaterialTheme.typography.bodySmall, color = if (over) Tokens.warning else Tokens.muted)
+                        WeekBars(week, if (over) Tokens.warning else Tokens.accent)
+                    }
+                }, second = {
                     SummaryTile({ onManage("budgets") }) {
-                        Text("${today.format(DateTimeFormatter.ofPattern("MMMM"))} budget", style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
+                        Text("${today.format(DateTimeFormatter.ofPattern("MMMM"))} budget", style = MaterialTheme.typography.titleSmall)
                         if (monthBudget != null && monthBudget.amount > 0) {
-                            val used = (monthSpent * 100 / monthBudget.amount).toInt()
-                            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("$used%", style = MaterialTheme.typography.headlineSmall)
-                                Text("used", Modifier.padding(bottom = 2.dp), style = MaterialTheme.typography.bodyMedium, color = Tokens.muted)
-                            }
-                            TallyMeter(monthSpent.toFloat() / monthBudget.amount)
+                            val share = monthSpent.toDouble() / monthBudget.amount
+                            val remaining = budgetAllowance(monthBudget.amount, monthSpent, today).remaining
+                            val close = share >= .8
+                            Text(referenceMoney(monthSpent), style = MaterialTheme.typography.headlineSmall)
+                            Text("of ${referenceMoney(monthBudget.amount)} · ${(share * 100).toInt()}% used", style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
+                            TallyMeter(share.toFloat(), if (close) Tokens.warning else Tokens.accent)
+                            Text(if (remaining < 0) "${referenceMoney(-remaining)} over budget" else "${referenceMoney(remaining)} left this month",
+                                style = MaterialTheme.typography.bodySmall, color = if (close) Tokens.warning else Tokens.muted)
                         } else {
                             Text("Not set", style = MaterialTheme.typography.headlineSmall)
                             Text("Set a monthly budget", style = MaterialTheme.typography.bodySmall, color = Tokens.accent)
                         }
                     }
-                }, second = {
-                    SummaryTile({ onManage("split") }) {
-                        Text("Friends owe", style = MaterialTheme.typography.bodySmall, color = Tokens.muted)
-                        Text(referenceMoney(receive), style = MaterialTheme.typography.headlineSmall)
-                        Text(if (pay > 0) "You owe ${referenceMoney(pay)}" else "You owe nothing", style = MaterialTheme.typography.bodySmall, color = if (pay > 0) Tokens.owed else Tokens.muted)
-                    }
                 })
+            }
+            if (upcoming.isNotEmpty()) {
+                item { SectionHeading("Coming up", "Recurring") { onManage("recurring") } }
+                item { GroupedCard {
+                    upcoming.forEachIndexed { index, next ->
+                        if (index > 0) GroupedDivider(60.dp)
+                        val day = if (next.date == today) "Today" else next.date.format(DateTimeFormatter.ofPattern("EEE d MMM"))
+                        val amount = if (visible) referenceMoney(next.amount) else hidden
+                        GroupedRow(next.label, if (next.kind == null) R.drawable.ic_refund_outline else if (next.kind == Kind.INCOME) R.drawable.ic_arrow_in else R.drawable.ic_calendar,
+                            supporting = if (next.kind == null) "$day · back to $amount" else "$day · draft to review",
+                            value = if (next.kind == null) null else amount, tone = ReferenceTone.Lavender) { onManage(next.destination) }
+                    }
+                } }
+            }
+            if (receive > 0 || pay > 0) {
+                item { SectionHeading("Friends", "Split") { onManage("split") } }
+                item { GroupedCard {
+                    if (receive > 0) GroupedRow("Owed to you", R.drawable.ic_people, value = referenceMoney(receive)) { onManage("split") }
+                    if (receive > 0 && pay > 0) GroupedDivider(60.dp)
+                    if (pay > 0) GroupedRow("You owe", R.drawable.ic_people, value = referenceMoney(pay), tone = ReferenceTone.Peach) { onManage("split") }
+                } }
             }
             if (latest.isEmpty()) item {
                 GroupedCard {
@@ -220,8 +228,8 @@ internal class PillAction(val label: String, val icon: Int?, val primary: Boolea
         val pill: @Composable (PillAction, Modifier) -> Unit = { action, modifier ->
             val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             Surface(onClick = lightHapticAction(action.onClick), interactionSource = interaction, shape = CircleShape,
-                color = when { action.primary -> Tokens.accent; action.tonal -> Tokens.tonal; else -> Tokens.secondarySurface },
-                contentColor = when { action.primary -> MaterialTheme.colorScheme.onPrimary; action.tonal -> Tokens.accent; else -> Tokens.text },
+                color = when { action.primary -> Tokens.accentFill; action.tonal -> Tokens.tonal; else -> Tokens.secondarySurface },
+                contentColor = when { action.primary -> Color.White; action.tonal -> Tokens.accent; else -> Tokens.text },
                 modifier = modifier.heightIn(min = 44.dp).softPress(interaction)) {
                 Row(Modifier.padding(horizontal = 18.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
                     action.icon?.let { Icon(painterResource(it), null, Modifier.size(18.dp)) }
@@ -234,9 +242,71 @@ internal class PillAction(val label: String, val icon: Int?, val primary: Boolea
     }
 }
 
+/** Balances counted in available to spend. Hidden amounts are replaced by [mask]. */
+@Composable private fun AccountChips(accounts: List<Account>, mask: String?, sources: WalletSources?, onClick: () -> Unit) {
+    val chip: @Composable (Account) -> Unit = { account ->
+        Surface(onClick = lightHapticAction(onClick), shape = Tokens.field, color = Tokens.secondarySurface, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+            Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                val gpay = account.id == sources?.gpayId
+                SolidIcon(if (gpay) R.drawable.ic_contactless else R.drawable.ic_wallet_outline, if (gpay) CategoryColors.transport else CategoryColors.wallet, 28.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(account.name, style = MaterialTheme.typography.labelSmall, color = Tokens.muted)
+                    Text(mask ?: referenceMoney(account.balance), style = MaterialTheme.typography.titleSmall)
+                }
+            }
+        }
+    }
+    if (accounts.size == 2) AdaptivePair(first = { chip(accounts[0]) }, second = { chip(accounts[1]) })
+    else Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { accounts.forEach { chip(it) } }
+}
+
+/** Round actions in one row, or two per row when labels would not fit. */
+@Composable private fun QuickActions(actions: List<PillAction>) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelMedium
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val widest = with(density) { actions.maxOf { measurer.measure(it.label, style).size.width }.toDp() }
+        val columns = if ((maxOf(widest, 52.dp) + 8.dp) * actions.size <= maxWidth) actions.size else 2
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            actions.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth()) {
+                    row.forEach { action ->
+                        val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                        Surface(onClick = lightHapticAction(action.onClick), interactionSource = interaction, color = Color.Transparent, modifier = Modifier.weight(1f).softPress(interaction)) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(Modifier.size(52.dp).background(if (action.primary) Tokens.accentFill else Tokens.secondarySurface, CircleShape), contentAlignment = Alignment.Center) {
+                                    action.icon?.let { Icon(painterResource(it), null, Modifier.size(22.dp), tint = if (action.primary) Color.White else Tokens.accent) }
+                                }
+                                Text(action.label, style = style, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Seven small bars ending today. Days below zero after refunds are drawn as empty. */
+@Composable private fun WeekBars(days: List<Pair<LocalDate, Long>>, color: Color) {
+    val quiet = Tokens.border
+    val most = days.maxOf { it.second }.coerceAtLeast(1)
+    val spoken = "Last seven days: " + days.joinToString { (date, amount) -> "${date.format(DateTimeFormatter.ofPattern("EEE"))} ${referenceMoney(amount)}" }
+    Canvas(Modifier.fillMaxWidth().height(36.dp).semantics { contentDescription = spoken }) {
+        val slot = size.width / days.size
+        val width = slot * .62f
+        days.forEachIndexed { index, (_, amount) ->
+            val height = (size.height * amount.coerceAtLeast(0).toFloat() / most).coerceAtLeast(3.dp.toPx())
+            drawRoundRect(if (index == days.lastIndex) color else quiet, androidx.compose.ui.geometry.Offset(index * slot + (slot - width) / 2, size.height - height),
+                androidx.compose.ui.geometry.Size(width, height), androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+        }
+    }
+}
+
 @Composable private fun SummaryTile(onClick: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Surface(onClick = lightHapticAction(onClick), interactionSource = interaction, shape = Tokens.card, color = Tokens.paper,
+    Surface(onClick = lightHapticAction(onClick), interactionSource = interaction, shape = Tokens.tile, color = Tokens.paper,
         modifier = Modifier.fillMaxWidth().fillMaxHeight().heightIn(min = 112.dp).softPress(interaction)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
     }
@@ -245,7 +315,7 @@ internal class PillAction(val label: String, val icon: Int?, val primary: Boolea
 private class SetupStep(val label: String, val caption: String, val destination: String, val done: Boolean)
 
 @Composable private fun StepNumber(number: Int, done: Boolean = false) {
-    if (done) Box(Modifier.size(28.dp).background(Tokens.accent, CircleShape).semantics { contentDescription = "Done" }, contentAlignment = Alignment.Center) {
+    if (done) Box(Modifier.size(28.dp).background(Tokens.accentFill, CircleShape).semantics { contentDescription = "Done" }, contentAlignment = Alignment.Center) {
         Icon(painterResource(R.drawable.ic_check), null, Modifier.size(16.dp), tint = Color.White)
     } else Box(Modifier.size(28.dp).border(1.dp, Tokens.border, CircleShape), contentAlignment = Alignment.Center) {
         Text(number.toString(), style = MaterialTheme.typography.labelMedium, color = Tokens.muted)
