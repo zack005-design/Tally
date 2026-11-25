@@ -161,7 +161,7 @@ internal fun sentenceCaseLabel(text: String): String {
 
 @Composable internal fun TallyWordmark() {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(painterResource(R.drawable.ic_tally_mark), null, Modifier.size(30.dp), tint = Tokens.accent)
+        Icon(painterResource(R.drawable.ic_tally_logo), null, Modifier.size(30.dp), tint = Tokens.accent)
         Text("Tally", style = MaterialTheme.typography.titleLarge, color = Tokens.text)
     }
 }

@@ -4,6 +4,12 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+Nothing yet.
+
+## [0.2.7](https://github.com/zack005-design/Tally/releases)
+
+- Publish one APK, the AI edition, instead of separate AI and non-AI downloads. It includes everything the non-AI edition had, and falls back to the same rules if a model cannot load. It installs over either earlier edition and keeps your records.
+- New app logo: a **T** whose stem turns into a tick, on the blue tile. Choose from ten home-screen icons in **Settings → Appearance → App icon**, including the original tally marks as **Classic**. Each has a themed-icon version for Android 13 and later. [Choose an app icon](docs/features/appearance.md#choose-an-app-icon)
 - Animate closing: sheets fade out, the bottom bar slides back in, and screens leave the way they arrived.
 - Keep the Activity filter button on screen with large text, and add a Search key to search fields.
 - Read a bill total that text recognition split with a space, when the items add up to it.
@@ -33,6 +39,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 - In **Spending**, each category's icon now matches its colour in the distribution bar, so the list works as the chart's legend. Previously the icons cycled through three unrelated colours.
 - Tapping your avatar on **Summary** now opens **Settings** instead of the long Tools list. Settings groups your profile, appearance, app lock, reminders, accounts, categories, merchant rules, favourites, calculator, backup, export and chat import. [Appearance guide](docs/features/appearance.md)
 - **Spending** now lists View transactions, Budgets, Smart insights, Savings goals, Recurring, Money planner, Calendar & diary, Monthly review and Year in review in one grouped list, with Spending details to show or hide the monthly breakdown, replacing the stacked buttons. Set budgets from **Budgets → Edit budgets**. [Spending and planning](docs/features/spending-and-planning.md)
+
+[Verification and known limits](docs/releases/0.2.7.md)
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 

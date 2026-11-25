@@ -1,0 +1,8 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The mark stays inside the adaptive icon safe zone. -->
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.7" android:scaleY="0.7" android:translateX="0">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M52,31 A25,25 0 1 0 77,56 H52 Z"/>
+        <path android:fillColor="#FFBFF2FF" android:pathData="M57,26 A25,25 0 0 1 82,51 H57 Z"/>
+    </group>
+</vector>
