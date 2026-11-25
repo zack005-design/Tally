@@ -117,7 +117,7 @@ jobs:
           retention-days: 7
 
   # Manual runs publish a development prerelease, only after every check above passes
-  # and only when both APKs carry the existing development certificate.
+  # and only when the published APK carries the existing development certificate.
   publish:
     name: Publish development prerelease
     if: github.event_name == 'workflow_dispatch'
@@ -142,8 +142,9 @@ jobs:
           code=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' app/build.gradle.kts)
           tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           mkdir -p out
-          cp apks/tally-apk-ai-true/app-debug.apk "out/tally-$version-ai-debug.apk"
-          cp apks/tally-apk-ai-false/app-debug.apk "out/tally-$version-non-ai-debug.apk"
+          # Only the AI edition is published. The non-AI build above still runs every check, so
+          # the rule-based fallback keeps working when a model cannot load on a phone.
+          cp apks/tally-apk-ai-true/app-debug.apk "out/tally-$version-debug.apk"
           for apk in out/*.apk; do
             cert=$("$tools/apksigner" verify --print-certs "$apk" | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)
             if [ "$cert" != "$EXPECTED_CERT_SHA256" ]; then
