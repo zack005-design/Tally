@@ -61,7 +61,7 @@ class EverydayMoneyFlowTest {
         compose.onNodeWithText("Tally is locked").assertExists()
         compose.runOnIdle {assertEquals("quick-add",model.launchRequest.value);lock.value=DeviceLockView(true,true)}
         compose.waitUntil(10000) {model.launchRequest.value==null}
-        compose.onNodeWithText("Continue to payments").assertExists()
+        compose.onNodeWithText("Save expense").assertExists()
         assertEquals(count,runBlocking {model.repository.snapshot().transactionCount})
     }
 

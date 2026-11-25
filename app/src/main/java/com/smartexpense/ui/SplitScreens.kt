@@ -16,6 +16,7 @@ import androidx.activity.compose.BackHandler
 @Composable fun SplitScreen(s:Snapshot,onAdd:()->Unit,onFriends:()->Unit,onGroups:()->Unit,onRepay:(Debt?,String?)->Unit,onDetails:(String)->Unit,onOffset:(String,String,Long,String?)->Unit,onRepeatGroup:(Group)->Unit={},onSettings:()->Unit={}) {
     var tools by rememberSaveable {mutableStateOf(false)}
     var search by rememberSaveable {mutableStateOf("")}
+    var tab by rememberSaveable {mutableStateOf("friends")}
     var group by rememberSaveable {mutableStateOf<String?>(null)}
     var offsetPerson by rememberSaveable {mutableStateOf<String?>(null)}
     var offsetAmount by rememberSaveable {mutableLongStateOf(0L)}
@@ -38,7 +39,7 @@ import androidx.activity.compose.BackHandler
                 item {Column(Modifier.fillMaxWidth().padding(vertical=12.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(10.dp)) {
                     InitialAvatar(name(personId),Modifier.size(84.dp))
                     Text(name(personId),style=MaterialTheme.typography.headlineMedium)
-                    Text((if(receive>pay) "+" else if(pay>receive) "−" else "")+referenceMoney(kotlin.math.abs(receive-pay)),style=MaterialTheme.typography.displaySmall,color=Tokens.accent)
+                    Text((if(receive>pay) "+" else if(pay>receive) "−" else "")+referenceMoney(kotlin.math.abs(receive-pay)),style=MaterialTheme.typography.displaySmall,color=if(receive>pay) Tokens.positive else Tokens.text)
                     Text(when {receive>pay->name(personId)+" owes you";pay>receive->"You owe "+name(personId);receive>0->"Net zero · original debts remain";else->"You're settled up"},color=Tokens.muted)
                 }}
                 item {SectionHeading("History")}
@@ -54,18 +55,41 @@ import androidx.activity.compose.BackHandler
             return
         }
     }
-    Page("Friends",largeTitle=true,actions={TextButton(onFriends) {Text("Add",color=Tokens.accent,style=MaterialTheme.typography.bodyLarge)}}) {
-        item {SearchPill("Search people",search,{search=it})}
-        item {Column(Modifier.fillMaxWidth().padding(top=12.dp,bottom=8.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Text(referenceMoney(kotlin.math.abs(owed-owing)),style=MaterialTheme.typography.displayMedium)
-            Text(if(owed>=owing) "Net amount owed to you" else "Net amount you owe",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
-            androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().padding(top=12.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("●  You're owed ${referenceMoney(owed)}",style=MaterialTheme.typography.bodySmall,color=Tokens.accent)
-                Text("●  You owe ${referenceMoney(owing)}",style=MaterialTheme.typography.bodySmall,color=Tokens.expense)
+    Page("Split",largeTitle=true,actions={TextButton(if(tab=="friends") onFriends else onGroups) {Text("Add",color=Tokens.accent,style=MaterialTheme.typography.bodyLarge)}}) {
+        item {GroupedCard {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+            Text(if(owed>=owing) "Overall, you are owed" else "Overall, you owe",color=Tokens.muted,style=MaterialTheme.typography.bodyMedium)
+            Text(referenceMoney(kotlin.math.abs(owed-owing)),style=MaterialTheme.typography.displaySmall,color=if(owed>owing) Tokens.positive else Tokens.text)
+            FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                Text("You're owed ${referenceMoney(owed)}",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
+                Text("You owe ${referenceMoney(owing)}",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
             }
-        }}
+            PillRow(listOf(
+                PillAction("New bill",com.smartexpense.R.drawable.ic_add,primary=true,onClick=onAdd),
+                PillAction("Settle up",com.smartexpense.R.drawable.ic_check,tonal=true) {onRepay(null,group)}
+            ))
+        }}}
+        item {EditorialSegmentedControl(tab,listOf("friends" to "Friends","groups" to "Groups")) {tab=it}}
+        if(tab=="groups") {
+            if(s.groups.isEmpty()) item {EmptyLedger("No groups yet","A group remembers its members, so a new bill is quicker.","Create a group",onGroups)}
+            else {
+                items(s.groups.size,key={"group-"+s.groups[it].id}) {index->
+                    val value=s.groups[index]
+                    val inGroup=s.debts.filter {it.groupId==value.id}
+                    val receive=Finance.total(inGroup.filter {it.to=="self"}.map {it.outstanding})
+                    val pay=Finance.total(inGroup.filter {it.from=="self"}.map {it.outstanding})
+                    GroupedCard {
+                        GroupedRow(value.name,com.smartexpense.R.drawable.ic_people,
+                            supporting=listOfNotNull("${value.members.size} people",if(receive>0) "You're owed ${referenceMoney(receive)}" else null,if(pay>0) "You owe ${referenceMoney(pay)}" else null,if(receive==0L && pay==0L) "All settled" else null).joinToString(" · "),
+                            onClick={onRepeatGroup(value)})
+                    }
+                }
+                item {Text("Tap a group to start a bill with its usual members.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)}
+                item {GroupedCard {GroupedRow("Manage groups",com.smartexpense.R.drawable.ic_people,onClick=onGroups)}}
+            }
+            return@Page
+        }
+        item {SearchPill("Search people",search,{search=it})}
         if(group!=null) item {Choice("Group",group?:"all",listOf("all" to "All groups")+s.groups.map {it.id to it.name}) {group=if(it=="all") null else it}}
-        item {Text("BALANCES",style=MaterialTheme.typography.labelSmall,color=Tokens.muted)}
         val friends=s.people.filter {it.id!="self" && (search.isBlank() || personLabel(it,s.people).contains(search,true) || it.aliases.any {alias->alias.contains(search,true)})}
         if(friends.isNotEmpty()) item {GroupedCard {
             friends.forEachIndexed {index,person->
@@ -76,13 +100,13 @@ import androidx.activity.compose.BackHandler
                 val stacked=LocalDensity.current.fontScale>1.3f || balanceLabel.length>12
                 Surface(onClick={selectedFriend=person.id},color=Tokens.paper,modifier=Modifier.fillMaxWidth()) {
                     Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                        Surface(shape=androidx.compose.foundation.shape.CircleShape,color=Tokens.border.copy(alpha=.65f)) {Box(Modifier.size(44.dp),contentAlignment=Alignment.Center) {Text(name(person.id).take(1).uppercase(),style=MaterialTheme.typography.titleLarge)}}
+                        InitialAvatar(name(person.id),Modifier.size(44.dp))
                         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)) {
                             Text(name(person.id),style=MaterialTheme.typography.bodyLarge)
                             Text(when {balance>0->"Owes you";balance<0->"You owe";receive>0 || pay>0->"Net zero · original debts remain";else->"Settled up"},color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
-                            if(stacked) Text(balanceLabel,color=if(balance>0) Tokens.accent else Tokens.text,style=MaterialTheme.typography.titleMedium)
+                            if(stacked) Text(balanceLabel,color=if(balance>0) Tokens.positive else Tokens.text,style=MaterialTheme.typography.titleMedium)
                         }
-                        if(!stacked) Text(balanceLabel,color=if(balance>0) Tokens.accent else Tokens.text,style=MaterialTheme.typography.titleMedium)
+                        if(!stacked) Text(balanceLabel,color=if(balance>0) Tokens.positive else Tokens.text,style=MaterialTheme.typography.titleMedium)
                         Text("›",color=Tokens.muted,style=MaterialTheme.typography.titleLarge)
                     }
                 }
@@ -90,8 +114,6 @@ import androidx.activity.compose.BackHandler
             }
         }} else item {EmptyLedger(if(search.isBlank()) "Add your first friend" else "No people found",if(search.isBlank()) "Shared bills and balances appear here." else "Try another name or alias.")}
         item {GroupedCard {
-            GroupedRow("Start a shared bill",com.smartexpense.R.drawable.ic_people,onClick=onAdd)
-            GroupedDivider()
             GroupedRow("Settlement history",com.smartexpense.R.drawable.ic_activity,onClick={tools=!tools})
         }}
         if(tools) item {GroupedCard {

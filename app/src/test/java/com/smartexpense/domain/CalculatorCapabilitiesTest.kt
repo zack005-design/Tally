@@ -67,4 +67,33 @@ class CalculatorCapabilitiesTest {
         assertEquals("3", answer("median 9, 1, 4, 2").value)
         assertEquals("16", answer("sum 9, 1, 4, 2").value)
     }
+
+    @Test fun sampleStatisticsUseBesselsCorrection() {
+        assertEquals("4", answer("sample variance 2, 4, 6").value)
+        assertEquals("2", answer("sample standard deviation 2, 4, 6").value)
+        assertEquals("2.5", answer("sample variance 1, 2, 3, 4, 5").value)
+        assertFalse(NaturalCalculator.calculate("sample variance 5") is CalculationOutcome.Answer)
+        assertFalse(NaturalCalculator.calculate("standard deviation 2, 4, 6") is CalculationOutcome.Answer)
+    }
+
+    @Test fun gstCanBeAddedOrRemoved() {
+        assertEquals("1180", java.math.BigDecimal(answer("add 18% gst to 1000").value).stripTrailingZeros().toPlainString())
+        assertEquals("1000", java.math.BigDecimal(answer("remove 18% gst from 1180").value).stripTrailingZeros().toPlainString())
+    }
+
+    @Test fun loanEmiMatchesTheStandardFormula() {
+        val emi = answer("emi on 100000 at 12% per year for 12 months")
+        // 100000 × 0.01 × 1.01^12 / (1.01^12 − 1) = 8884.878867…
+        assertEquals(8884.88, emi.value.toDouble(), 0.005)
+        assertTrue(emi.approximate)
+        assertTrue(emi.expression.contains("12 months"))
+        assertEquals(8884.88, answer("loan emi for 100000 at 12% per annum for 1 year").value.toDouble(), 0.005)
+        assertEquals("1000", answer("emi on 12000 at 0% per year for 12 months").value)
+        assertEquals(10623.52, answer("emi on 500000 at 10% per year for 5 years").value.toDouble(), 0.005)
+        listOf("emi on 100000 at 12% per year for 1.5 months", "emi on 100000 at 120% per year for 12 months",
+            "emi on 100000 at 12% per year for 0 months", "emi on 100000").forEach {
+            assertFalse(it, NaturalCalculator.calculate(it) is CalculationOutcome.Answer)
+        }
+    }
 }
+

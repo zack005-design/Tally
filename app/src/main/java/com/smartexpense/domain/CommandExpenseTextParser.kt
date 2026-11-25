@@ -5,16 +5,29 @@ class CommandExpenseTextParser(
     private val model: ScratchCommandModel?,
     private val fallback: ExpenseTextParser = RuleBasedTextParser(),
     private val extension: ScratchCommandModel? = null,
-    private val clock: java.time.Clock = java.time.Clock.systemDefaultZone()
+    private val clock: java.time.Clock = java.time.Clock.systemDefaultZone(),
+    private val categories: CategoryModel? = null
 ) : ExpenseTextParser {
-    override fun parse(text: String, people: List<PersonRef>): ParsedDraft =
-        parseNormalized(CommandInputNormalizer.normalize(text), people)
+    override fun parse(text: String, people: List<PersonRef>): ParsedDraft {
+        val input = CommandInputNormalizer.normalize(text)
+        return withCategory(parseNormalized(input, people), input)
+    }
+
+    /** Fills only a missing category of a personal expense whose description was extracted from the command. */
+    private fun withCategory(draft: ParsedDraft, input: String): ParsedDraft {
+        if (categories == null || draft.category != null || draft.kind != Kind.EXPENSE) return draft
+        if (draft.contributions.keys.any { it != "self" } || draft.splitRule != null) return draft
+        val description = draft.description.trim()
+        if (description.isEmpty() || description.equals(input.trim(), ignoreCase = true) || description.any(Char::isDigit)) return draft
+        val suggestion = categories.suggest(description) ?: return draft
+        return draft.copy(category = suggestion.category, warnings = draft.warnings + "Category suggested on device. Change it if it does not fit.")
+    }
 
     private fun parseNormalized(input: String, people: List<PersonRef>): ParsedDraft {
         val prepared = EnglishCommandInput.prepare(input, clock)
         val text = prepared.text
         val parsed = fallback.parse(text, people)
-        val base = parsed.copy(date = prepared.date ?: parsed.date)
+        val base = parsed.copy(date = prepared.date ?: parsed.date, warnings = listOfNotNull(prepared.note) + parsed.warnings, notes = prepared.notes)
         fun incomplete(reason: String, invalidDate: Boolean = false) = base.copy(
             amount = null, fromAccount = null, toAccount = null, contributions = emptyMap(), splitRule = null,
             date = if (invalidDate) null else base.date,
@@ -40,6 +53,6 @@ class CommandExpenseTextParser(
     }
 
     private companion object {
-        val newCapability = Regex("\\b(?:maine|kharch|diye|rupaye|gpy|gpaay|wallett|walllet)\\b|\\bgooogle\\s+pay\\b", RegexOption.IGNORE_CASE)
+        val newCapability = Regex("\\b(?:maine|kharch|diye|rupaye|gpy|gpaay|wallett|walllet|upi|phonepe|paytm|gaye|liya|khareeda|bhara)\\b|\\b(?:gooogle\\s+pay|phone\\s+pe)\\b", RegexOption.IGNORE_CASE)
     }
 }

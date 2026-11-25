@@ -105,8 +105,10 @@ class EditorialExtensionUiTest {
         var finish:(()->Unit)?=null
         val month=YearMonth.of(2026,10).toString()
         render {InsightsScreen(Snapshot(reportMonth=month),month,{},{_,_,_->},onBudgetSave={_,_,_,done->finish=done})}
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Set budget"))
-        compose.onNodeWithText("Set budget").performClick()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Budgets"))
+        compose.onNodeWithText("Budgets").performClick()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Edit budgets"))
+        compose.onNodeWithText("Edit budgets").performClick()
         compose.onNodeWithText("Budget amount (₹)").performTextInput("2500")
         compose.onNodeWithText("Save budget").performClick()
         compose.onNodeWithText("Budget amount (₹)").assertExists()

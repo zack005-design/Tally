@@ -200,6 +200,10 @@ class ReferenceScreenshotsTest {
     @Test fun calendar() { render { SpendingCalendarScreen(fixture, {}, today) }; capture("calendar") }
     @Test fun diary() { render { DiaryScreen(fixture, false, { _, _, _ -> }, { _, _ -> }, {}, today.toString()) }; capture("diary") }
     @Test fun friends() { render { SplitScreen(fixture, {}, {}, {}, { _, _ -> }, {}, { _, _, _, _ -> }) }; capture("friends") }
+    @Test fun splitGroups() {
+        render { SplitScreen(fixture, {}, {}, {}, { _, _ -> }, {}, { _, _, _, _ -> }) }
+        compose.onNodeWithText("Groups").performClick();capture("split-groups")
+    }
     @Test fun friendDetail() {
         render {SplitScreen(fixture,{},{},{},{_,_->},{},{_,_,_,_->})}
         compose.onNodeWithText("Rahul").performClick();capture("friend-detail")

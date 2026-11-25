@@ -63,6 +63,11 @@ import com.smartexpense.domain.*
         AdvancedEntryScreen(s,accounts,people,categories,groups,onChange,onParse,onSave,records,onFriends,if(namedBill && advancedMeal) ({advancedMeal=false}) else if(s.kind==Kind.EXPENSE) ({step=0;advanced=false}) else onBack,walletSources,hasBill,onDiscardBill,onExchange)
         return
     }
+    // The keypad page has no friend or payment steps, so shared expenses use the guided steps.
+    if(!hasBill && !s.shared) {
+        AddExpenseScreen(s,accounts,categories,walletSources,onChange,onSave,onBack,{advanced=true},onImportBill)
+        return
+    }
     fun back() {if(step>0) step-- else onBack()}
     BackHandler(step>0) {back()}
     val total=runCatching {Money.parse(s.amount)}.getOrNull()

@@ -49,6 +49,7 @@ import java.time.format.DateTimeFormatter
                 TextButton(onExchange) {Text("Enter a manual exchange rate")}
                 TextButton(onDiscardBill) {Text("Discard bill attachment")}
             }}
+            if(!refund && !hasBill && s.replaces==null) item {EditorialSegmentedControl(s.kind.name,listOf("EXPENSE" to "Expense","INCOME" to "Income","TRANSFER" to "Transfer")) {onChange(s.copy(kind=Kind.valueOf(it)))}}
             if(s.parserNotice.isNotBlank()) item {ReferenceInfo(s.parserNotice)}
             when {
                 transfer->{

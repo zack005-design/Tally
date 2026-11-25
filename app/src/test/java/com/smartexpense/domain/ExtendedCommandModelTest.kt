@@ -11,7 +11,7 @@ class ExtendedCommandModelTest {
     @Test fun compositeRuntimeMatchesFrozenPythonFixtures() {
         val old = baseline(); val extended = extension()
         val lines = requireNotNull(javaClass.getResourceAsStream("/command-extended-parity.tsv")).bufferedReader().use { it.readLines() }
-        assertEquals(386, lines.size)
+        assertEquals(410, lines.size)
         val decoder = java.util.Base64.getDecoder()
         lines.forEach { line ->
             val f = line.split('\t'); val text = String(decoder.decode(f[0]), Charsets.UTF_8)
@@ -40,5 +40,32 @@ class ExtendedCommandModelTest {
         listOf("maine chai pe 25 cash se nahi diye", "coffee 45 wallett gpy", "chai 25 aur taxi 100 cash").forEach {
             assertNull(it, parser.parse(it, emptyList()).amount)
         }
+    }
+
+    @Test fun v5AccountsAndPhrasesProduceExactDrafts() {
+        val parser = CommandExpenseTextParser(baseline(), extension = extension())
+        mapOf("umbrella khareeda 399 mein paytm se" to Triple("umbrella", 39900L, "paytm"),
+            "Paid 60 for chai using phonepe" to Triple("chai", 6000L, "phonepe"),
+            "Swiggy order 349 upi" to Triple("Swiggy order", 34900L, "gpay"),
+            "momos cash 120" to Triple("momos", 12000L, "wallet"),
+            "sabzi mein 85 gaye cash se" to Triple("sabzi", 8500L, "wallet")).forEach { (text, expected) ->
+            val result = parser.parse(text, emptyList())
+            assertEquals(text, expected.first, result.description)
+            assertEquals(text, expected.second, result.amount)
+            assertEquals(text, expected.third, result.fromAccount)
+        }
+        listOf("biryani 280 upi or cash", "petrol 1200 paytm and 300 cash", "momos 120 cash nahi diye").forEach {
+            assertNull(it, parser.parse(it, emptyList()).amount)
+        }
+    }
+
+    @Test fun hinglishParticlesNeverStartADescription() {
+        assertNull(extension().suggest("73156 mein dentist khareeda paytm se"))
+    }
+
+    @Test fun phonePeAndPaytmResolveOnlyToAccountsWithThoseNames() {
+        val accounts = listOf(Account("a1", "PhonePe", "Wallet", 0, false), Account("a2", "Wallet", "Cash", 0, false))
+        assertEquals("a1", resolveParsedAccount("phonepe", accounts))
+        assertNull(resolveParsedAccount("paytm", accounts))
     }
 }

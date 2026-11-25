@@ -40,14 +40,14 @@ internal object Tints {
 /** Solid icon-square colours from the redesign. Glyphs on them are always white. */
 internal object CategoryColors {
     val brand @Composable get() = tint(Color(0xFF0A66D8), Color(0xFF0A84FF))
-    val food @Composable get() = tint(Color(0xFFFF9500), Color(0xFFFF9F0A))
-    val transport @Composable get() = tint(Color(0xFF007AFF), Color(0xFF0A84FF))
+    val food @Composable get() = tint(Color(0xFFD15A00), Color(0xFFD15A00))
+    val transport @Composable get() = tint(Color(0xFF0A66D8), Color(0xFF0A66D8))
     val groceries @Composable get() = tint(Color(0xFF6B8E00), Color(0xFF7FA30A))
-    val bills @Composable get() = tint(Color(0xFF30B0C7), Color(0xFF40C8E0))
-    val shopping @Composable get() = tint(Color(0xFFFF2D55), Color(0xFFFF375F))
-    val wallet @Composable get() = tint(Color(0xFFA2845E), Color(0xFFAC8E68))
+    val bills @Composable get() = tint(Color(0xFF5048C8), Color(0xFF5E5CE6))
+    val shopping @Composable get() = tint(Color(0xFFD6104A), Color(0xFFD6104A))
+    val wallet @Composable get() = tint(Color(0xFF8C6C48), Color(0xFF8C6C48))
     val moneyIn @Composable get() = tint(Color(0xFF1A6E30), Color(0xFF30A14E))
-    val gray @Composable get() = tint(Color(0xFF8E8E93), Color(0xFF636366))
+    val gray @Composable get() = tint(Color(0xFF6C6C70), Color(0xFF6C6C70))
 }
 
 /** Semantic colours for every screen. Values come from the light or dark scheme. */
@@ -62,16 +62,20 @@ object Tokens {
     val text @Composable get() = MaterialTheme.colorScheme.onSurface
     val muted @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
     val accent @Composable get() = MaterialTheme.colorScheme.primary
+    /** Filled buttons keep the same blue in both themes, always under white text. */
+    val accentFill = Color(0xFF0A66D8)
+    val warning @Composable get() = tint(Color(0xFFB04600), Color(0xFFFF9F0A))
     val expense @Composable get() = text
     val positive @Composable get() = MaterialTheme.colorScheme.tertiary
     val owed @Composable get() = Tints.peach
     val negative @Composable get() = MaterialTheme.colorScheme.error
     val blue @Composable get() = accent
     val chartTones @Composable get() = listOf(CategoryColors.food, CategoryColors.groceries, CategoryColors.transport, CategoryColors.bills, CategoryColors.gray)
-    val card = RoundedCornerShape(20.dp)
-    val field = RoundedCornerShape(12.dp)
+    val card = RoundedCornerShape(26.dp)
+    val tile = RoundedCornerShape(22.dp)
+    val field = RoundedCornerShape(16.dp)
     val pill = RoundedCornerShape(percent = 50)
-    val pageInset = 20.dp
+    val pageInset = 16.dp
     val sectionGap = 16.dp
 }
 
@@ -107,7 +111,7 @@ private val lightColors = lightColorScheme(
     primaryContainer = Color(0xFFE4EEFB), onPrimaryContainer = Color(0xFF0A66D8),
     secondary = Color(0xFF6C6C70), onSecondary = Color.White,
     secondaryContainer = Color(0xFFE9E9EE), onSecondaryContainer = Color(0xFF000000),
-    tertiary = Color(0xFF1A6E30), onTertiary = Color.White,
+    tertiary = Color(0xFF1F7A35), onTertiary = Color.White,
     tertiaryContainer = Color(0xFFE2F1E6), onTertiaryContainer = Color(0xFF0E3F1B),
     background = Color(0xFFF2F2F7), onBackground = Color(0xFF000000),
     surface = Color(0xFFF2F2F7), onSurface = Color(0xFF000000),
@@ -115,26 +119,26 @@ private val lightColors = lightColorScheme(
     surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFFAFAFC),
     surfaceContainer = Color(0xFFF2F2F7), surfaceContainerHigh = Color(0xFFE9E9EE), surfaceContainerHighest = Color(0xFFE3E3E8),
     surfaceTint = Color.Transparent, outline = Color(0xFF8E8E93), outlineVariant = Color(0xFFD1D1D6),
-    error = Color(0xFFD70015), onError = Color.White,
+    error = Color(0xFFC9001B), onError = Color.White,
     errorContainer = Color(0xFFFFE5E7), onErrorContainer = Color(0xFF8A000D),
     inverseSurface = Color(0xFF1C1C1E), inverseOnSurface = Color.White, inversePrimary = Color(0xFF4C9BFF)
 )
 
-// Dark follows the redesign: a #1C1C1E page, #2C2C2E grouped cards and a brighter blue tint.
+// Dark follows the redesign: a black page, #1C1C1E grouped cards and a brighter blue tint.
 private val darkColors = darkColorScheme(
-    primary = Color(0xFF0A84FF), onPrimary = Color.White,
+    primary = Color(0xFF4C9AFF), onPrimary = Color(0xFF00213F),
     primaryContainer = Color(0xFF0F2A4A), onPrimaryContainer = Color(0xFF6AACFF),
     secondary = Color(0xFF98989F), onSecondary = Color(0xFF1C1C1E),
-    secondaryContainer = Color(0xFF3A3A3C), onSecondaryContainer = Color.White,
-    tertiary = Color(0xFF5FD17A), onTertiary = Color(0xFF00290C),
+    secondaryContainer = Color(0xFF2C2C2E), onSecondaryContainer = Color.White,
+    tertiary = Color(0xFF30D158), onTertiary = Color(0xFF00290C),
     tertiaryContainer = Color(0xFF133A1E), onTertiaryContainer = Color(0xFFC4F2CF),
-    background = Color(0xFF1C1C1E), onBackground = Color.White,
-    surface = Color(0xFF1C1C1E), onSurface = Color.White,
-    surfaceVariant = Color(0xFF3A3A3C), onSurfaceVariant = Color(0xFF98989F),
-    surfaceContainerLowest = Color(0xFF2C2C2E), surfaceContainerLow = Color(0xFF242426),
-    surfaceContainer = Color(0xFF1C1C1E), surfaceContainerHigh = Color(0xFF3A3A3C), surfaceContainerHighest = Color(0xFF48484A),
+    background = Color.Black, onBackground = Color.White,
+    surface = Color.Black, onSurface = Color.White,
+    surfaceVariant = Color(0xFF3A3A3C), onSurfaceVariant = Color(0xFFAEAEB2),
+    surfaceContainerLowest = Color(0xFF1C1C1E), surfaceContainerLow = Color(0xFF141416),
+    surfaceContainer = Color.Black, surfaceContainerHigh = Color(0xFF2C2C2E), surfaceContainerHighest = Color(0xFF3A3A3C),
     surfaceTint = Color.Transparent, outline = Color(0xFF8E8E93), outlineVariant = Color(0xFF3A3A3C),
-    error = Color(0xFFFF6B70), onError = Color(0xFF4A0006),
+    error = Color(0xFFFF6961), onError = Color(0xFF4A0006),
     errorContainer = Color(0xFF47141A), onErrorContainer = Color(0xFFFFD9DB),
     inverseSurface = Color(0xFFF2F2F7), inverseOnSurface = Color(0xFF1C1C1E), inversePrimary = Color(0xFF0A66D8)
 )

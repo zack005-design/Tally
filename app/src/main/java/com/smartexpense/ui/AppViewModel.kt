@@ -114,7 +114,13 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         saved["category"]=value.categoryId;saved["group"]=value.groupId;saved["shared"]=value.shared;saved["participants"]=ArrayList(value.participants);saved["paid"]=HashMap(value.paid);saved["method"]=value.method;saved["values"]=HashMap(value.values);saved["items"]=value.items;saved["billItemNames"]=ArrayList(value.billItemNames);saved["date"]=value.date;saved["notes"]=value.notes;saved["notice"]=value.parserNotice;saved["replaces"]=value.replaces;saved["refundOf"]=value.refundOf;saved["secondAccount"]=value.secondAccountId;saved["secondPayment"]=value.secondPayment;saved["itemCharges"]=value.itemCharges;saved["itemDiscount"]=value.itemDiscount;saved["originalMovements"]=HashMap(value.originalMovements);saved["originalDate"]=value.originalDate
     }
     fun clearRepaymentDraft() {parsedRepayment.value=null}
-    fun newEntry(kind:Kind=Kind.EXPENSE,shared:Boolean=false) {discardDraftBill();change(EntryUiState(kind=kind,shared=shared,accountId=state.value.snapshot.walletSources?.walletId.orEmpty())) }
+    /** Remaining drafts from a several-expenses command, reviewed and saved one at a time. */
+    private val queuedDrafts=ArrayDeque<Pair<String,ParsedDraft>>()
+    private var queuedTotal=0
+    /** True while the entry form holds the next draft of a several-expenses command. */
+    var continuingQueue=false
+        private set
+    fun newEntry(kind:Kind=Kind.EXPENSE,shared:Boolean=false) {queuedDrafts.clear();continuingQueue=false;discardDraftBill();change(EntryUiState(kind=kind,shared=shared,accountId=state.value.snapshot.walletSources?.walletId.orEmpty())) }
     fun repeatGroup(group:Group) {newEntry(Kind.EXPENSE,true);change(withGroupDefault(entry.value,group))}
     fun repeatExpense(id:String,onReady:()->Unit) = action("Expense copy ready to review") {
         val detail=repository.detail(id)
@@ -162,7 +168,13 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
     fun saveEntry(onSaved:(String)->Unit) = action("Transaction saved") {
         val id=if(billExpected.value) {require(form.value.replaces==null) {"Discard this imported attachment before correcting an existing transaction."};val bill=requireNotNull(pendingBill) {"Bill review was interrupted. Import the bill again, or discard its attachment explicitly."};repository.saveWithBill(form.value.draft(),bill)}
         else repository.save(form.value.draft(),form.value.replaces)
-        newEntry();onSaved(id)
+        val rest=queuedDrafts.toList();val total=queuedTotal
+        newEntry()
+        rest.firstOrNull()?.let {(segment,next)->
+            queuedDrafts.addAll(rest.drop(1));queuedTotal=total;continuingQueue=true
+            applyParsedText(queuedNotice(next,total-rest.size+1,total),form.value.copy(text=segment))
+        }
+        onSaved(id)
     }
     fun edit(id:String,duplicate:Boolean=false,onReady:()->Unit) = action(if(duplicate) "Copy ready to review" else "Correction ready to review") {
         val d=repository.loadDraft(id)
@@ -171,25 +183,83 @@ class AppViewModel @Inject constructor(val repository:FinanceRepository,val back
         change(EntryUiState(kind=d.kind,amount=Money.input(d.amount),description=d.description,accountId=d.accountId,destinationId=d.destinationAccountId.orEmpty(),categoryId=d.categoryId,groupId=d.groupId,shared=d.participants!=listOf("self"),participants=d.participants,paid=d.contributions.mapValues { Money.input(it.value) },method=if(d.participants!=listOf("self")) "Fixed" else "Equal",values=(d.splitRule as? SplitRule.Fixed)?.amounts?.mapValues { Money.input(it.value) }.orEmpty(),date=java.time.Instant.ofEpochMilli(d.date).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString(),notes=d.notes,replaces=if(duplicate) null else id,refundOf=d.refundOf,secondAccountId=d.selfPayments.keys.firstOrNull {it!=d.accountId}.orEmpty(),originalMovements=original,originalDate=if(duplicate) null else d.date,secondPayment=d.selfPayments.entries.firstOrNull {it.key!=d.accountId}?.value?.let(Money::input).orEmpty()));onReady()
     }
     private var parseRequest = 0L
+    /** The last answered question, kept for 10 minutes so follow-ups such as "and last month?" can build on it. */
+    private var lastAssistantTurn: Pair<AssistantPlanner.Answer,Long>? = null
+    /** Personal category model trained on this phone from saved entries; rebuilt when the records change. */
+    private var personalCategories: Pair<Int,PersonalCategoryModel?>? = null
+    private suspend fun refreshPersonalCategories() {
+        val snapshot=state.value.snapshot
+        val key=java.util.Objects.hash(snapshot.records.size,snapshot.records.firstOrNull()?.id,snapshot.transactionCount,snapshot.categories.map {it.id to it.archived})
+        if(personalCategories?.first==key) return
+        val active=snapshot.categories.filterNot {it.archived}.map {it.id}.toSet()
+        personalCategories=key to kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { PersonalCategoryModel.train(snapshot.records,active) }
+    }
     fun parseText() {
         val request = ++parseRequest
         val requested = form.value
         val people = state.value.snapshot.people.filter { it.id!="self" }.map { PersonRef(it.id,it.name,it.aliases) }
         viewModelScope.launch {
-        val parsed = try { commandParser?.parse(requested.text, people) ?: kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { CommandExpenseTextParser(null).parse(requested.text, people) } }
+        // In the AI edition, the tiny reasoning model plans an answer; exact code runs every step.
+        val previousTurn = lastAssistantTurn?.takeIf { System.currentTimeMillis() - it.second < 10 * 60_000L }?.first
+        if (commandParser != null && (AssistantPlanner.looksLikeQuestion(requested.text) || (previousTurn != null && AssistantPlanner.looksLikeFollowUp(requested.text)))) {
+            val answer = try {
+                val full = repository.snapshot()
+                commandParser.assist(requested.text, AssistantPlanner.Data(full.records, full.categories, full.accounts, full.budgets, java.time.LocalDate.now()), previousTurn)
+            } catch (error: CancellationException) { throw error } catch (error: Exception) { null }
+            if (request != parseRequest || form.value != requested) return@launch
+            if (answer != null) {
+                lastAssistantTurn = answer to System.currentTimeMillis()
+                change(requested.copy(parserNotice = answer.display() + "\n\nAnswered on this phone by Tally's tiny reasoning model; every number comes from your records. Nothing was saved.")); return@launch }
+        }
+        // Spending questions are answered from local records instead of becoming a draft.
+        if (SpendingQuestions.isQuestion(requested.text)) {
+            val answer = try { val full = repository.snapshot(); SpendingQuestions.answer(requested.text, full.records, full.categories, java.time.LocalDate.now()) }
+                catch (error: CancellationException) { throw error } catch (error: Exception) { null }
+            if (request != parseRequest || form.value != requested) return@launch
+            if (answer != null) { change(requested.copy(parserNotice = answer.text + " Nothing was saved.")); return@launch }
+        }
+        queuedDrafts.clear();continuingQueue=false
+        try { refreshPersonalCategories() } catch (error: CancellationException) { throw error } catch (error: Exception) { personalCategories=null }
+        suspend fun interpret(text:String)=commandParser?.parse(text, people) ?: kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { CommandExpenseTextParser(null).parse(text, people) }
+        // Several complete personal expenses on one line become drafts reviewed and saved one by one.
+        val segments=MultiExpense.segments(requested.text)
+        if (segments.isNotEmpty()) {
+            val drafts = try { segments.map { segment -> segment to interpret(segment) } } catch (error: CancellationException) { throw error } catch (error: Exception) { emptyList() }
+            if (request != parseRequest || form.value != requested) return@launch
+            if (drafts.size == segments.size && drafts.all { MultiExpense.isComplete(it.second) }) {
+                queuedDrafts.addAll(drafts.drop(1));queuedTotal=drafts.size
+                applyParsedText(queuedNotice(drafts.first().second,1,drafts.size),requested.copy(text=drafts.first().first))
+                return@launch
+            }
+        }
+        val parsed = try { interpret(requested.text) }
         catch (error: CancellationException) { throw error }
         catch (error: Exception) { if (request == parseRequest && form.value == requested) mutable.update { it.copy(message="Could not interpret this entry. Please enter the fields manually.") }; return@launch }
         if (request != parseRequest || form.value != requested) return@launch
         applyParsedText(parsed, requested)
         }
     }
+    private fun queuedNotice(draft:ParsedDraft,position:Int,total:Int)=draft.copy(warnings=listOf("Expense $position of $total from your list. Save it to continue with the next one; nothing is saved automatically.")+draft.warnings)
     private fun applyParsedText(parsed: ParsedDraft, current: EntryUiState) {
         val snapshot=state.value.snapshot
         val source=resolveParsedAccount(parsed.fromAccount,snapshot.accounts,snapshot.walletSources)
         val destination=resolveParsedAccount(parsed.toAccount,snapshot.accounts,snapshot.walletSources)
-        val missing=parsed.missing-(if(source!=null) setOf("account") else emptySet())-(if(destination!=null) setOf("destination account") else emptySet())
+        // The user's own saved entries take priority for category and fill a missing account; explicit account words win.
+        val personal=if(parsed.kind==Kind.EXPENSE && parsed.contributions.keys.all { it=="self" } && parsed.splitRule==null)
+            personalSuggestion(parsed.description,snapshot.records,snapshot.accounts.filterNot { it.archived }.map { it.id }.toSet(),snapshot.categories.map { it.id }.toSet())
+            else PersonalSuggestion()
+        val learned=if(personal.categoryId==null && parsed.kind==Kind.EXPENSE && parsed.contributions.keys.all { it=="self" } && parsed.splitRule==null)
+            personalCategories?.second?.suggest(parsed.description)?.categoryId?.takeIf { id -> snapshot.categories.any { it.id==id && !it.archived } } else null
+        val personalAccount=if(source==null) personal.accountId else null
+        val accountSource=source?:personalAccount
+        val missing=parsed.missing-(if(accountSource!=null) setOf("account") else emptySet())-(if(destination!=null) setOf("destination account") else emptySet())
+        val history=listOfNotNull(personal.categoryId?.let { "category" },personalAccount?.let { "account" })
+        val warnings=(if(personal.categoryId!=null || learned!=null) parsed.warnings.filterNot { it.startsWith("Category suggested on device") } else parsed.warnings)+
+            listOfNotNull(learned?.let { "Category picked by your personal model, trained on this phone from your entries. Change it if it does not fit." })+
+            (if(history.isEmpty()) emptyList() else listOf("Filled ${history.joinToString(" and ")} from your past entries. Change if needed."))+
+            listOfNotNull(SmartInsights.possibleDuplicate(parsed.description,parsed.amount,parsed.date?:java.time.LocalDate.now(),snapshot.records)?.let { "You already saved ${it.description} for ${Money.format(it.amount)} that day. Check this is not a duplicate." })
         if(parsed.kind==Kind.REPAYMENT) {parsedRepayment.value=parsed;change(current.copy(parserNotice=(parsed.warnings+"Repayment draft ready. Review the person, direction, amount and account.").joinToString("\n")));return}
-        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,categoryId=state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=source?:current.accountId,secondAccountId="",secondPayment="",destinationId=destination.orEmpty(),date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(parsed.warnings+"Review all fields. Missing: ${missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
+        change(current.copy(kind=parsed.kind?:current.kind,amount=parsed.amount?.let(Money::input).orEmpty(),description=parsed.description,notes=parsed.notes?.let { (current.notes+"\n"+it).trim() }?:current.notes,categoryId=personal.categoryId?:learned?:state.value.snapshot.categories.find { it.name==parsed.category }?.id,shared=parsed.contributions.keys.any { it!="self" } || "participants" in parsed.missing,participants=parsed.contributions.keys.toList().ifEmpty { listOf("self") },paid=parsed.contributions.mapValues { Money.input(it.value) },method=if("split method" in parsed.missing) "" else "Equal",accountId=accountSource?:current.accountId,secondAccountId="",secondPayment="",destinationId=destination.orEmpty(),date=parsed.date?.atTime(12,0)?.toString()?:current.date,parserNotice=(warnings+"Review all fields. Missing: ${missing.joinToString()}${if(parsed.date!=null) "; date identified, review time (12:00 draft default)" else ""}").joinToString("\n")))
     }
 }
 

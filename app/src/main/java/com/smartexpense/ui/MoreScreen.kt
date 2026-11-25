@@ -10,13 +10,64 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.smartexpense.R
 
-private data class ToolGroup(val id: String, val title: String, val description: String, val icon: Int, val links: List<Pair<String, String>>)
+private data class ToolLink(val route: String, val label: String, val icon: Int)
+private data class ToolSection(val label: String, val tone: ReferenceTone, val links: List<ToolLink>)
+private data class ToolGroup(val id: String, val title: String, val description: String, val icon: Int, val sections: List<ToolSection>)
+
+// Each group page is split into short, labelled sections with a distinct icon per row,
+// instead of one long card where every row repeats the group's icon.
 private val toolGroups = listOf(
-    ToolGroup("money", "Money & planning", "Budgets, goals and limits", R.drawable.ic_insights, listOf("wallet" to "Wallet & GPay", "income" to "Record income", "transfer" to "Transfer between accounts", "accounts" to "Accounts", "gpay-settings" to "GPay balance & resets", "insights" to "Spending insights", "budgets" to "Budgets", "calculator" to "Calculate", "planner" to "Money planner", "goals" to "Savings goals", "recurring" to "Recurring entries")),
-    ToolGroup("friends", "Friends & groups", "Split expenses and settle up", R.drawable.ic_people, listOf("split" to "Shared balances", "people" to "Friends", "groups" to "Groups", "default-splits" to "Default group splits")),
-    ToolGroup("history", "History & reports", "Spending, trends and exports", R.drawable.ic_clock_outline, listOf("activity" to "Activity", "calendar" to "Spending calendar", "diary" to "Daily diary", "monthly-review" to "Monthly review", "year-summary" to "Yearly summary", "export" to "Export monthly report", "history-import" to "Import from ChatGPT")),
-    ToolGroup("bills", "Bills & categories", "Manage categories and rules", R.drawable.ic_tag_outline, listOf("bill-import" to "Photo / PDF bill", "foreign-entry" to "Foreign bill to INR", "categories" to "Categories", "category-rules" to "Merchant categories")),
-    ToolGroup("settings", "Settings & backup", "App preferences and data", R.drawable.ic_settings_outline, listOf("profile" to "Your profile", "appearance" to "Appearance", "app-lock" to "App lock", "reminders" to "Local reminders", "backup" to "Backup & restore"))
+    ToolGroup("money", "Money & planning", "Budgets, goals and limits", R.drawable.ic_insights, listOf(
+        ToolSection("Record", ReferenceTone.Blue, listOf(
+            ToolLink("income", "Record income", R.drawable.ic_arrow_in),
+            ToolLink("transfer", "Transfer between accounts", R.drawable.ic_transfer),
+            ToolLink("calculator", "Calculate", R.drawable.ic_tally_mark))),
+        ToolSection("Accounts", ReferenceTone.Wallet, listOf(
+            ToolLink("accounts", "Accounts", R.drawable.ic_account),
+            ToolLink("wallet", "Wallet & GPay", R.drawable.ic_wallet_outline),
+            ToolLink("gpay-settings", "GPay balance & resets", R.drawable.ic_contactless),
+            ToolLink("net-worth", "Net worth", R.drawable.ic_tab_summary))),
+        ToolSection("Plan", ReferenceTone.Lavender, listOf(
+            ToolLink("insights", "Spending insights", R.drawable.ic_insights),
+            ToolLink("smart-insights", "Smart insights", R.drawable.ic_tab_insights),
+            ToolLink("budgets", "Budgets", R.drawable.ic_target_outline),
+            ToolLink("goals", "Savings goals", R.drawable.ic_piggy_outline),
+            ToolLink("planner", "Money planner", R.drawable.ic_calendar),
+            ToolLink("recurring", "Recurring entries", R.drawable.ic_duplicate_outline))))),
+    ToolGroup("friends", "Friends & groups", "Split expenses and settle up", R.drawable.ic_people, listOf(
+        ToolSection("Balances", ReferenceTone.Blue, listOf(
+            ToolLink("split", "Shared balances", R.drawable.ic_transfer))),
+        ToolSection("People", ReferenceTone.Lavender, listOf(
+            ToolLink("people", "Friends", R.drawable.ic_people),
+            ToolLink("groups", "Groups", R.drawable.ic_people),
+            ToolLink("default-splits", "Default group splits", R.drawable.ic_settings_outline))))),
+    ToolGroup("history", "History & reports", "Spending, trends and exports", R.drawable.ic_clock_outline, listOf(
+        ToolSection("Browse", ReferenceTone.Blue, listOf(
+            ToolLink("activity", "Activity", R.drawable.ic_activity),
+            ToolLink("calendar", "Spending calendar", R.drawable.ic_calendar),
+            ToolLink("diary", "Daily diary", R.drawable.ic_pencil_outline))),
+        ToolSection("Review", ReferenceTone.Lavender, listOf(
+            ToolLink("monthly-review", "Monthly review", R.drawable.ic_check_outline),
+            ToolLink("year-summary", "Yearly summary", R.drawable.ic_insights))),
+        ToolSection("Export & import", ReferenceTone.Peach, listOf(
+            ToolLink("export", "Export monthly report", R.drawable.ic_upload_outline),
+            ToolLink("history-import", "Import from ChatGPT", R.drawable.ic_document_outline))))),
+    ToolGroup("bills", "Bills & categories", "Manage categories and rules", R.drawable.ic_tag_outline, listOf(
+        ToolSection("Add a bill", ReferenceTone.Peach, listOf(
+            ToolLink("bill-import", "Photo / PDF bill", R.drawable.ic_photo_outline),
+            ToolLink("foreign-entry", "Foreign bill to INR", R.drawable.ic_plane_outline))),
+        ToolSection("Organise", ReferenceTone.Lavender, listOf(
+            ToolLink("categories", "Categories", R.drawable.ic_tag_outline),
+            ToolLink("category-rules", "Merchant categories", R.drawable.ic_shop_outline))))),
+    ToolGroup("settings", "Settings & backup", "App preferences and data", R.drawable.ic_settings_outline, listOf(
+        ToolSection("You", ReferenceTone.Blue, listOf(
+            ToolLink("profile", "Your profile", R.drawable.ic_people),
+            ToolLink("appearance", "Appearance", R.drawable.ic_visibility))),
+        ToolSection("Security & reminders", ReferenceTone.Peach, listOf(
+            ToolLink("app-lock", "App lock", R.drawable.ic_lock_outline),
+            ToolLink("reminders", "Local reminders", R.drawable.ic_bell_outline))),
+        ToolSection("Data", ReferenceTone.Lavender, listOf(
+            ToolLink("backup", "Backup & restore", R.drawable.ic_shield_outline)))))
 )
 
 @Composable fun MoreScreen(section: String? = null, onNavigate: (String) -> Unit) {
@@ -31,19 +82,19 @@ private val toolGroups = listOf(
                     GroupedRow(entry.title, entry.icon, supporting = entry.description, roomy=true, bareIcon=true) { onNavigate("tools/${entry.id}") }
                 }
             } }
-            item { SectionLabel("FAVOURITES & WIDGET") }
+            item { SectionLabel("SHORTCUTS") }
             item { GroupedCard {
-                GroupedRow("Favourites", R.drawable.ic_star_outline, supporting = "Quick access to what you use",roomy=true,bareIcon=true) { onNavigate("favourites") }
-                GroupedDivider()
-                GroupedRow("Home screen widget", R.drawable.ic_widget_outline, supporting = "Quick expense shortcuts",roomy=true,bareIcon=true) { onNavigate("favourites") }
+                GroupedRow("Favourites & widget", R.drawable.ic_star_outline, supporting = "Quick entries and a home-screen widget",roomy=true,bareIcon=true) { onNavigate("favourites") }
             } }
-            item { Surface(shape=Tokens.field,color=Tokens.secondarySurface) {GroupedRow("Add Tally to your home screen",R.drawable.ic_phone_outline,supporting="Open expense drafts quickly. No balances or history shown.",color=Tokens.secondarySurface) {onNavigate("favourites")}} }
-        } else item { GroupedCard {
-            group.links.forEachIndexed { index, (route, label) ->
-                if (index > 0) GroupedDivider()
-                GroupedRow(label, group.icon) { onNavigate(route) }
-            }
-        } }
+        } else group.sections.forEach { section ->
+            item { SectionLabel(section.label.uppercase()) }
+            item { GroupedCard {
+                section.links.forEachIndexed { index, link ->
+                    if (index > 0) GroupedDivider()
+                    GroupedRow(link.label, link.icon, tone = section.tone) { onNavigate(link.route) }
+                }
+            } }
+        }
     }
     if(menu) EditorialActionSheet("Tools",toolGroups.map {entry->EditorialAction(entry.title) {menu=false;onNavigate("tools/${entry.id}")}}, {menu=false})
 }

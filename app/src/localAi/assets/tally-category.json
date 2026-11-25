@@ -1,0 +1,25 @@
+{
+  "model": "scratch hashed character n-gram category suggester",
+  "parameters": 40970,
+  "buckets": 4096,
+  "categories": [
+    "Food",
+    "Groceries",
+    "Transport",
+    "Shopping",
+    "Education",
+    "Entertainment",
+    "Bills",
+    "Subscriptions",
+    "Health",
+    "Travel"
+  ],
+  "threshold": 0.8245,
+  "seed": 5309,
+  "sha256": "87a400106441fbe373b9c6d1c1d63d875cf965d20f46573524435022d242e7e0",
+  "bytes": 164022,
+  "pretrained_weights": false,
+  "model_version": "category-v1",
+  "evaluation": "Held-out variants of assistant-authored terms and unknown words only; unseen words are unreliable; not independent real-user accuracy.",
+  "data_provenance": "Assistant-authored description lexicon; no private financial records."
+}

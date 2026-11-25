@@ -92,7 +92,7 @@ class EnglishCommandInputTest {
         val p=parser(false)
         assertEquals(LocalDate.of(2026,10,23), p.parse("coffee 45 cash day   before yesterday",emptyList()).date)
         listOf("coffee 45 cash -2 days ago", "coffee 45 cash 1.2 days ago", "coffee 45 cash last night",
-            "coffee 45 cash two weeks ago", "coffee 45 cash Monday").forEach { text ->
+            "coffee 45 cash two months ago", "coffee 45 cash Monday").forEach { text ->
             val result=p.parse(text,emptyList())
             assertNull(text,result.amount)
             assertNull(text,result.date)
@@ -185,5 +185,52 @@ class EnglishCommandInputTest {
         listOf("I will pay 2k for coffee using cash today","I did not pay 2k for coffee using cash yesterday").forEach { text ->
             assertNull(text,parser(false).parse(text,emptyList()).amount)
         }
+    }
+
+    @Test fun timeOfDayPhrasesMeanToday() {
+        val today=LocalDate.now(clock)
+        for (ai in listOf(false,true)) listOf("this morning","this afternoon","this evening","tonight","earlier today").forEach { phrase ->
+            val result=parser(ai).parse("coffee 45 cash $phrase",emptyList())
+            assertEquals(phrase,4500L,result.amount)
+            assertEquals(phrase,"coffee",result.description)
+            assertEquals(phrase,today,result.date)
+        }
+    }
+
+    @Test fun weekOffsetsResolveToWholeWeeks() {
+        val today=LocalDate.now(clock)
+        mapOf("a week ago" to today.minusWeeks(1),"two weeks ago" to today.minusWeeks(2),"3 weeks ago" to today.minusWeeks(3)).forEach { (phrase,expected) ->
+            val result=parser(false).parse("coffee 45 cash $phrase",emptyList())
+            assertEquals(phrase,4500L,result.amount)
+            assertEquals(phrase,expected,result.date)
+        }
+        listOf("coffee 45 cash 53 weeks ago","coffee 45 cash about a week ago","coffee 45 cash in two weeks").forEach { text ->
+            val result=parser(false).parse(text,emptyList())
+            assertNull(text,result.amount)
+            assertTrue(text,"date" in result.missing)
+        }
+    }
+
+    @Test fun dayAndMonthWithoutYearMeanThisYearOnlyWhenPast() {
+        for (ai in listOf(false,true)) listOf("coffee 45 cash on 21 October","coffee 45 cash on Oct 21","coffee 45 cash on october 21").forEach { text ->
+            val result=parser(ai).parse(text,emptyList())
+            assertEquals(text,4500L,result.amount)
+            assertEquals(text,"coffee",result.description)
+            assertEquals(text,LocalDate.of(2026,10,21),result.date)
+        }
+        listOf("coffee 45 cash on 31 October","coffee 45 cash on 30 February","coffee 45 cash on 21 Octember").forEach { text ->
+            val result=parser(false).parse(text,emptyList())
+            assertNull(text,result.amount)
+            assertTrue(text,"date" in result.missing)
+        }
+    }
+
+    @Test fun indianSlashDashPriceSuffixKeepsTheExactAmount() {
+        for (ai in listOf(false,true)) mapOf("coffee 80/- cash" to 8000L,"coffee Rs. 1,250/- cash" to 125000L,"coffee ₹99.50/- cash" to 9950L).forEach { (text,expected) ->
+            val result=parser(ai).parse(text,emptyList())
+            assertEquals(text,expected,result.amount)
+            assertEquals(text,"coffee",result.description)
+        }
+        listOf("coffee 80/-5 cash","coffee 80/2 cash").forEach { assertNull(it,parser(false).parse(it,emptyList()).amount) }
     }
 }

@@ -1,5 +1,7 @@
 # Improved 1M expense-command extension
 
+**Superseded:** the current source ships the [v5 extension and category suggester](IMPROVED_V5.md). This report records v4 and the app runtime that v5 keeps.
+
 The current app source integrates a **999,150-parameter** bidirectional GRU trained from random weights, plus the existing **53,142-parameter** compatibility model. Total learned parameters: **1,052,292**. Compatibility predictions are preferred; the extension handles abstentions, protecting established behavior while extending coverage. Neither model is a conversational LLM or a math engine.
 
 ## Capabilities and limits

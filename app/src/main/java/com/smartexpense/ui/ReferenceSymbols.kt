@@ -32,13 +32,16 @@ internal fun referenceSymbol(label:String,fallback:Int=R.drawable.ic_food):Int {
 }
 
 /** Rounded continuous progress without Material's decorative endpoint dot. */
-@Composable internal fun ReferenceProgress(progress:Float,modifier:Modifier=Modifier,overLimit:Boolean=false) {
+@Composable internal fun ReferenceProgress(progress:Float,modifier:Modifier=Modifier,overLimit:Boolean=false,pace:Float?=null) {
     val value=progress.coerceIn(0f,1f)
     val track=Tokens.border.copy(alpha=.65f)
-    val fill=if(overLimit) listOf(Tokens.negative,Tokens.negative) else listOf(Tokens.accent,Tokens.accent.copy(alpha=.75f))
+    val mark=Tokens.text
+    val state=when {overLimit->Tokens.negative;value>=.8f->Tokens.warning;else->Tokens.accent}
+    val fill=listOf(state,state)
     Canvas(modifier.height(10.dp).semantics {progressBarRangeInfo=ProgressBarRangeInfo(value,0f..1f)}) {
         val radius=CornerRadius(size.height/2)
         drawRoundRect(track,cornerRadius=radius)
         if(value>0) drawRoundRect(Brush.horizontalGradient(fill),size=Size(size.width*value,size.height),cornerRadius=radius)
+        if(pace!=null) drawRect(mark,androidx.compose.ui.geometry.Offset((size.width*pace.coerceIn(0f,1f)-1.dp.toPx()).coerceAtLeast(0f),0f),Size(2.dp.toPx(),size.height))
     }
 }

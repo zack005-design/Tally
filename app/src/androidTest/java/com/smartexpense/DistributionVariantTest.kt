@@ -11,5 +11,9 @@ class DistributionVariantTest {
         assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-command.json" in assets)
         assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-command-extended.bin" in assets)
         assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-command-extended.json" in assets)
+        assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-category.bin" in assets)
+        assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-category.json" in assets)
+        assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-assistant.bin" in assets)
+        assertEquals(BuildConfig.LOCAL_AI_ENABLED, "tally-assistant.json" in assets)
     }
 }

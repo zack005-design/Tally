@@ -16,9 +16,10 @@ class RedesignUiTest {
         var destination=""
         compose.setContent {TrackerTheme {HomeScreen(Snapshot(),{kind,_->chosen=kind},{},{},{},{destination=it})}}
         compose.onAllNodesWithText("₹0.00").assertCountEquals(0)
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Add an expense"))
-        compose.onNodeWithText("Add an expense").assertIsDisplayed().performClick()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Add expense"))
+        compose.onNodeWithText("Add expense").assertIsDisplayed().performClick()
         assertEquals(Kind.EXPENSE,chosen)
+        compose.onNode(hasScrollAction()).performScrollToNode(hasContentDescription("Settings"))
         compose.onNodeWithContentDescription("Settings").performClick()
         assertEquals("more",destination)
     }

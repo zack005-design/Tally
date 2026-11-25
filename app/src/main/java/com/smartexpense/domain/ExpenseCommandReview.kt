@@ -8,7 +8,7 @@ internal object ExpenseCommandReview {
     private val isoDate = Regex("\\b\\d{4}-\\d{2}-\\d{2}\\b")
     private val numeric = Regex("[0-9]+(?:,[0-9]+)*(?:\\.[0-9]+)?")
     private val valid = Regex("(?:[0-9]+|[1-9][0-9]{0,2}(?:,[0-9]{3})+|[1-9][0-9]?(?:,[0-9]{2})*,[0-9]{3})(?:\\.[0-9]{1,2})?")
-    private val account = Regex("\\b(?:google\\s+pay|gooogle\\s+pay|g[\\s-]+pay|googlepay|gpay|gpy|gpaay|wallet|wallett|walllet|cash)\\b", RegexOption.IGNORE_CASE)
+    private val account = Regex("\\b(?:google\\s+pay|gooogle\\s+pay|g[\\s-]+pay|googlepay|gpay|gpy|gpaay|upi|wallet|wallett|walllet|cash|phone\\s*pe|paytm)\\b", RegexOption.IGNORE_CASE)
 
     fun reason(text: String, base: ParsedDraft): String? {
         if (text.codePoints().anyMatch { Character.getType(it) == Character.FORMAT.toInt() || Character.isISOControl(it) })
@@ -30,7 +30,13 @@ internal object ExpenseCommandReview {
         if ((base.kind != null && base.kind != Kind.EXPENSE) || base.contributions.keys.any { it != "self" } ||
             base.splitRule != null || "participants" in base.missing || "split method" in base.missing) return null
         val sources = account.findAll(text).map {
-            if (it.value.lowercase(java.util.Locale.ROOT) in setOf("cash", "wallet", "wallett", "walllet")) "WALLET" else "GPAY"
+            val name = it.value.lowercase(java.util.Locale.ROOT).replace(Regex("\\s+"), "")
+            when {
+                name in setOf("cash", "wallet", "wallett", "walllet") -> "WALLET"
+                name == "phonepe" -> "PHONEPE"
+                name == "paytm" -> "PAYTM"
+                else -> "GPAY"
+            }
         }.toSet()
         if (sources.size > 1) return "Multiple payment accounts found. Enter the amount and account manually."
         if (matches.size > 1) return "Multiple amounts found. Choose the transaction amount manually."
