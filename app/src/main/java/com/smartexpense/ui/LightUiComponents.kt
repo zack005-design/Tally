@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -167,8 +168,11 @@ internal fun sentenceCaseLabel(text: String): String {
 
 /** iOS-style search field: a white pill with a search glyph and no underline. */
 @Composable internal fun SearchPill(placeholder:String,value:String,onChange:(String)->Unit,modifier:Modifier=Modifier) {
-    TextField(value,onChange,modifier.fillMaxWidth(),placeholder={Text(placeholder,color=Tokens.muted)},
+    val focus=androidx.compose.ui.platform.LocalFocusManager.current
+    // The placeholder disappears while typing, so the field keeps its own accessible name.
+    TextField(value,onChange,modifier.fillMaxWidth().semantics {contentDescription=placeholder},placeholder={Text(placeholder,color=Tokens.muted)},
         leadingIcon={Icon(painterResource(R.drawable.ic_search),null,Modifier.size(20.dp),tint=Tokens.muted)},
+        keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(imeAction=androidx.compose.ui.text.input.ImeAction.Search),keyboardActions=androidx.compose.foundation.text.KeyboardActions(onSearch={focus.clearFocus()}),
         singleLine=true,shape=Tokens.pill,textStyle=MaterialTheme.typography.bodyLarge,
         colors=TextFieldDefaults.colors(unfocusedContainerColor=Tokens.inputSurface,focusedContainerColor=Tokens.inputSurface,unfocusedIndicatorColor=Color.Transparent,focusedIndicatorColor=Color.Transparent))
 }

@@ -93,7 +93,7 @@ import java.time.format.DateTimeFormatter
             if(smart.structured) Text("Understood: "+(smart.labels+listOfNotNull(smart.text.takeIf {it.isNotEmpty()}?.let {"“$it”"})).joinToString(" · "),
                 color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
         }}
-        item(key="filters") {Row(Modifier.fillMaxWidth().padding(bottom=8.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+        item(key="filters") {FlowRow(Modifier.fillMaxWidth().padding(bottom=8.dp),horizontalArrangement=Arrangement.SpaceBetween) {
             OutlinedButton({monthPicker=true}) {Text((if(monthText.isEmpty()) "All dates" else YearMonth.parse(monthText).format(DateTimeFormatter.ofPattern("MMMM yyyy")))+" ⌄")}
             val count=listOf(kind,category,account,person,group).count {it!="all"}+listOf(start,end,minimum,maximum).count {it.isNotBlank()}
             OutlinedButton({previousFilters=listOf(kind,category,account,person,group,start,end,minimum,maximum,monthText);filters=true}) {Text("Filter"+if(count>0) " · $count" else "")}
