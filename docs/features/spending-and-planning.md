@@ -14,7 +14,7 @@ For shared bills, your personal share is distinct from the cash you paid on beha
 
 ## Yearly summary
 
-Open **Tools → History & reports → Yearly summary** to see a whole year at once:
+Open **Spending → Year in review** to see a whole year at once:
 
 - total spending and income for the year
 - how spending compares with last year. For the year in progress, Tally compares the same dates, so January to November is measured against January to November last year.

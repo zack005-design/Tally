@@ -4,7 +4,8 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
-Nothing yet.
+- Tapping your avatar on **Summary** now opens **Settings** instead of the long Tools list. Settings groups your profile, appearance, app lock, reminders, accounts, categories, merchant rules, favourites, calculator, backup, export and chat import. [Appearance guide](docs/features/appearance.md)
+- **Spending** now lists Budgets, Savings goals, Recurring, Money planner, Calendar & diary, Monthly review and Year in review in one grouped list, replacing the stacked buttons. Set budgets from **Budgets → Edit budgets**. [Spending and planning](docs/features/spending-and-planning.md)
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 

@@ -20,7 +20,7 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CancellationException
 
-@Composable fun InsightsScreen(s:Snapshot,selected:String,onMonth:(String)->Unit,onBudget:(String,String?,Long)->Unit,onPlanner:()->Unit={},onBudgetSave:((String,String?,Long,()->Unit)->Unit)?=null,busy:Boolean=false,onTransactions:()->Unit={},onPeriodReport:(suspend (LocalDate,LocalDate)->PeriodReport)?=null) {
+@Composable fun InsightsScreen(s:Snapshot,selected:String,onMonth:(String)->Unit,onBudget:(String,String?,Long)->Unit,onPlanner:()->Unit={},onOpen:(String)->Unit={},onBudgetSave:((String,String?,Long,()->Unit)->Unit)?=null,busy:Boolean=false,onTransactions:()->Unit={},onPeriodReport:(suspend (LocalDate,LocalDate)->PeriodReport)?=null) {
     var monthPicker by rememberSaveable {mutableStateOf(false)}
     var budgetsOpen by rememberSaveable {mutableStateOf(false)}
     var details by rememberSaveable {mutableStateOf(false)}
@@ -72,6 +72,19 @@ import kotlinx.coroutines.CancellationException
             item {GroupedCard {
                 GroupedRow("Budgets",R.drawable.ic_insights) {budgetsOpen=true}
                 GroupedDivider()
+                GroupedRow("Savings goals",R.drawable.ic_target_outline,tone=ReferenceTone.Peach) {onOpen("goals")}
+                GroupedDivider()
+                GroupedRow("Recurring",R.drawable.ic_clock_outline,tone=ReferenceTone.Lavender) {onOpen("recurring")}
+                GroupedDivider()
+                GroupedRow("Money planner",R.drawable.ic_piggy_outline,tone=ReferenceTone.Pink) {onPlanner()}
+                GroupedDivider()
+                GroupedRow("Calendar & diary",R.drawable.ic_calendar,tone=ReferenceTone.Peach) {onOpen("calendar")}
+                GroupedDivider()
+                GroupedRow("Monthly review",R.drawable.ic_document_outline,tone=ReferenceTone.Gray) {onOpen("monthly-review")}
+                GroupedDivider()
+                GroupedRow("Year in review",R.drawable.ic_star_outline,tone=ReferenceTone.Gray) {onOpen("year-summary")}
+            }}
+            item {GroupedCard {
                 GroupedRow("Spending details",R.drawable.ic_activity,value=if(details) "Hide" else "Show",showChevron=false) {details=!details}
             }}
             if(details) {
