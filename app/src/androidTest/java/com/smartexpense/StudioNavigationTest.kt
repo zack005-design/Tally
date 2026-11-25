@@ -38,7 +38,7 @@ class StudioNavigationTest {
 
     @Test fun savingActualPaymentsOpensCommittedReceiptAndReturnsHome() {
         val friend=start()
-        compose.onNodeWithText("Expense").performClick()
+        compose.onNodeWithText("Add").performClick()
         compose.runOnIdle {
             model.change(model.entry.value.copy(amount="330",description="Dinner",shared=true,participants=listOf("self",friend),paid=mapOf("self" to "300",friend to "30")))
         }
@@ -58,12 +58,9 @@ class StudioNavigationTest {
         compose.onNode(hasText("Summary") and isSelectable()).assertIsSelected()
     }
 
-    @Test fun incomeRemainsReachableFromSettingsAfterRemovingTheAddTab() {
+    @Test fun incomeRemainsReachableFromSummaryAfterRemovingTheAddTab() {
         start()
-        compose.onNodeWithContentDescription("Settings").performClick()
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Money & planning"))
-        compose.onNodeWithText("Money & planning").performClick()
-        compose.onNodeWithText("Record income").performClick()
+        compose.onNodeWithText("Income").performClick()
         compose.runOnIdle {assertEquals(Kind.INCOME,model.entry.value.kind)}
         compose.onNode(hasText("Summary") and isSelectable()).assertDoesNotExist()
         compose.onNodeWithContentDescription("Back").assertExists()
