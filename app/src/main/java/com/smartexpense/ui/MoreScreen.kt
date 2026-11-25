@@ -25,7 +25,8 @@ private val toolGroups = listOf(
         ToolSection("Accounts", ReferenceTone.Wallet, listOf(
             ToolLink("accounts", "Accounts", R.drawable.ic_account),
             ToolLink("wallet", "Wallet & GPay", R.drawable.ic_wallet_outline),
-            ToolLink("gpay-settings", "GPay balance & resets", R.drawable.ic_contactless))),
+            ToolLink("gpay-settings", "GPay balance & resets", R.drawable.ic_contactless),
+            ToolLink("net-worth", "Net worth", R.drawable.ic_tab_summary))),
         ToolSection("Plan", ReferenceTone.Lavender, listOf(
             ToolLink("insights", "Spending insights", R.drawable.ic_insights),
             ToolLink("budgets", "Budgets", R.drawable.ic_target_outline),

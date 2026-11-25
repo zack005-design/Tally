@@ -120,10 +120,13 @@ class ScratchCommandModel private constructor(
         private val unsupported = Regex("\\b(?:transfer|transferred|refund|refunded|income|salary|earned|received|repay|repaid|repayment|returned|split|shared|owe|owed|owes|between|dollars|usd|eur|gbp|balance|budget|delete|remove|cancel|not|never|didn\\W?t|don\\W?t|haven\\W?t|tomorrow|plan|planning)\\b|[\u0024€£]|\\?", RegexOption.IGNORE_CASE)
         private val future = Regex("\\bi\\s+(?:will|would|might|may|could|should)\\b", RegexOption.IGNORE_CASE)
         private val accountNames = mapOf("cash" to "WALLET", "wallet" to "WALLET", "gpay" to "GPAY", "google pay" to "GPAY", "g pay" to "GPAY", "g-pay" to "GPAY", "googlepay" to "GPAY")
-        private val enhancedAccountNames = accountNames + mapOf("gpy" to "GPAY", "gpaay" to "GPAY", "gooogle pay" to "GPAY", "wallett" to "WALLET", "walllet" to "WALLET")
+        // Explicit allowlist only. UPI uses the app's UPI slot; PhonePe/Paytm resolve only to an account with that exact name.
+        private val enhancedAccountNames = accountNames + mapOf("gpy" to "GPAY", "gpaay" to "GPAY", "gooogle pay" to "GPAY", "wallett" to "WALLET", "walllet" to "WALLET",
+            "upi" to "GPAY", "phonepe" to "PHONEPE", "phone pe" to "PHONEPE", "paytm" to "PAYTM")
+        private val accountLeads = enhancedAccountNames.keys.map { it.substringBefore(' ') }.toSet()
         private val hindiNonAction = Regex("\\b(?:nahi|nahin|mat|kal|karunga|karungi|karenge|dunga|dungi)\\b", RegexOption.IGNORE_CASE)
-        private val descriptionFillers = setOf("entry", "today's", "today", "please", "record", "log", "note", "add", "spent", "paid", "payment", "i", "my", "for", "on", "at", "via", "using", "aaj", "maine", "the")
-        private val descriptionEnd = setOf("using", "through", "with", "paid", "amount", "via", "was", "cost", "costing", "came", "for", "from", "rupees", "inr", "rs", "ke", "pe", "par", "ka", "rupaye", "se", "out")
+        private val descriptionFillers = setOf("entry", "today's", "today", "please", "record", "log", "note", "add", "spent", "paid", "payment", "i", "my", "for", "on", "at", "via", "using", "aaj", "maine", "the", "mein", "ka", "ke", "ki", "se", "pe", "par")
+        private val descriptionEnd = setOf("using", "through", "with", "paid", "amount", "via", "was", "cost", "costing", "came", "for", "from", "rupees", "inr", "rs", "ke", "pe", "par", "ka", "rupaye", "se", "out", "worth", "mein", "gaye", "liya", "khareeda", "bhara") + accountLeads
         private fun descriptionBoundaryAllowed(tokens: List<Token>, description: List<Int>): Boolean {
             if (tokens[description.first()].text.lowercase(Locale.ROOT) in descriptionFillers) return false
             val last = description.last()

@@ -24,6 +24,16 @@ Open **Tools → History & reports → Yearly summary** to see a whole year at o
 
 Use the arrows to move between years. The summary uses the same rules as monthly reports: only your share of a shared bill counts, refunds reduce spending, and transfers and repayments are not spending. It is built only from the records you entered.
 
+## Net worth
+
+Open **More → Money & planning → Net worth** to see what you have minus what you owe:
+
+- **Account balances**: every account, including cash, bank and UPI.
+- **Friends owe you**: outstanding shared-bill balances owed to you.
+- **You owe friends**: outstanding balances you owe.
+
+The screen lists each account and shows your account total at the end of each of the last six months, rebuilt from your saved entries. Savings goals are money set aside inside your accounts, so they are not counted twice. Loans, investments and property are not tracked in Tally, so they are not included. Nothing is changed by opening this screen.
+
 ## Plan ahead
 
 | Tool | Purpose |

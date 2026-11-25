@@ -5,7 +5,9 @@ data class ParsedDraft(
     val description: String, val kind: Kind?, val amount: Long?, val category: String?,
     val contributions: Map<String, Long> = emptyMap(), val splitRule: SplitRule? = null,
     val personId: String? = null, val fromAccount: String? = null, val toAccount: String? = null,
-    val missing: Set<String> = emptySet(), val warnings: List<String> = emptyList(),val date:java.time.LocalDate?=null
+    val missing: Set<String> = emptySet(), val warnings: List<String> = emptyList(),val date:java.time.LocalDate?=null,
+    /** Extra text for the transaction notes, such as an original foreign amount and rate. */
+    val notes: String? = null
 )
 interface ExpenseTextParser { fun parse(text: String, people: List<PersonRef>): ParsedDraft }
 /** Suggestions only. The caller must show an editable draft and require confirmation. */
