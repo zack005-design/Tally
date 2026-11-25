@@ -17,6 +17,25 @@ internal object AssistantValidator {
         "lock" to setOf("lock"), "backup" to setOf("backup", "restore"), "export" to setOf("export", "csv"), "privacy" to setOf("privacy", "private"))
     private val percentCues = setOf("percent", "percentage", "%", "share", "part")
     private val compareCues = setOf("compare", "compared", "vs", "versus", "than", "or", "higher", "ya")
+    private val topCues = setOf("categories", "category", "areas", "rank", "breakdown")
+    private val countCues = setOf("times", "baar", "often")
+    private val forecastCues = setOf("forecast", "will", "track", "estimate", "predict", "projected", "end", "overspend", "hoga")
+    private val monthWords = setOf("month", "monthly", "mahine")
+
+    /** True when [token] is followed within two words by month wording ("N a month", "N per month", "N monthly"). */
+    private fun perMonth(source: List<String>, token: String) =
+        source.indices.any { i -> source[i] == token && source.subList(i + 1, minOf(source.size, i + 3)).any { it in monthWords } }
+
+    /** A saving plan's month count must appear as "N months"; a timeline names no month count and its monthly amount has month wording. */
+    private fun savingRolesOk(source: List<String>, statement: List<String>): Boolean {
+        val args = statement.drop(1)
+        val namesMonths = (0 until source.size - 1).filter { placeholder(source[it], listOf("NUM")) && source[it + 1] == "months" }.map { source[it] }.toSet()
+        return when (statement[0]) {
+            "saveplan" -> namesMonths == setOf(args[2]) && !perMonth(source, args[0])
+            "savetime" -> namesMonths.isEmpty() && perMonth(source, args[2]) && !perMonth(source, args[0])
+            else -> true
+        }
+    }
 
     fun placeholder(token: String, kinds: List<String> = listOf("CAT", "ACC", "NUM", "WORD")) =
         kinds.any { token.startsWith(it) && token.length > it.length && token.substring(it.length).all(Char::isDigit) }
@@ -114,7 +133,12 @@ internal object AssistantValidator {
             if ((words intersect percentCues).isNotEmpty() && (setOf("share", "whatif") intersect heads.toSet()).isEmpty()) return false
             if ((words intersect compareCues).isNotEmpty() && "compare" !in heads && "whatif" !in heads && "savetime" !in heads) return false
             if ("compare" in heads && (words intersect (compareCues + "more")).isEmpty()) return false
+            if ((words intersect topCues).isNotEmpty() && heads[0] in filtered && heads[0] != "top") return false
+            if ((words intersect countCues).isNotEmpty() && heads[0] in filtered && heads[0] != "count") return false
+            if (heads[0] == "forecast" && (words intersect forecastCues).isEmpty()) return false
+            if (!savingRolesOk(source, statements[0])) return false
         }
+        if (statements.toSet().size != statements.size) return false
         val placeholders = program.filter { placeholder(it) }.toSet()
         val mentioned = source.filter { placeholder(it) }.toSet()
         val carried = context.filter { placeholder(it) }.toSet()

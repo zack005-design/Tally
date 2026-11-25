@@ -78,16 +78,16 @@ Supported: `$`, `€`, `£` and the codes USD, EUR, GBP, AED, SAR, QAR, KWD, OMR
 
 The AI edition includes a small language model, trained from scratch for Tally, that works out **how** to answer a money question. Type a question in the command box:
 
-- `did I spend more on food this month than last month?`
-- `food vs shopping last week`
-- `what percent of my spending was travel in october`
-- `how much budget do I have left?` · `am I on track this month?`
-- `I want to save 1 lakh in 12 months, how much per month?`
+- `how much did I spend on food this month?`, then a follow-up: `what about last month` or `same for last week`
+- `what was my biggest expense this week` · `average daily spending last month`
+- `top spending categories in october`
+- `what if I cut food by 20%`
+- `how much budget do I have left?` · `will I overspend this month?`
 - `how do I split a bill?`
 
-The model writes a short plan, such as "total Food this month, total Food last month, compare". Tally's exact code then carries out each step on your records, and the answer lists the steps under **How I worked it out**. Every number comes from your saved entries or the figures you typed, never from the model.
+The model writes a short plan, such as "total Food this month". Tally's exact code then carries out each step on your records, and the answer lists the steps under **How I worked it out**. Every number comes from your saved entries or the figures you typed, never from the model. For about ten minutes after an answer, a short follow-up such as `what about last month` reuses the category, account or period you just asked about. Follow-ups that change the period work best; switching category (`what about travel`) is usually declined.
 
-It checks its own plan and declines when unsure. The plan must use every name, number and period you mentioned, follow the step grammar and clear a confidence level set during testing. When it declines, Tally tries the simpler spending-question rules below, then treats the text as an entry. In testing on phrasings it had never seen, it answered about 55% of questions with no wrong answers and declined the rest. It is not a chatbot: it can't discuss topics outside your Tally records, and unusual wording is often declined. It runs on your phone with no internet and adds about 19 MB to the AI edition. [Model details](../../ml/tally-assistant/README.md)
+It checks its own plan and declines when unsure. The plan must use every name, number and period you mentioned, follow the step grammar, match the meaning of your words (a ranking needs a ranking step, "how many times" needs a count, a savings timeline must not be planned as a monthly target) and clear a confidence level set during testing. When it declines, Tally tries the simpler spending-question rules below, then treats the text as an entry. On phrasings it had never been trained on, it answered about 46% of questions with no wrong answers and declined the rest. It often declines comparisons (`food vs shopping`), percentage shares and savings plans; those are better asked as single totals for now. It is not a chatbot: it can't discuss topics outside your Tally records, and unusual wording is often declined. It runs on your phone with no internet and adds about 5 MB to the AI edition. [Model details](../../ml/tally-assistant/README.md)
 
 ## Ask about your spending
 

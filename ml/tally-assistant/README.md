@@ -1,6 +1,8 @@
 # Tally's tiny reasoning model
 
-A **4,843,776-parameter** decoder-only transformer, trained from random weights on this project's own synthetic questions. No pretrained weights, no external teacher model and no private records were used. It runs on the phone in the AI edition (`tally-assistant.bin`, 19.4 MB) through a plain Kotlin implementation, with no native AI runtime and no network.
+**The app now ships assistant v2** (4,870,144 parameters, int8, `tally-assistant.bin`, 5.1 MB); see [Version 2](#version-2-bigger-model-follow-ups-and-gpu-training) for its results. The v1 description below is kept as the record of the first model.
+
+Version 1 was a **4,843,776-parameter** decoder-only transformer, trained from random weights on this project's own synthetic questions. No pretrained weights, no external teacher model and no private records were used. It runs on the phone in the AI edition through a plain Kotlin implementation, with no native AI runtime and no network (v1 file: 19.4 MB, float).
 
 It is a small language model that **plans**, not a chatbot. It reads a money question and writes a short step program:
 
@@ -78,6 +80,21 @@ Runs, checkpoints and generated datasets stay in the ignored `runs/` folder. Thi
 | `small` | ~4.9M | ~5 MB | CPU, about an hour |
 | `medium` | ~14M | ~14 MB | GPU |
 | `large` | ~25M | ~25 MB | GPU (6 GB is enough) |
+
+### Shipped v2 model (`small`, trained on CPU)
+
+Width 256, 6 layers, 8 heads, feed-forward 1,024, context 128, vocabulary 384. 200,000 training questions (seed 9173, dataset SHA-256 first 16 hex `04b5d7104a663884`), 12,000 steps on CPU (6,299 s); development exact-match peaked at **step 4,000** (68.1% on the 800-question probe), which was kept. Bundle SHA-256 `57faa69c5b5447c6d315a298c00ecfa8d66c568326e659b4928f9db4442dd673`. Every number is for the int8 model as shipped.
+
+| Set | Questions | Exact plan | Answered | Wrong answers | Declined |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Development | 3,000 | 2,091 (69.7%) | 1,401 | 0 | 1,599 |
+| Held-out test | 3,000 | 2,253 (75.1%) | 1,372 (45.7%) | 0 | 1,628 |
+
+Held-out answers by type: largest 147/147, average 156/156, what-if 151/151, follow-up period 181/216, follow-up category 22/36, spending 286/471, forecast 91/180, count 83/157, top 80/159, budget 76/163, help 50/186, income 33/160, compare periods 13/249, saving 2/235, share 1/99, compare categories 0/93, follow-up comparisons 0/32, out-of-scope 0/110 (all refused).
+
+**How the gate was passed.** The first gate of this model gave **169 wrong held-out answers** and blocked export. They were systematic meaning errors, not noise: "biggest spending areas" planned as the single largest expense, "to reach N in M months what do I need to put aside monthly" planned as a timeline instead of a monthly target, "kitni baar" planned as a total instead of a count, a comparison of a period with itself, and a forecast for an off-topic follow-up. Five rules were added to the validator (in Python and Kotlin): ranking words need a top step, count words need a count step, a forecast needs forecast wording, saving plans and timelines must match how months and monthly amounts appear in the question, and no step may repeat. The answer-threshold floor of 0.5 was also enforced (it had been skipped when a step had wrong development answers). Thresholds were then chosen again on development data only (`--regate`), and the held-out test gave 0 wrong answers. Because the rules were written after looking at held-out errors, **this held-out result is inspected evidence, not an untouched measurement**.
+
+**Compared with v1 on the same questions.** On the 2,117 v2 held-out questions that are not follow-ups, the v1 model (with the same stricter validator and its own thresholds) answered 1,189 but **124 of them were wrong**: 66 forecasts and 58 period comparisons. v1 had 1,065 correct answers; v2 answered 945 of those questions with none wrong, is a quarter of the size, and adds follow-ups, averages, largest expense and what-if. It answers far fewer comparisons, shares and saving plans than v1 did; those now decline and fall back to the exact rules or entry handling.
 
 ### Train on your own GPU (Windows, PowerShell)
 

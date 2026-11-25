@@ -6,7 +6,11 @@
 3. Periods: the set of time periods named in the question equals the set used by the program (budget, forecast,
    saving plans, what-if and help steps take no period).
 4. Meaning cues: percentage wording needs a share or what-if step; comparison wording needs a compare step; a help
-   topic must be the single best match for the question's topic words.
+   topic must be the single best match for the question's topic words; category-ranking wording ("areas",
+   "categories", "rank") needs a top step; "times"/"baar"/"often" needs a count step; a forecast needs forecast
+   wording; no step may repeat.
+5. Saving roles: a saving plan's month count must appear as "N months" in the question; a saving timeline must not
+   name a month count, and its monthly amount (not its target) must be followed by month wording ("a month").
 """
 PERIODS = {('today',): 'today', ('yesterday',): 'yesterday', ('this', 'week'): 'this_week', ('last', 'week'): 'last_week',
            ('previous', 'week'): 'last_week', ('this', 'month'): 'this_month', ('last', 'month'): 'last_month',
@@ -26,6 +30,25 @@ STRONG_CUES = {'split': {'split'}, 'receipt': {'receipt', 'scan'}, 'budget': {'b
                'backup': {'backup', 'restore'}, 'export': {'export', 'csv'}, 'privacy': {'privacy', 'private'}}
 PERCENT_CUES = {'percent', 'percentage', '%', 'share', 'part'}
 COMPARE_CUES = {'compare', 'compared', 'vs', 'versus', 'than', 'or', 'higher', 'ya'}
+TOP_CUES = {'categories', 'category', 'areas', 'rank', 'breakdown'}
+COUNT_CUES = {'times', 'baar', 'often'}
+FORECAST_CUES = {'forecast', 'will', 'track', 'estimate', 'predict', 'projected', 'end', 'overspend', 'hoga'}
+MONTH_WORDS = {'month', 'monthly', 'mahine'}
+
+
+def per_month(source, token):
+    """True when `token` is followed within two words by month wording ("N a month", "N per month", "N monthly")."""
+    return any(source[i] == token and MONTH_WORDS & set(source[i + 1:i + 3]) for i in range(len(source)))
+
+
+def saving_roles_ok(source, statement):
+    head, args = statement[0], statement[1:]
+    names_months = {source[i] for i in range(len(source) - 1) if placeholder(source[i], ('NUM',)) and source[i + 1] == 'months'}
+    if head == 'saveplan':
+        return names_months == {args[2]} and not per_month(source, args[0])
+    if head == 'savetime':
+        return not names_months and per_month(source, args[2]) and not per_month(source, args[0])
+    return True
 
 
 def placeholder(token, kinds=('CAT', 'ACC', 'NUM', 'WORD')):
@@ -159,6 +182,16 @@ def valid(source, program, context=()):
             return False
         if 'compare' in heads and not words & (COMPARE_CUES | {'more', 'more'}):
             return False
+        if words & TOP_CUES and heads[0] in FILTERED and heads[0] != 'top':
+            return False
+        if words & COUNT_CUES and heads[0] in FILTERED and heads[0] != 'count':
+            return False
+        if heads[0] == 'forecast' and not words & FORECAST_CUES:
+            return False
+        if not saving_roles_ok(source, statements[0]):
+            return False
+    if len({tuple(s) for s in statements}) != len(statements):
+        return False
     used = {t for t in program if placeholder(t)}
     mentioned = {t for t in source if placeholder(t)}
     carried = {t for t in context if placeholder(t)}

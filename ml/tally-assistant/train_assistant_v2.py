@@ -4,6 +4,8 @@ GPU (recommended, e.g. a 6 GB laptop card):
     python train_assistant_v2.py --run-dir runs/assistant-v2 --size large --export
 CPU smoke test:
     python train_assistant_v2.py --run-dir runs/v2-smoke --size tiny --steps 600 --train-count 20000
+Re-gate a finished run after a validator change (no training; thresholds are chosen again on development data):
+    python train_assistant_v2.py --run-dir runs/assistant-v2 --regate --export
 
 The gate runs on the int8 model exactly as shipped. Per first step, the answer threshold is the lowest with zero
 wrong development answers (floor 0.5; a step never predicted on development data is never answered). The held-out
@@ -38,6 +40,24 @@ FILLERS = ['please', 'just', 'tell', 'me', 'so', 'far', 'my', 'the', 'total', 'h
 SYNONYMS = {'spend': ['spent', 'spending'], 'spent': ['spend'], 'biggest': ['largest'], 'largest': ['biggest'],
             'earn': ['receive'], 'receive': ['earn'], 'money': ['cash'], 'compare': ['vs'], 'vs': ['compare'],
             'expenses': ['spending'], 'spending': ['expenses'], 'more': ['higher'], 'higher': ['more']}
+
+
+RULE_CASES = [
+    ('', 'biggest spending areas this month', 'top this_month ; answer'),
+    ('', 'biggest spending areas this month', 'largest this_month ; answer'),
+    ('', 'biggest single expense this month', 'largest this_month ; answer'),
+    ('', 'WORD1 kitni baar today', 'count today text WORD1 ; answer'),
+    ('', 'WORD1 kitni baar today', 'spend today text WORD1 ; answer'),
+    ('', 'to reach NUM1 in NUM2 months what do i need to put aside monthly', 'saveplan NUM1 months NUM2 ; answer'),
+    ('', 'to reach NUM1 in NUM2 months what do i need to put aside monthly', 'savetime NUM1 per NUM2 ; answer'),
+    ('', 'at NUM1 a month how many months for NUM2', 'savetime NUM2 per NUM1 ; answer'),
+    ('', 'at NUM1 a month how many months for NUM2', 'savetime NUM1 per NUM2 ; answer'),
+    ('', 'if i save NUM1 every month how long to reach NUM2', 'saveplan NUM2 months NUM1 ; answer'),
+    ('', 'will i overspend this month', 'forecast ; answer'),
+    ('spend this_month ; answer', 'order pizza for me', 'forecast ; answer'),
+    ('spend last_year acc ACC1 ; answer', 'vs today', 'spend last_year acc ACC1 ; spend today acc ACC1 ; compare $1 $2 ; answer'),
+    ('spend last_year acc ACC1 ; answer', 'vs today', 'spend today acc ACC1 ; spend today acc ACC1 ; compare $1 $2 ; answer'),
+]
 
 
 def augment(row, rng):
@@ -92,7 +112,10 @@ def main():
     parser.add_argument('--seed', type=int, default=9173)
     parser.add_argument('--device', default='auto', help='auto, cpu, cuda')
     parser.add_argument('--export', action='store_true', help='write the gated int8 model and fixtures into the app')
+    parser.add_argument('--regate', action='store_true', help='re-run the gate on an existing run directory without training')
     args = parser.parse_args()
+    if args.regate:
+        return regate(args)
     if args.run_dir.exists():
         parser.error('Use a fresh run directory')
     device = torch.device('cuda' if args.device == 'auto' and torch.cuda.is_available() else 'cpu' if args.device == 'auto' else args.device)
@@ -145,6 +168,13 @@ def main():
     model = TinyLM(len(vocab), d, layers, heads, ff).eval()
     model.load_state_dict(best_state)
     torch.save({'state_dict': best_state, 'vocab': vocab, 'size': args.size, 'step': best_step}, args.run_dir / 'model.pt')
+    info.update({'selected_step': best_step, 'history': history, 'training_seconds': round(time.perf_counter() - started)})
+    report = gate_and_save(model, vocab, index, dev, test, words, args.run_dir, info, device)
+    if args.export:
+        export_to_app(args.run_dir, report)
+
+
+def gate_and_save(model, vocab, index, dev, test, words, run_dir, info, device=torch.device('cpu')):
     quantise_(model)  # every gate number below is for the int8 model as shipped
     model.to(device)
     dev_scores = score(model, vocab, index, dev)
@@ -152,17 +182,30 @@ def main():
     for head in HEADS:
         mine = [r for r in dev_scores if r['head'] == head and r['answered']]
         wrong = [r['confidence'] for r in mine if not r['correct']]
-        thresholds[head] = (max(wrong) + 1e-6 if wrong else .5) if mine else 1.01
+        thresholds[head] = max(.5, max(wrong) + 1e-6) if wrong else (.5 if mine else 1.01)
     test_scores = score(model, vocab, index, test)  # frozen thresholds; scored once
     gate = {'thresholds': thresholds, 'dev': summary(dev_scores, thresholds), 'test': summary(test_scores, thresholds),
             'test_by_intent': {i: summary([r for r in test_scores if r['intent'] == i], thresholds) for i in sorted({r['intent'] for r in test_scores})}}
     model.cpu()
     buffer = io.BytesIO(); export(model, vocab, min(thresholds.values()), buffer, words, thresholds, int8=True); blob = buffer.getvalue()
-    (args.run_dir / 'assistant.bin').write_bytes(blob)
-    report = {**info, 'selected_step': best_step, 'history': history, 'training_seconds': round(time.perf_counter() - started),
-              'bytes': len(blob), 'sha256': hashlib.sha256(blob).hexdigest(), 'gate': gate}
-    (args.run_dir / 'report.json').write_text(json.dumps(report, indent=2))
+    (run_dir / 'assistant.bin').write_bytes(blob)
+    report = {**info, 'bytes': len(blob), 'sha256': hashlib.sha256(blob).hexdigest(), 'gate': gate}
+    (run_dir / 'report.json').write_text(json.dumps(report, indent=2))
     print(json.dumps({k: v for k, v in report.items() if k != 'history'}, indent=1), flush=True)
+    return report
+
+
+def regate(args):
+    previous = json.loads((args.run_dir / 'report.json').read_text())
+    data = json.loads((args.run_dir / 'dataset.json').read_text())
+    checkpoint = torch.load(args.run_dir / 'model.pt')
+    vocab = checkpoint['vocab']; index = {t: i for i, t in enumerate(vocab)}
+    model = TinyLM(len(vocab), *SIZES[checkpoint['size']]).eval()
+    model.load_state_dict(checkpoint['state_dict'])
+    words = sorted(language_vocabulary())
+    info = {k: v for k, v in previous.items() if k not in ('bytes', 'sha256', 'gate', 'regated_from')}
+    info['regated_from'] = {'sha256': previous['sha256'], 'gate': previous['gate']}
+    report = gate_and_save(model, vocab, index, data['dev'], data['test'], words, args.run_dir, info)
     if args.export:
         export_to_app(args.run_dir, report)
 
@@ -214,6 +257,8 @@ def export_to_app(run_dir, report):
         if len(broken) > 3:
             del broken[rng.randrange(len(broken) - 2)]
         cases.append((row.get('context', []), row['source'], broken))
+    for context, source, program in RULE_CASES:  # meaning and saving-role rules, both directions
+        cases.append((context.split(), source.split(), program.split()))
     (resources / 'assistant-validate.tsv').write_text('\n'.join(
         '\t'.join(base64.b64encode(' '.join(x).encode()).decode() for x in (c, s, p)) + '\t' + str(valid(s, p, c)).lower()
         for c, s, p in cases) + '\n')
