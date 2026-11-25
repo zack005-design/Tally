@@ -111,4 +111,17 @@ class BillRecognitionTest {
     @Test fun repeatedSameTotalIsOneCandidateAndCommaGroupsAreHandled() {
         assertEquals(123450L,BillRecognition.parse("Store\nTOTAL ₹1,234.50\nAmount due 1,234.50").total)
     }
+    @Test fun rupeeSlashDashSuffixKeepsTheAmount() {
+        val bill=BillRecognition.parse("Corner Cafe\nTea 50/-\nSamosa Rs. 30/-\nTotal 80/-")
+        assertEquals(listOf(BillItem("Tea",5000),BillItem("Samosa",3000)),bill.items)
+        assertEquals(8000L,bill.total)
+    }
+    @Test fun printedTaxCodeOrMarkerAfterPriceKeepsTheAmount() {
+        val bill=BillRecognition.parse("Fresh Mart\nMilk 56.00 A\nBread 40.00 *\nGrand Total 96.00")
+        assertEquals(listOf(BillItem("Milk",5600),BillItem("Bread",4000)),bill.items)
+        assertEquals(9600L,bill.total)
+    }
+    @Test fun trailingWordAfterWholeNumberIsNotAPrice() {
+        assertTrue(BillRecognition.parse("Shop\nWater 2 L\nTotal 20.00").items.isEmpty())
+    }
 }

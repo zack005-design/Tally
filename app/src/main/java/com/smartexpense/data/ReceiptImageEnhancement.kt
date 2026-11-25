@@ -51,6 +51,42 @@ internal object ReceiptImageEnhancement {
         return Bitmap.createBitmap(pixels,width,height,Bitmap.Config.ARGB_8888)
     }
 
+    /**
+     * Unsharp mask on luminance: each pixel is pushed away from its local average, which restores
+     * edge contrast lost to mild blur. Returns a new grayscale bitmap; the source is unchanged.
+     */
+    suspend fun sharpen(source:Bitmap,radius:Int=2,amount:Int=2):Bitmap {
+        val width=source.width
+        val height=source.height
+        val pixels=IntArray(width*height)
+        source.getPixels(pixels,0,width,0,0,width,height)
+        // Integral image of luminance: row-major, (width+1) x (height+1), for constant-time box averages.
+        val stride=width+1
+        val integral=IntArray(stride*(height+1))
+        for(y in 0 until height) {
+            if(y%64==0) currentCoroutineContext().ensureActive()
+            var row=0
+            for(x in 0 until width) {
+                row+=luminance(pixels[y*width+x])
+                integral[(y+1)*stride+x+1]=integral[y*stride+x+1]+row
+            }
+        }
+        for(y in 0 until height) {
+            if(y%64==0) currentCoroutineContext().ensureActive()
+            val top=maxOf(0,y-radius);val bottom=minOf(height,y+radius+1)
+            for(x in 0 until width) {
+                val left=maxOf(0,x-radius);val right=minOf(width,x+radius+1)
+                val sum=integral[bottom*stride+right]-integral[top*stride+right]-integral[bottom*stride+left]+integral[top*stride+left]
+                val mean=sum/((bottom-top)*(right-left))
+                val value=luminance(pixels[y*width+x])
+                val sharp=(value+amount*(value-mean)).coerceIn(0,255)
+                pixels[y*width+x]=(255 shl 24) or (sharp shl 16) or (sharp shl 8) or sharp
+            }
+        }
+        currentCoroutineContext().ensureActive()
+        return Bitmap.createBitmap(pixels,width,height,Bitmap.Config.ARGB_8888)
+    }
+
     private fun luminance(pixel:Int):Int {
         val gray=(((pixel ushr 16 and 255)*77)+((pixel ushr 8 and 255)*150)+((pixel and 255)*29)) ushr 8
         return 255-(255-gray)*(pixel ushr 24)/255

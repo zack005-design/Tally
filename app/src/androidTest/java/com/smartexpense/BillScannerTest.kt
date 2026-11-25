@@ -46,6 +46,73 @@ class BillScannerTest {
     }
     private fun file(name:String):File {val c=ApplicationProvider.getApplicationContext<Context>();return File(File(c.cacheDir,"bill-camera").apply {mkdirs()},name)}
     private suspend fun scan(file:File):ScannedBill {val c=ApplicationProvider.getApplicationContext<Context>();return BillScanner(c).read(FileProvider.getUriForFile(c,"${c.packageName}.bills",file))}
+    @Test fun mildlyBlurredPhotoStillReadsTheTotal()=runBlocking {
+        // Shrinking and enlarging again softens every edge, like slight hand shake or soft focus.
+        val sharp=bitmap();val file=file("ocr-blurred.jpg")
+        val small=Bitmap.createScaledBitmap(sharp,sharp.width/4,sharp.height/4,true)
+        val blurred=Bitmap.createScaledBitmap(small,sharp.width,sharp.height,true)
+        try {
+            file.outputStream().use {blurred.compress(Bitmap.CompressFormat.JPEG,90,it)}
+            val read=scan(file)
+            assertEquals(read.text,15000L,BillRecognition.parse(read.text).total)
+        } finally {file.delete();sharp.recycle();small.recycle();blurred.recycle()}
+    }
+    @Test fun sidewaysPhotoWithoutRotationMetadataIsReadUpright()=runBlocking {
+        // Some camera apps save landscape pixels without an orientation tag.
+        val upright=bitmap();val file=file("ocr-sideways.png")
+        val sideways=Bitmap.createBitmap(upright,0,0,upright.width,upright.height,Matrix().apply {setRotate(90f)},true)
+        try {
+            file.outputStream().use {sideways.compress(Bitmap.CompressFormat.PNG,100,it)}
+            val read=scan(file)
+            assertEquals(read.text,15000L,BillRecognition.parse(read.text).total)
+        } finally {file.delete();upright.recycle();sideways.recycle()}
+    }
+    @Test fun lowResolutionForwardedImageIsEnlargedForRecognition()=runBlocking {
+        // Messaging apps shrink photos; small print must still be read.
+        val image=Bitmap.createBitmap(480,400,Bitmap.Config.ARGB_8888);val file=file("ocr-low-res.jpg")
+        try {
+            image.eraseColor(Color.WHITE)
+            val canvas=Canvas(image);val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=22f}
+            listOf("Tally Store","Tea 50.00","Cake 100.00","Total 150.00").forEachIndexed {i,line->canvas.drawText(line,40f,60f+i*50,paint)}
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,85,it)}
+            val read=scan(file)
+            assertEquals(read.text,15000L,BillRecognition.parse(read.text).total)
+            assertEquals("Small originals are kept unchanged","image/jpeg",read.mime)
+            assertEquals(file.length().toInt(),read.bytes.size)
+        } finally {file.delete();image.recycle()}
+    }
+    @Test fun standardTwelveMegapixelPhotoKeepsSmallPrintReadable()=runBlocking {
+        // A phone photo of a receipt held at arm's length: small print that halving would blur away.
+        val image=Bitmap.createBitmap(4032,3024,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-12mp-camera.jpg")
+        try {
+            image.eraseColor(Color.WHITE)
+            val canvas=Canvas(image);val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=26f}
+            listOf("Tally Store","Tea 50.00","Cake 100.00","Grand Total 150.00").forEachIndexed {i,line->canvas.drawText(line,1700f,1300f+i*60,paint)}
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,95,it)}
+            val read=scan(file)
+            val bill=BillRecognition.parse(read.text)
+            assertEquals(read.text,listOf(5000L,10000L),bill.items.map {it.amount})
+            assertEquals(read.text,15000L,bill.total)
+        } finally {file.delete();image.recycle()}
+    }
+    @Test fun cameraPhotoLargerThanStorageLimitIsReadAndStoredCompactly()=runBlocking {
+        // Camera apps often save photos above the 6 MB storage limit. Noise keeps this JPEG large.
+        val image=Bitmap.createBitmap(3000,3000,Bitmap.Config.ARGB_8888)
+        val file=file("ocr-large-camera.jpg")
+        try {
+            val random=java.util.Random(7);val pixels=IntArray(image.width)
+            for(y in 0 until image.height) {for(x in pixels.indices) {val v=200+random.nextInt(56);pixels[x]=Color.rgb(v,v,v)};image.setPixels(pixels,0,image.width,0,y,image.width,1)}
+            val canvas=Canvas(image);val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply {color=Color.BLACK;textSize=90f}
+            listOf("Tally Store","Tea 50.00","Cake 100.00","Grand Total 150.00").forEachIndexed {i,line->canvas.drawText(line,200f,400f+i*220,paint)}
+            file.outputStream().use {image.compress(Bitmap.CompressFormat.JPEG,100,it)}
+            assertTrue("Fixture must exceed the storage limit",file.length()>BillScanner.MAX_BYTES)
+            val read=scan(file)
+            assertEquals("image/jpeg",read.mime)
+            assertTrue(read.bytes.size<=BillScanner.MAX_BYTES)
+            assertEquals(read.text,15000L,BillRecognition.parse(read.text).total)
+        } finally {file.delete();image.recycle()}
+    }
     @Test fun bundledModelReadsImageWithoutInternetPermission()=runBlocking {
         val c=ApplicationProvider.getApplicationContext<Context>()
         assertEquals(android.content.pm.PackageManager.PERMISSION_DENIED,c.checkSelfPermission(android.Manifest.permission.INTERNET))

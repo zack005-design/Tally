@@ -19,6 +19,12 @@ User-facing changes in the published development releases. Downloadable APKs are
 - Suggest a category on the phone when the rules cannot tell, from a new 40,970-parameter model trained from scratch on about 460 everyday terms (AI edition). It stays silent when unsure and never picks Other. [On-device suggestions](docs/features/on-device-ai.md#category-suggestions)
 - Fill a missing category and payment account from your own saved entries with the same description, when at least two recent entries agree. Accounts you type always win. [Learns from your own entries](docs/features/on-device-ai.md#learns-from-your-own-entries)
 - Understand more dates and amounts in commands: `this morning`, `tonight`, `earlier today`, `two weeks ago`, `on 21 Oct` without a year, and Indian `₹500/-` prices. [English logging shortcuts](docs/features/on-device-ai.md#english-logging-shortcuts)
+- Read standard 12 MP phone photos at full resolution. They were halved before text recognition, which could leave receipt print too small to recognise and produce wrong items and amounts.
+- Accept bill photos in any format the phone can open, including HEIC/HEIF, AVIF, GIF and BMP, not only JPEG, PNG and WebP.
+- Enlarge small images, such as photos forwarded through messaging apps, before reading them, and read receipts photographed sideways or upside down without rotation information.
+- Sharpen and re-read photos with mild blur from hand shake or soft focus. Tally says when it used the sharpened read.
+- Accept bill photos larger than 6 MB. Photos larger than 6 MB were rejected before any text was read; photos up to 40 MB now work and are saved as a compact JPEG copy.
+- Pick up bill amounts written as `50/-` or `50/=`, or followed by a tax-code letter or `*` (such as `56.00 A`). These rows were previously skipped, leaving the item list and total empty.
 
 ## [0.2.6](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124)
 
