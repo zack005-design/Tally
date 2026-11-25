@@ -35,6 +35,13 @@ object BillRecognition {
         else value.replace(",","")
     }
     private fun value(line:String):Long?=amountMatch(line)?.groupValues?.get(1)?.let {runCatching {Money.parse(normalizedAmount(it))}.getOrNull()}
+    // OCR can break a small-print amount at a narrow digit: "150.00" becomes "1 50.00".
+    private val brokenAmount=Regex("(?<=\\s)([0-9]{1,3})\\s+([0-9]{2,3}\\.[0-9]{2})\\s*$")
+    /** Rejoins a broken total only when the separately read items add up to it, so quantities stay quantities. */
+    private fun rejoinedTotal(line:String,items:Long?):Long? {
+        val match=brokenAmount.find(line)?:return null
+        return runCatching {Money.parse(match.groupValues[1]+match.groupValues[2])}.getOrNull()?.takeIf {it==items}
+    }
     /** Recover adjacent label/amount pairs, but never guess the ordering of a whole column. */
     private fun receiptLines(text:String):List<String> {
         val source=text.take(10000).lines().map(String::trim).filter(String::isNotBlank)
@@ -57,7 +64,6 @@ object BillRecognition {
         val foreign=Regex("\\b(?:USD|EUR|GBP|AED|JPY|CAD|AUD)\\b|[$€£]",RegexOption.IGNORE_CASE).containsMatchIn(text)
         val totalLines=lines.filter {totalLabel.containsMatchIn(it) && !metadata.containsMatchIn(it) && value(it)?.let {amount->amount>0}==true}
         val payableLines=totalLines.filter {payableLabel.containsMatchIn(it)}
-        val totals=(payableLines.ifEmpty {totalLines}).mapNotNull(::value).distinct()
         val dates=Regex("\\b(?:[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{1,2}[/.-][0-9]{1,2}[/.-][0-9]{4})\\b").findAll(text).mapNotNull {match->
             runCatching {
                 if(match.value.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}"))) LocalDate.parse(match.value).toString()
@@ -76,8 +82,9 @@ object BillRecognition {
             val value=runCatching {Money.parse(normalizedAmount(match.groupValues[1]))}.getOrNull()
             if(name.any(Char::isLetter) && value!=null && value>0) BillItem(name.take(100),value) else null
         }
+        val itemTotal=runCatching {Finance.total(items.map {it.amount})}.getOrNull()
+        val totals=(payableLines.ifEmpty {totalLines}).mapNotNull {rejoinedTotal(it,itemTotal)?:value(it)}.distinct()
         val subtotal=lines.filter {subtotalLabel.containsMatchIn(it)}.mapNotNull(::value).distinct().singleOrNull()
-        val itemSum=runCatching {Finance.total(items.map {it.amount})}.getOrNull()
         // Labels also cover unreadable or signed adjustments; dates/payment IDs are not charges.
         val hasAdjustments=lines.any {adjustmentLabel.containsMatchIn(it)}
         val expectedItems=subtotal?:totals.singleOrNull()?.takeUnless {hasAdjustments}
@@ -92,6 +99,6 @@ object BillRecognition {
         }?.take(100).orEmpty()
         return BillSuggestion(merchant,
             if(!foreign && totals.size==1) totals.single() else null,dates.singleOrNull(),items,
-            buildList {if(foreign) add("Foreign currency detected. Enter a manual exchange rate before recording INR.");if(totals.size!=1) add("Total is missing or ambiguous. Enter it from the original bill.");if(dates.size!=1) add("Check the bill date.");if(items.isEmpty() || (expectedItems!=null && itemSum!=expectedItems)) add("Some items may be missing or misread. Check item amounts against the printed subtotal, taxes and discounts.");add("Recognition can make mistakes. Check all amounts and items before saving.")})
+            buildList {if(foreign) add("Foreign currency detected. Enter a manual exchange rate before recording INR.");if(totals.size!=1) add("Total is missing or ambiguous. Enter it from the original bill.");if(dates.size!=1) add("Check the bill date.");if(items.isEmpty() || (expectedItems!=null && itemTotal!=expectedItems)) add("Some items may be missing or misread. Check item amounts against the printed subtotal, taxes and discounts.");add("Recognition can make mistakes. Check all amounts and items before saving.")})
     }
 }

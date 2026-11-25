@@ -4,6 +4,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BillRecognitionTest {
+    @Test fun totalSplitByOcrSpacingIsRejoinedOnlyWhenItemsAgree() {
+        val split=BillRecognition.parse("Tally Store\nTea 50.00\nCake 100.00\nGrand Total 1 50.00")
+        assertEquals(15000L,split.total)
+        assertEquals(listOf(5000L,10000L),split.items.map {it.amount})
+        // A printed quantity before the total stays a quantity, with or without taxes.
+        assertEquals(15000L,BillRecognition.parse("Store\nTea 50.00\nCake 100.00\nTotal 2 150.00").total)
+        assertEquals(15750L,BillRecognition.parse("Store\nTea 50.00\nCake 100.00\nGST 7.50\nTotal 2 157.50").total)
+    }
     @Test fun merchantSkipsRegistrationAndContactHeaders() {
         val bill=BillRecognition.parse("GSTIN 29ABCDE1234F1Z5\nTax Invoice\nPhone: 9876543210\nwww.example.test\nCorner Cafe\nTea 50.00\nGrand Total 50.00")
         assertEquals("Corner Cafe",bill.merchant)
