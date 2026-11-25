@@ -3,7 +3,9 @@ package com.smartexpense.data
 import android.content.Context
 import android.util.Log
 import com.smartexpense.BuildConfig
+import com.smartexpense.domain.AssistantPlanner
 import com.smartexpense.domain.CategoryModel
+import com.smartexpense.domain.TinyLanguageModel
 import com.smartexpense.domain.CommandExpenseTextParser
 import com.smartexpense.domain.ParsedDraft
 import com.smartexpense.domain.PersonRef
@@ -47,6 +49,20 @@ class LocalCommandParser @Inject constructor(@param:ApplicationContext private v
         }
         CommandExpenseTextParser(model, extension = extension, categories = categories)
     }
+
+    /** Tiny reasoning model (AI edition only); null when unavailable, so questions fall back to exact rules. */
+    private val assistant by lazy {
+        if (!BuildConfig.LOCAL_AI_ENABLED) null else try {
+            context.assets.open("tally-assistant.bin").use(TinyLanguageModel::load)
+        } catch (error: java.io.IOException) {
+            Log.w("LocalCommandParser", "Assistant model unavailable", error); null
+        } catch (error: IllegalArgumentException) {
+            Log.w("LocalCommandParser", "Assistant model invalid", error); null
+        }
+    }
+
+    suspend fun assist(question: String, data: AssistantPlanner.Data): AssistantPlanner.Answer? =
+        withContext(Dispatchers.Default) { assistant?.let { AssistantPlanner.answer(question, it, data) } }
 
     suspend fun parse(text: String, people: List<PersonRef>): ParsedDraft =
         withContext(Dispatchers.Default) { parser.parse(text, people) }

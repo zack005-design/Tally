@@ -74,6 +74,21 @@ Add the rate you were charged, in rupees per unit:
 
 Supported: `$`, `€`, `£` and the codes USD, EUR, GBP, AED, SAR, QAR, KWD, OMR, BHD, SGD, MYR, THB, JPY, CNY, HKD, KRW, AUD, NZD, CAD, CHF, SEK, NOK, DKK, LKR, NPR, BDT, ZAR, IDR and VND. Tally never downloads rates. Without `at <rate>` it asks you to convert, and only one foreign amount is allowed per expense. Card fees and markups are not added; include them in your rate. For a whole receipt in another currency, use **More → Bills & categories → Foreign bill to INR**.
 
+## Ask Tally (tiny reasoning model)
+
+The AI edition includes a small language model, trained from scratch for Tally, that works out **how** to answer a money question. Type a question in the command box:
+
+- `did I spend more on food this month than last month?`
+- `food vs shopping last week`
+- `what percent of my spending was travel in october`
+- `how much budget do I have left?` · `am I on track this month?`
+- `I want to save 1 lakh in 12 months, how much per month?`
+- `how do I split a bill?`
+
+The model writes a short plan, such as "total Food this month, total Food last month, compare". Tally's exact code then carries out each step on your records, and the answer lists the steps under **How I worked it out**. Every number comes from your saved entries or the figures you typed, never from the model.
+
+It checks its own plan and declines when unsure. The plan must use every name, number and period you mentioned, follow the step grammar and clear a confidence level set during testing. When it declines, Tally tries the simpler spending-question rules below, then treats the text as an entry. In testing on phrasings it had never seen, it answered about 55% of questions with no wrong answers and declined the rest. It is not a chatbot: it can't discuss topics outside your Tally records, and unusual wording is often declined. It runs on your phone with no internet and adds about 19 MB to the AI edition. [Model details](../../ml/tally-assistant/README.md)
+
 ## Ask about your spending
 
 Type a spending question in the same box and Tally answers from your own records instead of preparing a draft:
@@ -101,7 +116,7 @@ The command extension has **1,002,068 parameters** and a **4,011,202-byte** port
 
 The models select spans from your input; exact decimal code converts the selected amount to integer paise rather than generating a new number. An uncertain new-language command leaves amount/account incomplete and asks for manual confirmation.
 
-This is a specialised expense parser, not a conversational LLM. Spending questions are answered by exact code over your records, not by a model. No cloud inference, login, API key, or pretrained model weights are required.
+The command models are specialised expense parsers. The tiny reasoning model above only plans steps; exact code over your records produces every number. No cloud inference, login, API key, or pretrained model weights are required.
 
 ## Scope and fallback
 

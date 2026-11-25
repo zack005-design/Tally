@@ -4,6 +4,7 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 ## Unreleased
 
+- Add **Ask Tally**, a 4.8M-parameter reasoning model trained from scratch that runs on the phone (AI edition). It plans the steps for questions like `did I spend more on food this month than last month?`, `what percent of my spending was travel in october` or `save 1 lakh in 12 months`, and Tally's exact code carries them out and shows how it worked it out. It never invents numbers and declines when unsure. [Ask Tally](docs/features/on-device-ai.md#ask-tally-tiny-reasoning-model) · [Model report](ml/tally-assistant/README.md)
 - Train a personal category model on the phone from your own entries, including categories you created, so variants like `evening chai` follow your usual choice. It stays in memory, needs a few entries per category and stays silent when unsure. [Learns from your own entries](docs/features/on-device-ai.md#learns-from-your-own-entries)
 - Search transactions in plain words: `coffee over 100 last month`, `food in october by gpay`, `refunds under 500`. Tally shows what it understood. [Find a transaction](docs/features/everyday-money.md#find-a-transaction)
 - Add **Smart insights** under More → Money & planning: a month-end spending forecast, alerts for unusually high categories and large entries, detected repeating payments with next dates and monthly cost, one-tap budget suggestions from your history, and duplicate warnings, all worked out on the phone. [Smart insights](docs/features/spending-and-planning.md#smart-insights)

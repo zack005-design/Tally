@@ -1,0 +1,47 @@
+{
+  "model": "scratch decoder-only transformer step planner",
+  "parameters": 4843776,
+  "vocab": 313,
+  "layers": 6,
+  "width": 256,
+  "heads": 8,
+  "feed_forward": 1024,
+  "context": 96,
+  "thresholds": {
+    "spend": 0.93251471383667,
+    "income": 0.6948757038841248,
+    "count": 0.5,
+    "average": 1.01,
+    "top": 0.9977394805679322,
+    "largest": 1.01,
+    "budget": 0.5,
+    "forecast": 0.5257758365402222,
+    "saveplan": 0.990194784236908,
+    "savetime": 1.01,
+    "whatif": 1.01,
+    "help": 0.5
+  },
+  "selected_step": 6000,
+  "gate": {
+    "dev": {
+      "count": 1479,
+      "answered": 902,
+      "wrong_answers": 0,
+      "refused_or_declined": 577,
+      "exact_program": 1029
+    },
+    "test": {
+      "count": 1500,
+      "answered": 830,
+      "wrong_answers": 0,
+      "refused_or_declined": 670,
+      "exact_program": 1210
+    }
+  },
+  "sha256": "3308ca8324f86d9f57a56a4ca83bcb9d947acc8efe41548993eb4052e0efcf0d",
+  "bytes": 19379390,
+  "pretrained_weights": false,
+  "model_version": "assistant-v1",
+  "evaluation": "Held-out assistant-authored question templates; not independent real-user accuracy.",
+  "data_provenance": "Assistant-authored synthetic questions; no private financial records."
+}
