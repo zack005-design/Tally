@@ -53,8 +53,8 @@ class StudioDesignTest {
         compose.onNodeWithContentDescription("Search").assertIsDisplayed()
         compose.onNodeWithContentDescription("Settings").assertIsDisplayed()
         compose.onAllNodesWithText("Summary").onFirst().assertIsDisplayed()
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Latest"))
-        compose.onNodeWithText("Latest").assertIsDisplayed()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Recent"))
+        compose.onNodeWithText("Recent").assertIsDisplayed()
         capture("today-large")
     }
 
@@ -99,11 +99,11 @@ class StudioDesignTest {
         var kind:Kind?=null
         var route=""
         compose.setContent {TrackerTheme {HomeScreen(Snapshot(),{k,_->kind=k},{},{},{},{route=it})}}
-        compose.onNodeWithText("Add an expense").assertIsDisplayed().performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Add expense"));compose.onNodeWithText("Add expense").assertIsDisplayed().performClick()
         assertEquals(Kind.EXPENSE,kind)
-        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Settings"));compose.onNodeWithContentDescription("Settings").performClick()
         assertEquals("more",route)
-        compose.onNodeWithText("Add your wallet or UPI account").assertExists()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Add your money"))
         compose.onNodeWithText("Daily spending diary ›").assertDoesNotExist()
     }
 

@@ -28,6 +28,9 @@ import kotlin.math.roundToInt
     fun edit(id:String?) {
         category=id;amount=budgets.firstOrNull {it.categoryId==id}?.amount?.let(Money::input).orEmpty();editing=true
     }
+    // An even pace only means something while the month is in progress.
+    val today=java.time.LocalDate.now()
+    val pace=if(month==YearMonth.from(today)) today.dayOfMonth.toFloat()/month.lengthOfMonth() else null
     BackHandler(!editing && !monthPicker,onBack)
     Page("Budgets",largeTitle=true,actions={TextButton({monthPicker=true}) {Text(month.format(DateTimeFormatter.ofPattern("MMMM"))+" ⌄")}}) {
         if(!ready) item {Text("Loading this month's report…",color=Tokens.muted)} else {
@@ -40,7 +43,16 @@ import kotlin.math.roundToInt
                     Text(referenceMoney(s.selectedReport.spending),Modifier.weight(1f,false),style=MaterialTheme.typography.headlineMedium)
                     Text(overall?.let {"spent of ${referenceMoney(it.amount)}"}?:"spent this month",color=Tokens.muted,style=MaterialTheme.typography.bodyLarge)
                 }
-                overall?.let {BudgetProgress(s.selectedReport.spending,it.amount)}
+                overall?.let {
+                    BudgetProgress(s.selectedReport.spending,it.amount,pace)
+                    val allowance=budgetAllowance(it.amount,s.selectedReport.spending,today)
+                    Text(when {
+                        allowance.remaining<0->"${referenceMoney(-allowance.remaining)} over budget"
+                        pace!=null->"${referenceMoney(allowance.remaining)} left · ${referenceMoney(allowance.perDay)} a day"
+                        else->"${referenceMoney(allowance.remaining)} left"
+                    },style=MaterialTheme.typography.titleSmall,color=if(allowance.remaining<0) Tokens.negative else Tokens.text)
+                    if(pace!=null) Text("${paceLabel(s.selectedReport.spending,it.amount,pace)}. The mark shows even spending through the month.",style=MaterialTheme.typography.bodySmall,color=Tokens.muted)
+                }
                 if(overall==null) Text("No overall limit set. Category budgets are shown separately.",color=Tokens.muted,style=MaterialTheme.typography.bodySmall)
             }}}
             budgets.filter {it.categoryId!=null}.forEach {budget->item(key=budget.id) {
@@ -53,7 +65,8 @@ import kotlin.math.roundToInt
                         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(9.dp)) {
                             Text(value?.name?:"Unavailable category",style=MaterialTheme.typography.titleMedium)
                             Text("${referenceMoney(used)} of ${referenceMoney(budget.amount)}",style=MaterialTheme.typography.bodyMedium,color=Tokens.muted)
-                            BudgetProgress(used,budget.amount)
+                            BudgetProgress(used,budget.amount,pace)
+                            if(pace!=null) Text(paceLabel(used,budget.amount,pace),style=MaterialTheme.typography.bodySmall,color=if(used>pace*budget.amount) Tokens.warning else Tokens.muted)
                         }
                         Text("›",color=Tokens.muted,style=MaterialTheme.typography.titleLarge)
                     }
@@ -82,11 +95,13 @@ import kotlin.math.roundToInt
     }
 }
 
-@Composable private fun BudgetProgress(used:Long,limit:Long) {
+private fun paceLabel(used:Long,limit:Long,pace:Float)=when {used>limit->"Over budget";used>pace.toDouble()*limit->"Ahead of pace";else->"Under pace"}
+
+@Composable private fun BudgetProgress(used:Long,limit:Long,pace:Float?=null) {
     val ratio=if(limit>0) used.toDouble()/limit.toDouble() else 0.0
     val percent=(ratio*100).roundToInt()
     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-        ReferenceProgress(ratio.toFloat(),Modifier.weight(1f),overLimit=used>limit)
+        ReferenceProgress(ratio.toFloat(),Modifier.weight(1f),overLimit=used>limit,pace=pace)
         Text("$percent%",color=if(used>limit) Tokens.negative else Tokens.muted,style=MaterialTheme.typography.bodySmall)
     }
 }
