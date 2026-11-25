@@ -2,7 +2,7 @@
 
 # Offline calculator
 
-Open **More → Money & planning → Calculate** to work out totals, discounts, equal splits, and conversions without changing your records. The calculator is included in both editions.
+Open **Tools → Money & planning → Calculate** to work out totals, discounts, equal splits, and conversions without changing your records. The calculator is included in both editions.
 
 ## Try a calculation
 

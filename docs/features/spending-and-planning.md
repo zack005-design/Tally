@@ -10,6 +10,8 @@ Understand where your money goes and plan the next month with budgets, allowance
 
 Use the calendar to explore transactions by day, then review category totals and monthly activity. Open the transactions behind a total when you need more context.
 
+Below the chart, **Spending** groups its actions in one list: View transactions, Budgets, Smart insights, Savings goals, Recurring, Money planner, Calendar & diary, Monthly review and Year in review. **Spending details** shows or hides the monthly breakdown. Set budgets from **Budgets → Edit budgets**.
+
 For shared bills, your personal share is distinct from the cash you paid on behalf of the group. Transfers between your own accounts stay separate from spending.
 
 ## Yearly summary
@@ -26,7 +28,7 @@ Use the arrows to move between years. The summary uses the same rules as monthly
 
 ## Smart insights
 
-Open **More → Money & planning → Smart insights** for analysis worked out on your phone from your own entries:
+Open **Tools → Money & planning → Smart insights** for analysis worked out on your phone from your own entries:
 
 - **Month-end forecast**: what you have spent so far plus your average daily spending over the last 28 days for the days left, compared with your overall monthly budget if you set one. It appears after two weeks of records.
 - **Worth a look**: a category at least 1.5 times and ₹500 above its usual level by this date (needs spending in two of the last three months), an entry of ₹1,000 or more that is at least three times your typical entry in that category over 90 days, and possible duplicates (same description and amount on the same day in the last 30 days).
@@ -39,7 +41,7 @@ These are plain statistics over your records, not a trained model or financial a
 
 ## Net worth
 
-Open **More → Money & planning → Net worth** to see what you have minus what you owe:
+Open **Tools → Money & planning → Net worth** to see what you have minus what you owe:
 
 - **Account balances**: every account, including cash, bank and UPI.
 - **Friends owe you**: outstanding shared-bill balances owed to you.
