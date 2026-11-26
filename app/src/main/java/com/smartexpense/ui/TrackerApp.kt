@@ -192,7 +192,7 @@ import com.smartexpense.domain.*
                 }}
             }}
         }
-        // iOS-style banner: drops in from the top so it never covers Save or the action row.
+        // Floating status pill near the bottom, lifted clear of Save and the action row.
         IosToastHost(snackbar)
         }
         }

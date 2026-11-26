@@ -6,6 +6,13 @@ User-facing changes in the published development releases. Downloadable APKs are
 
 Nothing yet.
 
+## [0.2.8](https://github.com/zack005-design/Tally/releases)
+
+- Publish an optimised build instead of a debug build. It is signed with the same development key, so it installs over 0.2.7 and keeps your records, but Android now compiles it fully, so scrolling and animations no longer stutter.
+- Redesign the lock screen: the Tally mark and today's date, a large unlock button, **Unlock Tally** at the bottom and a quiet link for your PIN, pattern or password.
+- Show messages such as **Transaction saved** as a pill near the bottom, above the tab bar and **Save** buttons.
+- Show the account an expense was paid from on the transaction screen, instead of **No cash movement**.
+
 ## [0.2.7](https://github.com/zack005-design/Tally/releases)
 
 - Publish one APK, the AI edition, instead of separate AI and non-AI downloads. It includes everything the non-AI edition had, and falls back to the same rules if a model cannot load. It installs over either earlier edition and keeps your records.

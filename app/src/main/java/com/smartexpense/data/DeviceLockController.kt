@@ -25,7 +25,7 @@ class DeviceLockController(private val activity:ComponentActivity) {
     private var cancellation:CancellationSignal?=null
     private var credentialActivity=false
     private val credential=activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {result->
-        credentialActivity=false;finish(result.resultCode==Activity.RESULT_OK,if(result.resultCode==Activity.RESULT_OK) null else "Authentication canceled. Your ledger remains locked.")
+        credentialActivity=false;finish(result.resultCode==Activity.RESULT_OK,if(result.resultCode==Activity.RESULT_OK) null else "Tally stays locked until you unlock it.")
     }
     init {protectWindow()}
     private fun protectWindow() {
@@ -39,27 +39,46 @@ class DeviceLockController(private val activity:ComponentActivity) {
         if(!keyguard.isDeviceSecure) {update(message="Set a device PIN, pattern or password in Android settings first.");return}
         token=gate.beginAuthentication();requestedSetting=setting;update(busy=true)
         try {
-            if(Build.VERSION.SDK_INT>=28 && !credentialOnly) biometric() else openCredential()
+            // Android 11+: one modern system sheet over Tally's own lock screen that offers fingerprint, face and the
+            // PIN pad together, instead of the old full-screen "Confirm your PIN" page.
+            if(Build.VERSION.SDK_INT>=30) modernPrompt(credentialOnly)
+            else if(Build.VERSION.SDK_INT>=28 && !credentialOnly) biometric() else openCredential()
         } catch(e:Exception) {finish(false,"Authentication is unavailable. Try your device credential.")}
+    }
+    @androidx.annotation.RequiresApi(30)
+    private fun modernPrompt(credentialOnly:Boolean) {
+        val authToken=requireNotNull(token)
+        val kinds=android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL or
+            (if(credentialOnly) 0 else android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG)
+        val prompt=BiometricPrompt.Builder(activity).setTitle("Unlock Tally")
+            .setSubtitle(if(credentialOnly) "Enter your phone's PIN, pattern or password" else "Use your fingerprint, face or screen lock")
+            .setAllowedAuthenticators(kinds).build()
+        val signal=CancellationSignal();cancellation=signal
+        prompt.authenticate(signal,activity.mainExecutor,object:BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result:BiometricPrompt.AuthenticationResult) {finish(true,null,authToken)}
+            override fun onAuthenticationError(code:Int,message:CharSequence) {
+                finish(false,if(code==BiometricPrompt.BIOMETRIC_ERROR_USER_CANCELED || code==BiometricPrompt.BIOMETRIC_ERROR_CANCELED) "Tally stays locked until you unlock it." else message.toString(),authToken)
+            }
+        })
     }
     @androidx.annotation.RequiresApi(28)
     private fun biometric() {
         val authToken=requireNotNull(token)
-        val builder=BiometricPrompt.Builder(activity).setTitle("Unlock Tally").setSubtitle("Authenticate to view your local ledger")
+        val builder=BiometricPrompt.Builder(activity).setTitle("Unlock Tally").setSubtitle("Use your fingerprint or screen lock")
         if(Build.VERSION.SDK_INT>=30) builder.setAllowedAuthenticators(android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG)
-        builder.setNegativeButton("Use device credential",activity.mainExecutor) {_,_->if(token==authToken) openCredential()}
+        builder.setNegativeButton("Use PIN",activity.mainExecutor) {_,_->if(token==authToken) openCredential()}
         val signal=CancellationSignal();cancellation=signal
         builder.build().authenticate(signal,activity.mainExecutor,object:BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result:BiometricPrompt.AuthenticationResult) {finish(true,null,authToken)}
             override fun onAuthenticationError(code:Int,message:CharSequence) {
                 // API28's negative button hands off to the separately registered credential result.
-                if(!credentialActivity) finish(false,"Authentication canceled or unavailable. Use your device credential to try again.",authToken)
+                if(!credentialActivity) finish(false,"Tally stays locked. Try again, or use your PIN, pattern or password.",authToken)
             }
         })
     }
     @Suppress("DEPRECATION")
     private fun openCredential() {
-        val intent=keyguard.createConfirmDeviceCredentialIntent("Authenticate for Tally","Use your Android PIN, pattern or password")
+        val intent=keyguard.createConfirmDeviceCredentialIntent("Unlock Tally","Enter your phone's PIN, pattern or password")
         if(intent==null) {finish(false,"No device credential is configured.");return}
         credentialActivity=true;credential.launch(intent)
     }

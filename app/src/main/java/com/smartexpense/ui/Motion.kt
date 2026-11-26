@@ -94,8 +94,8 @@ internal fun lightHapticAction(onClick: () -> Unit): () -> Unit {
 }
 
 /**
- * Status messages as an iOS-style banner pinned to the top of the page, so they never sit over
- * Save or the action buttons. Swipe up to dismiss early; TalkBack still announces it.
+ * Status messages as a floating pill near the bottom, lifted clear of
+ * the tab bar and Save buttons. Swipe down to dismiss early; TalkBack still announces it.
  */
 @Composable
 internal fun BoxScope.IosToastHost(state: SnackbarHostState) {
@@ -110,15 +110,15 @@ internal fun BoxScope.IosToastHost(state: SnackbarHostState) {
         data.dismiss()
     }
     AnimatedVisibility(
-        current != null, Modifier.align(Alignment.TopCenter).padding(horizontal = 16.dp, vertical = 8.dp),
-        enter = slideInVertically(iosSpring<IntOffset>(Spring.StiffnessMedium)) { -it * 2 } + fadeIn() + scaleIn(iosSpring(), initialScale = .9f),
-        exit = slideOutVertically(iosSpring<IntOffset>(Spring.StiffnessMedium)) { -it * 2 } + fadeOut() + scaleOut(targetScale = .9f)
+        current != null, Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = 84.dp),
+        enter = slideInVertically(iosSpring<IntOffset>(Spring.StiffnessMedium)) { it * 2 } + fadeIn() + scaleIn(iosSpring(), initialScale = .9f),
+        exit = slideOutVertically(iosSpring<IntOffset>(Spring.StiffnessMedium)) { it * 2 } + fadeOut() + scaleOut(targetScale = .9f)
     ) {
         val data = shown ?: return@AnimatedVisibility
         Surface(
             shape = Tokens.pill, color = Tokens.paper, contentColor = Tokens.text, shadowElevation = 10.dp, tonalElevation = 0.dp,
             modifier = Modifier.widthIn(max = 420.dp).semantics { liveRegion = LiveRegionMode.Polite }
-                .pointerInput(data) { detectVerticalDragGestures { _, drag -> if (drag < -6f) data.dismiss() } }
+                .pointerInput(data) { detectVerticalDragGestures { _, drag -> if (drag > 6f) data.dismiss() } }
         ) {
             Text(data.visuals.message, Modifier.padding(horizontal = 20.dp, vertical = 12.dp), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
         }
