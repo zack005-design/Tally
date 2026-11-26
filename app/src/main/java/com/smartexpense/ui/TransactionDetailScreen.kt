@@ -120,7 +120,7 @@ import kotlinx.coroutines.launch
         item {GroupedCard {
             ReferenceDetailRow("Date",R.drawable.ic_calendar,date.format(DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a")))
             GroupedDivider(14.dp)
-            ReferenceDetailRow("Account",R.drawable.ic_wallet_outline,record.accountIds.mapNotNull {id->snapshot.accounts.find {it.id==id}?.name}.joinToString().ifBlank {"No cash movement"})
+            ReferenceDetailRow("Account",R.drawable.ic_wallet_outline,(record.accountIds.ifEmpty {detail?.entries.orEmpty().map {it.accountId}}).distinct().mapNotNull {id->snapshot.accounts.find {it.id==id}?.name}.joinToString().ifBlank {if(detail==null) "…" else "No cash movement"})
             snapshot.categories.find {it.id==record.categoryId}?.let {GroupedDivider(14.dp);ReferenceDetailRow("Category",R.drawable.ic_food,it.name)}
             GroupedDivider(14.dp);ReferenceDetailRow("Description",R.drawable.ic_document_outline,record.description)
         }}

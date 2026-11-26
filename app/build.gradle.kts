@@ -29,8 +29,8 @@ android {
         applicationId = "com.smartexpense"
         minSdk = 26
         targetSdk = 37
-        versionCode = 9
-        versionName = "0.2.7"
+        versionCode = 10
+        versionName = "0.2.8"
         buildConfigField("boolean", "LOCAL_AI_ENABLED", tallyAiEnabled.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -49,6 +49,14 @@ android {
         getByName("release") {
             isDebuggable = false
             if (releaseSigningReady) signingConfig = signingConfigs.getByName("distribution")
+        }
+        // Published development APK: optimised like release (not debuggable, so ART compiles it fully and
+        // Compose runs without debug checks) but signed with the development key, so it updates over debug builds.
+        create("dev") {
+            initWith(getByName("release"))
+            isDebuggable = false
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
         }
     }
     if (tallyAiEnabled) sourceSets.getByName("main").assets.directories.add("src/localAi/assets")

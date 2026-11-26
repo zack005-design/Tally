@@ -54,13 +54,15 @@ jobs:
           test -s ~/.android/debug.keystore
 
       - name: Run unit tests, Android lint and compile APK
-        run: ./gradlew -PtallyAi=${{ matrix.tally-ai }} :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-daemon --stacktrace
+        run: ./gradlew -PtallyAi=${{ matrix.tally-ai }} :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDev --no-daemon --stacktrace
 
-      - name: Save debug APK
+      - name: Save debug and optimised APKs
         uses: actions/upload-artifact@v4
         with:
           name: tally-apk-ai-${{ matrix.tally-ai }}
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/dev/app-dev.apk
           if-no-files-found: error
           retention-days: 14
 
@@ -144,7 +146,9 @@ jobs:
           mkdir -p out
           # Only the AI edition is published. The non-AI build above still runs every check, so
           # the rule-based fallback keeps working when a model cannot load on a phone.
-          cp apks/tally-apk-ai-true/app-debug.apk "out/tally-$version-debug.apk"
+          # The optimised dev build is published: it is signed with the development key like the debug build,
+          # but not debuggable, so animations run smoothly on phones.
+          cp apks/tally-apk-ai-true/dev/app-dev.apk "out/tally-$version.apk"
           for apk in out/*.apk; do
             cert=$("$tools/apksigner" verify --print-certs "$apk" | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)
             if [ "$cert" != "$EXPECTED_CERT_SHA256" ]; then
@@ -154,6 +158,7 @@ jobs:
             badging=$("$tools/aapt2" dump badging "$apk")
             echo "$badging" | grep -q "package: name='com.smartexpense' versionCode='$code' versionName='$version'"
             if echo "$badging" | grep -q "uses-permission: name='android.permission.INTERNET'"; then echo "::error::$apk requests Internet access"; exit 1; fi
+            if echo "$badging" | grep -q "application-debuggable"; then echo "::error::$apk is debuggable and would run slowly"; exit 1; fi
           done
           (cd out && sha256sum *.apk > "tally-$version-SHA256SUMS.txt" && cat "tally-$version-SHA256SUMS.txt")
           echo "VERSION=$version" >> "$GITHUB_ENV"
