@@ -175,7 +175,7 @@ internal fun adaptiveLayoutScale(widthDp: Int): Float =
 }
 
 @Composable fun TrackerTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalDarkTheme provides darkTheme) {
+    CompositionLocalProvider(LocalDarkTheme provides darkTheme, androidx.compose.material3.LocalRippleConfiguration provides null, androidx.compose.foundation.LocalIndication provides IosHighlight) {
         MaterialTheme(
             colorScheme = if (darkTheme) darkColors else lightColors, typography = appTypography,
             shapes = Shapes(small = Tokens.field, medium = Tokens.card, large = Tokens.card, extraLarge = RoundedCornerShape(28.dp)),

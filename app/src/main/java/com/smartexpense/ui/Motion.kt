@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 /** iOS-like spring: quick, settles without a visible bounce. */
 internal fun <T> iosSpring(stiffness: Float = Spring.StiffnessMediumLow) = spring<T>(dampingRatio = .86f, stiffness = stiffness)
@@ -46,6 +47,40 @@ internal fun Modifier.softPress(source: MutableInteractionSource): Modifier {
     val scale by animateFloatAsState(if (pressed) .96f else 1f, spring(dampingRatio = .6f, stiffness = if (pressed) 1400f else 500f), label = "Control press")
     val fade by animateFloatAsState(if (pressed) .72f else 1f, spring(stiffness = if (pressed) 2000f else 400f), label = "Control dim")
     return graphicsLayer { scaleX = scale; scaleY = scale; alpha = fade }
+}
+
+/**
+ * iOS-style touch highlight used app-wide instead of the Material ripple: a soft gray wash appears at once
+ * under the finger and fades out on release.
+ */
+internal object IosHighlight : androidx.compose.foundation.IndicationNodeFactory {
+    override fun create(interactionSource: androidx.compose.foundation.interaction.InteractionSource): androidx.compose.ui.node.DelegatableNode = Node(interactionSource)
+    override fun equals(other: Any?) = other === this
+    override fun hashCode() = 7
+
+    private class Node(private val source: androidx.compose.foundation.interaction.InteractionSource) :
+        androidx.compose.ui.Modifier.Node(), androidx.compose.ui.node.DrawModifierNode {
+        private val wash = androidx.compose.animation.core.Animatable(0f)
+        override fun onAttach() {
+            coroutineScope.launch {
+                var presses = 0
+                source.interactions.collect { interaction ->
+                    when (interaction) {
+                        is androidx.compose.foundation.interaction.PressInteraction.Press -> presses++
+                        is androidx.compose.foundation.interaction.PressInteraction.Release, is androidx.compose.foundation.interaction.PressInteraction.Cancel -> presses = (presses - 1).coerceAtLeast(0)
+                    }
+                    launch {
+                        if (presses > 0) wash.snapTo(1f)
+                        else wash.animateTo(0f, androidx.compose.animation.core.tween(280))
+                    }
+                }
+            }
+        }
+        override fun androidx.compose.ui.graphics.drawscope.ContentDrawScope.draw() {
+            drawContent()
+            if (wash.value > 0f) drawRect(androidx.compose.ui.graphics.Color(0xFF787880), alpha = .16f * wash.value)
+        }
+    }
 }
 
 /** Uses the system touch-feedback preference; never forces vibration. */
