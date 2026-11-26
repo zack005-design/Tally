@@ -107,12 +107,9 @@ Every release is checked for the internet permission before it is published.
 
 ## Download
 
-The latest version is **0.2.6**, for Android 8.0 and later. Choose **one** edition; both have the same finance and receipt features and share one app ID, so you can switch later without losing data.
+The latest version is **0.2.7**, a development prerelease for Android 8.0 and later. It is one app with the on-device AI built in, and it installs over either 0.2.6 edition without losing data.
 
-| Edition | Best for | Download |
-| --- | --- | --- |
-| **AI** | Typing short commands that a small on-device model turns into drafts | [**tally-0.2.6-ai-debug.apk**](https://github.com/zack005-design/Tally/releases/download/v0.2.6-20261124/tally-0.2.6-ai-debug.apk) |
-| **Non-AI** | Rule-based parsing and a smaller download | [**tally-0.2.6-non-ai-debug.apk**](https://github.com/zack005-design/Tally/releases/download/v0.2.6-20261124/tally-0.2.6-non-ai-debug.apk) |
+**[Download tally-0.2.7-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.7-20261126/tally-0.2.7-debug.apk)**
 
 Release notes, checksums and earlier versions are on the [releases page](https://github.com/zack005-design/Tally/releases).
 
@@ -127,8 +124,8 @@ Release notes, checksums and earlier versions are on the [releases page](https:/
 | If you are | Start here |
 | --- | --- |
 | **New to Tally** | Follow the [installation guide](docs/getting-started.md). The app walks you through your starting balances. |
-| **Updating** | Read the [0.2.6 release notes](docs/releases/0.2.6.md), export a backup, then install over your current version. |
-| **Switching editions** | See [downloads](docs/downloads.md); both editions read the same data. |
+| **Updating** | Read the [0.2.7 release notes](docs/releases/0.2.7.md), export a backup, then install over your current version. |
+| **Coming from an AI or non-AI 0.2.6 build** | Install 0.2.7 over it; see [downloads](docs/downloads.md). |
 | **Bringing spending from a chat** | Use [chat history import](docs/features/chat-history-import.md) with the Tally Companion plugin. |
 
 ## Build from source

@@ -2,15 +2,15 @@
 
 # Download and setup
 
-Tally is an Android expense tracker for manually maintained accounts and shared bills. The current download is **version 0.2.6**, a development build for **Android 8.0 or later**, available in AI and non-AI editions. Both include the offline calculator and receipt scanner.
+Tally is an Android expense tracker for manually maintained accounts and shared bills. The current download is **version 0.2.7**, a development prerelease for **Android 8.0 or later**. It is one app with the on-device AI, offline calculator and receipt scanner built in.
 
 ## Install Tally
 
-Use the [download guide](downloads.md) to choose the AI or non-AI edition and find the correct asset.
+Use the [download guide](downloads.md) to find the correct asset.
 
-1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124) in your Android browser.
+1. Open the [published development release](https://github.com/zack005-design/Tally/releases/tag/v0.2.7-20261126) in your Android browser.
 2. Expand **Assets** below the release notes.
-3. Tap **tally-0.2.6-ai-debug.apk** for local expense suggestions, or **tally-0.2.6-non-ai-debug.apk** for rule-based expense parsing.
+3. Tap **tally-0.2.7-debug.apk**.
 4. Open the downloaded APK. If Android asks, allow installation from the app you used to open it.
 5. Complete installation and open Tally.
 
