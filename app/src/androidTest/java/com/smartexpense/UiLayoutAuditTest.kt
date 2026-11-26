@@ -57,10 +57,10 @@ class UiLayoutAuditTest {
 
     @Test fun activityHeaderDoesNotSqueezeTitleBetweenActionsAtLargeText() {
         render { ActivityScreen(Snapshot(), {}) }
-        val title=layout("Transactions")
+        val title=layout("Activity")
         capture("activity-320dp-2x")
-        assertFalse("Transactions layout width=${title.size.width} height=${title.size.height} lines=${title.lineCount} paragraphWidth=${title.multiParagraph.width} paragraphHeight=${title.multiParagraph.height}",title.didOverflowWidth || title.didOverflowHeight)
-        assertEquals("Transactions".length,title.getLineEnd(title.lineCount-1,visibleEnd=true))
+        assertFalse("Activity layout width=${title.size.width} height=${title.size.height} lines=${title.lineCount} paragraphWidth=${title.multiParagraph.width} paragraphHeight=${title.multiParagraph.height}",title.didOverflowWidth || title.didOverflowHeight)
+        assertEquals("Activity".length,title.getLineEnd(title.lineCount-1,visibleEnd=true))
         capture("activity-320dp-2x")
         compose.onNodeWithText("Search transactions").performScrollTo().assertIsDisplayed()
         compose.onNode(hasScrollAction() and SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)).performScrollToNode(hasText("Filter"))

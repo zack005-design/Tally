@@ -42,7 +42,7 @@ class TransactionHistoryPolishTest {
             EditorialPreviewTheme { ActivityScreen(Snapshot(records = listOf(record(0))), {}) }
         }
         compose.onNodeWithText("Search transactions").performTextInput("no such expense")
-        compose.onNodeWithText("Search transactions").performImeAction()
+        compose.onNodeWithContentDescription("Search transactions").performImeAction()
         compose.onNodeWithText("No matching activity").assertIsDisplayed()
         compose.onNodeWithText("Reset search & filters").assertIsDisplayed().performClick()
         compose.onNodeWithText("Expense 0").assertIsDisplayed()
@@ -54,7 +54,7 @@ class TransactionHistoryPolishTest {
             EditorialPreviewTheme { ActivityScreen(Snapshot(records = listOf(record(12))), {}) }
         }
         compose.onNodeWithText("Search transactions").performTextInput("  expense 12  ")
-        compose.onNodeWithText("Search transactions").performImeAction()
+        compose.onNodeWithContentDescription("Search transactions").performImeAction()
         compose.onNodeWithText("Expense 12").assertIsDisplayed()
     }
 

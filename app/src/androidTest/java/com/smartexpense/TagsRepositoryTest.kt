@@ -39,7 +39,7 @@ import org.junit.runner.RunWith
         assertTrue(repository.snapshot().records.single {it.id==id}.tags.isEmpty())
     }
 
-    @Test fun editingKeepsTagsAndReversedRecordsCannotBeTagged()=runBlocking {
+    @Test fun editingKeepsTagsAndReversedRecordsCannotBeTagged()=runBlocking<Unit> {
         val id=expense()
         repository.saveTags(id,listOf("Goa trip"))
         val replacement=repository.save(EntryDraft(amount=1500,description="Dinner",accountId=account),replaces=id)

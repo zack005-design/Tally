@@ -47,7 +47,7 @@ class LocalFinanceUiTest {
         var balance:Long?=null;var scheduled:Boolean?=null
         val s=Snapshot(accounts=listOf(Account("w","Wallet","Cash",20000,false),Account("g","GPay","Bank",30000,false)),walletSources=WalletSources("w","g","2026-10"))
         compose.setContent {TrackerTheme {GpaySettingsScreen(s,false,{value,done->balance=value;done()},{enabled,_,_,_,done->scheduled=enabled;done()},{})}}
-        compose.onNodeWithText("Correct balance").performClick()
+        compose.onNode(hasText("Correct balance") and hasClickAction()).performClick()
         compose.onNodeWithContentDescription("Actual GPay balance (₹)").performTextReplacement("750")
         compose.onNodeWithText("Save GPay balance").performScrollTo().performClick()
         compose.onNodeWithText("Save settings").performScrollTo().performClick()

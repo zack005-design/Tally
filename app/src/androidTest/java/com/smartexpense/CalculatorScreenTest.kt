@@ -19,7 +19,7 @@ class CalculatorScreenTest {
     @get:Rule val compose = createComposeRule()
 
     private fun calculate() {
-        compose.onNode(hasText("Calculate") and hasClickAction()).performScrollTo()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Calculate") and hasClickAction())
         compose.waitForIdle()
         compose.onNode(hasText("Calculate") and hasClickAction()).assertIsEnabled()
             .performSemanticsAction(SemanticsActions.OnClick) { it() }
@@ -44,10 +44,13 @@ class CalculatorScreenTest {
             }
         } }
         compose.onNodeWithText("Split a bill").performScrollTo().performClick()
-        compose.onNodeWithText("Bill total in rupees").performScrollTo().performTextInput("100")
-        compose.onNodeWithText("How many people?").performScrollTo().performTextInput("3")
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Bill total in rupees"))
+        compose.onNodeWithText("Bill total in rupees").performTextInput("100")
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("How many people?"))
+        compose.onNodeWithText("How many people?").performTextInput("3")
         calculate()
-        compose.waitUntil(5000) { compose.onAllNodesWithText("₹33.34 + ₹33.33 + ₹33.33").fetchSemanticsNodes().isNotEmpty() }
+        // The result appears after the calculation finishes and may sit below the composed rows.
+        compose.waitUntil(5000) { runCatching { compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("₹33.34 + ₹33.33 + ₹33.33")) }.isSuccess }
         compose.onNodeWithText("₹33.34 + ₹33.33 + ₹33.33").performScrollTo().assertIsDisplayed()
     }
 }
