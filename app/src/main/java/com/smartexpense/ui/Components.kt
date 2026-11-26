@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.platform.LocalFocusManager
@@ -171,20 +173,30 @@ val LocalEditorialBack = staticCompositionLocalOf<(() -> Unit)?> { null }
     val style=MaterialTheme.typography.labelMedium
     val labelWidth=with(density) {options.maxOf {measurer.measure(it.second,style).size.width}.toDp()}
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val stacked=density.fontScale>1.3f || (maxWidth-8.dp)/options.size<labelWidth+24.dp
+        val segmentWidth=(maxWidth-6.dp)/options.size
+        // Three short labels stay in one iOS-style row even with large text; they wrap before they stack.
+        val stacked=options.size>3 && segmentWidth<labelWidth+16.dp || segmentWidth<64.dp
         if(stacked) {
             Column(Modifier.fillMaxWidth().selectableGroup(),verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                options.forEach {(id,label)->Surface(onClick={onSelect(id)},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp).semantics {this.selected=id==selected},shape=Tokens.field,color=if(id==selected) Tokens.accent else Tokens.secondarySurface,contentColor=if(id==selected) MaterialTheme.colorScheme.onPrimary else Tokens.text) {
+                options.forEach {(id,label)->Surface(onClick=lightHapticAction {onSelect(id)},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp).semantics {this.selected=id==selected},shape=Tokens.field,color=if(id==selected) Tokens.accent else Tokens.secondarySurface,contentColor=if(id==selected) MaterialTheme.colorScheme.onPrimary else Tokens.text) {
                     Box(Modifier.padding(12.dp),contentAlignment=Alignment.CenterStart) {Text(label,style=style)}
                 }}
             }
-        } else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).selectableGroup().background(Tokens.secondarySurface,CircleShape).padding(3.dp)) {
-            options.forEach {(id,label)->
-                val segment=MaterialTheme.colorScheme.surfaceContainerHighest
-                val fill by androidx.compose.animation.animateColorAsState(if(id==selected) (if(LocalDarkTheme.current) segment else Tokens.paper) else Tokens.secondarySurface, label="segment fill")
-                Surface(onClick={onSelect(id)},modifier=Modifier.weight(1f).fillMaxHeight().heightIn(min=44.dp).semantics {this.selected=id==selected},shape=CircleShape,color=fill,contentColor=Tokens.text,shadowElevation=if(id==selected) 1.dp else 0.dp) {
-                    Box(Modifier.padding(horizontal=12.dp,vertical=8.dp),contentAlignment=Alignment.Center) {
-                        Text(label,style=if(id==selected) style.copy(fontWeight=androidx.compose.ui.text.font.FontWeight.SemiBold) else style,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+        } else {
+            val index=options.indexOfFirst {it.first==selected}
+            // The white thumb slides between segments on a spring, like UISegmentedControl.
+            val thumbX by androidx.compose.animation.core.animateDpAsState(segmentWidth*index.coerceAtLeast(0),iosSpring(),label="segment thumb")
+            val thumbColor=if(LocalDarkTheme.current) MaterialTheme.colorScheme.surfaceContainerHighest else Tokens.paper
+            Box(Modifier.fillMaxWidth().height(IntrinsicSize.Min).background(Tokens.secondarySurface,CircleShape).padding(3.dp)) {
+                if(index>=0) Surface(Modifier.offset(x=thumbX).width(segmentWidth).fillMaxHeight(),shape=CircleShape,color=thumbColor,shadowElevation=2.dp) {}
+                Row(Modifier.fillMaxWidth().selectableGroup()) {
+                    options.forEach {(id,label)->
+                        val interaction=remember {androidx.compose.foundation.interaction.MutableInteractionSource()}
+                        Box(Modifier.weight(1f).heightIn(min=44.dp).clip(CircleShape)
+                            .selectable(id==selected,interactionSource=interaction,indication=null,role=androidx.compose.ui.semantics.Role.Tab,onClick=lightHapticAction {onSelect(id)})
+                            .softPress(interaction).padding(horizontal=8.dp,vertical=8.dp),contentAlignment=Alignment.Center) {
+                            Text(label,style=if(id==selected) style.copy(fontWeight=androidx.compose.ui.text.font.FontWeight.SemiBold) else style,textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=2)
+                        }
                     }
                 }
             }

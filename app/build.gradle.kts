@@ -78,6 +78,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation("androidx.navigation:navigation-compose:2.10.2")
+    // Installs the Compose libraries' bundled baseline profiles on sideloaded APKs, so screens animate smoothly from the first launch.
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
     implementation("androidx.room:room-runtime:2.8.5")
     implementation("androidx.room:room-ktx:2.8.5")
     ksp("androidx.room:room-compiler:2.8.5")
