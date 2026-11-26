@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
     @javax.inject.Inject lateinit var backupReminders:com.smartexpense.data.BackupReminderCoordinator
     @javax.inject.Inject lateinit var preferences:com.smartexpense.data.Preferences
     override fun onCreate(savedInstanceState:Bundle?) {
-        super.onCreate(savedInstanceState);val lock=deviceLock;enableEdgeToEdge(statusBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT),navigationBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT));setContent {
+        super.onCreate(savedInstanceState);preferHighestRefreshRate();val lock=deviceLock;enableEdgeToEdge(statusBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT),navigationBarStyle=SystemBarStyle.light(android.graphics.Color.TRANSPARENT,android.graphics.Color.TRANSPARENT));setContent {
             val mode by preferences.themeMode.collectAsStateWithLifecycle(initialValue=com.smartexpense.domain.ThemeMode.System)
             val dark=mode.isDark(androidx.compose.foundation.isSystemInDarkTheme())
             // Status and navigation bar icons must contrast with the app background, not the system theme.
@@ -72,5 +72,12 @@ import kotlinx.coroutines.withContext
     }
     override fun onNewIntent(intent:android.content.Intent) {super.onNewIntent(intent);setIntent(intent);handleLaunch(intent)}
     override fun onDestroy() {deviceLock.destroy();super.onDestroy()}
+    /** Asks for the panel's fastest mode at the current resolution (120 Hz where available); the system still lowers it for battery saver. */
+    private fun preferHighestRefreshRate() {
+        val display = if (android.os.Build.VERSION.SDK_INT >= 30) display else @Suppress("DEPRECATION") windowManager.defaultDisplay
+        val current = display?.mode ?: return
+        val best = display.supportedModes.filter { it.physicalWidth == current.physicalWidth && it.physicalHeight == current.physicalHeight }.maxByOrNull { it.refreshRate } ?: return
+        window.attributes = window.attributes.apply { preferredDisplayModeId = best.modeId }
+    }
 }
 

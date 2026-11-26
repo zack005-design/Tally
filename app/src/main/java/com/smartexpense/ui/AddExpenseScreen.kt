@@ -1,11 +1,14 @@
 package com.smartexpense.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -46,15 +49,15 @@ internal fun keypadDisplay(raw: String): String {
     val valid = s.canReview(accounts, categories) && s.description.isNotBlank()
     val projections = projectedBalances(s, accounts, walletSources).getOrNull().orEmpty()
     Scaffold(modifier = Modifier.imePadding(), containerColor = Tokens.background, contentWindowInsets = WindowInsets(0, 0, 0, 0), bottomBar = {
-        Box(Modifier.padding(horizontal = Tokens.pageInset, vertical = 10.dp)) { EditorialPrimaryButton("Save expense", valid, onSave) }
+        Box(Modifier.padding(horizontal = Tokens.pageInset, vertical = 10.dp)) { EditorialPrimaryButton(if (s.replaces != null) "Save correction" else "Save expense", valid, onSave) }
     }) { padding -> Box(Modifier.fillMaxSize().padding(padding)) {
         Page(if (s.replaces != null) "Correct expense" else "Add expense", onBack = onBack) {
             if (s.replaces == null) item {
-                EditorialSegmentedControl("EXPENSE", listOf("EXPENSE" to "Expense", "INCOME" to "Income", "TRANSFER" to "Transfer")) { onChange(s.copy(kind = Kind.valueOf(it))) }
+                EditorialSegmentedControl(s.kind.name, listOf("EXPENSE" to "Expense", "INCOME" to "Income", "TRANSFER" to "Transfer")) { onChange(s.copy(kind = Kind.valueOf(it))) }
             }
             if (s.parserNotice.isNotBlank()) item { ReferenceInfo(s.parserNotice) }
             item {
-                Text(keypadDisplay(s.amount), Modifier.fillMaxWidth().padding(vertical = 8.dp).semantics { contentDescription = "Amount ${keypadDisplay(s.amount)}" },
+                RollingAmount(keypadDisplay(s.amount), Modifier.fillMaxWidth().padding(vertical = 8.dp).semantics { contentDescription = "Amount ${keypadDisplay(s.amount)}" },
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = androidx.compose.ui.unit.TextUnit(48f, androidx.compose.ui.unit.TextUnitType.Sp), lineHeight = androidx.compose.ui.unit.TextUnit(56f, androidx.compose.ui.unit.TextUnitType.Sp)), textAlign = TextAlign.Center, color = if (s.amount.isBlank()) Tokens.muted else Tokens.text)
             }
             item { Field("Description", s.description, { onChange(s.copy(description = it)) }) }
@@ -109,6 +112,28 @@ internal fun keypadDisplay(raw: String): String {
     }
 }
 
+/** Each character rolls in from below as digits are typed and drops away when deleted, like the iOS calculator display. */
+@Composable private fun RollingAmount(text: String, modifier: Modifier, style: androidx.compose.ui.text.TextStyle, textAlign: TextAlign, color: androidx.compose.ui.graphics.Color) {
+    var previous by remember { mutableStateOf(text) }
+    val growing = text.length >= previous.length
+    var settled by remember { mutableStateOf(false) }
+    SideEffect { previous = text; settled = true }
+    Row(modifier, horizontalArrangement = if (textAlign == TextAlign.Center) Arrangement.Center else Arrangement.Start) {
+        text.forEachIndexed { index, char -> key(index) {
+            // A newly typed digit springs up into place; the first draw of the screen does not animate.
+            val appear = remember { androidx.compose.animation.core.Animatable(if (settled) 0f else 1f) }
+            LaunchedEffect(Unit) { appear.animateTo(1f, iosSpring(androidx.compose.animation.core.Spring.StiffnessMedium)) }
+            androidx.compose.animation.AnimatedContent(char, Modifier.graphicsLayer { alpha = appear.value; translationY = (1f - appear.value) * size.height * .35f },
+                label = "amount digit $index", transitionSpec = {
+                val spring = iosSpring<androidx.compose.ui.unit.IntOffset>(androidx.compose.animation.core.Spring.StiffnessMedium)
+                (androidx.compose.animation.slideInVertically(spring) { if (growing) it / 2 else -it / 2 } + androidx.compose.animation.fadeIn())
+                    .togetherWith(androidx.compose.animation.slideOutVertically(spring) { if (growing) -it / 2 else it / 2 } + androidx.compose.animation.fadeOut())
+                    .using(androidx.compose.animation.SizeTransform(clip = false))
+            }) { c -> Text(c.toString(), style = style, color = color, maxLines = 1) }
+        } }
+    }
+}
+
 @Composable private fun AddChip(label: String, icon: Int, onClick: () -> Unit) {
     Surface(onClick = lightHapticAction(onClick), shape = Tokens.pill, color = Tokens.paper, modifier = Modifier.heightIn(min = 48.dp)) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -124,8 +149,12 @@ internal fun keypadDisplay(raw: String): String {
         listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf(".", "0", "⌫")).forEach { row ->
             Row(Modifier.fillMaxWidth()) {
                 row.forEach { key ->
-                    Surface(onClick = lightHapticAction { onKey(key) }, shape = Tokens.field, color = Tokens.background,
-                        modifier = Modifier.weight(1f).heightIn(min = 52.dp).semantics { contentDescription = when (key) { "⌫" -> "Delete digit"; "." -> "Decimal point"; else -> "Key $key" } }) {
+                    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    // iOS keypads flash a soft fill under the finger instead of a ripple.
+                    val fill by androidx.compose.animation.animateColorAsState(if (pressed) Tokens.secondarySurface else Tokens.background, androidx.compose.animation.core.tween(if (pressed) 40 else 260), label = "key fill")
+                    Surface(onClick = lightHapticAction { onKey(key) }, interactionSource = interaction, shape = Tokens.field, color = fill,
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp).softPress(interaction).semantics { contentDescription = when (key) { "⌫" -> "Delete digit"; "." -> "Decimal point"; else -> "Key $key" } }) {
                         Box(contentAlignment = Alignment.Center) { Text(key, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)) }
                     }
                 }

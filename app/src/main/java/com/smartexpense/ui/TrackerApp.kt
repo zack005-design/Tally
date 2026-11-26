@@ -82,7 +82,7 @@ import com.smartexpense.domain.*
     // Tabs are switched, not stacked, wherever a screen links to one.
     val openRoute:(String)->Unit={destination->if(destination in mainTabs) onTab(destination) else nav.navigate(destination)}
     // Landscape phones with a camera cutout or punch-hole keep content clear of it on the side.
-    Scaffold(snackbarHost={SnackbarHost(snackbar)},contentWindowInsets=ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)),bottomBar={
+    Scaffold(contentWindowInsets=ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)),bottomBar={
         AnimatedVisibility(showNavigation && !useRail,enter=slideInVertically(tween(260,easing=FastOutSlowInEasing)) {it}+fadeIn(tween(200)),exit=ExitTransition.None) {
             LedgerNavigation(shownTab,onTab)
         }
@@ -112,7 +112,10 @@ import com.smartexpense.domain.*
                 popExitTransition = {
                     if(initialState.destination.route in mainTabs && targetState.destination.route in mainTabs) fadeOut(tween(150))
                     else slideOutHorizontally(pushMotion) { it }
-                }
+                },
+                // The back swipe drags the same slide with the finger: no shrinking card, no see-through page.
+                predictivePopEnterTransition = { slideInHorizontally(pushMotion) { -it / 3 } },
+                predictivePopExitTransition = { slideOutHorizontally(pushMotion) { it } }
             ) {
                 // First run: welcome, how it works, starting balances, reminders and app lock, or a restore.
                 // The onboarding route ends only when the person finishes it, even after a restore.
@@ -189,6 +192,8 @@ import com.smartexpense.domain.*
                 }}
             }}
         }
+        // iOS-style banner: drops in from the top so it never covers Save or the action row.
+        IosToastHost(snackbar)
         }
         }
     }
