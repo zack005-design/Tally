@@ -107,7 +107,7 @@ Every release is checked for the internet permission before it is published.
 
 ## Download
 
-The latest version is **0.2.7**, a development prerelease for Android 8.0 and later. It is one app with the on-device AI built in, and it installs over either 0.2.6 edition without losing data.
+The latest version is **0.2.7**, a development build for Android 8.0 and later. It is one app with the on-device AI built in, and it installs over either 0.2.6 edition without losing data.
 
 **[Download tally-0.2.7-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.7-20261126/tally-0.2.7-debug.apk)**
 

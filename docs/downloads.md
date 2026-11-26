@@ -10,7 +10,7 @@ The app and plugins are available from public GitHub Releases. Choose a download
 
 [Download tally-0.2.7-debug.apk](https://github.com/zack005-design/Tally/releases/download/v0.2.7-20261126/tally-0.2.7-debug.apk), or expand **Assets** and select **tally-0.2.7-debug.apk**. Version 0.2.7 is one app with the on-device AI built in; it uses the same rules as the old non-AI edition when a model cannot load. See the [0.2.7 release notes](releases/0.2.7.md).
 
-It requires Android 8.0 or later and is a development prerelease. It installs over either 0.2.6 edition and keeps your records. Create a full backup before updating, and do not uninstall to update.
+It requires Android 8.0 or later and is a development build. It installs over either 0.2.6 edition and keeps your records. Create a full backup before updating, and do not uninstall to update.
 
 The 0.2.6 AI and non-AI editions remain available from the [0.2.6 release](https://github.com/zack005-design/Tally/releases/tag/v0.2.6-20261124).
 

@@ -2,7 +2,7 @@
 
 # Download and setup
 
-Tally is an Android expense tracker for manually maintained accounts and shared bills. The current download is **version 0.2.7**, a development prerelease for **Android 8.0 or later**. It is one app with the on-device AI, offline calculator and receipt scanner built in.
+Tally is an Android expense tracker for manually maintained accounts and shared bills. The current download is **version 0.2.7**, a development build for **Android 8.0 or later**. It is one app with the on-device AI, offline calculator and receipt scanner built in.
 
 ## Install Tally
 
